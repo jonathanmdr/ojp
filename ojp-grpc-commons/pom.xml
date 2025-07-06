@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>ojp-grpc-commons</artifactId>
-    <version>>0.0.4-alpha</version>
+    <version>0.0.4-alpha</version>
 
     <parent>
         <groupId>org.openjdbcproxy</groupId>
