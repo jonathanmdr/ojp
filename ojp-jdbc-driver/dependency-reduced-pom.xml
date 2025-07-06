@@ -3,11 +3,36 @@
   <parent>
     <artifactId>ojp-parent</artifactId>
     <groupId>org.openjdbcproxy</groupId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.0.4-alpha</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>ojp-jdbc-driver</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <name>OJP JDBC Driver</name>
+  <version>0.0.4-alpha</version>
+  <description>JDBC driver for OJP (Open JDBC Proxy)</description>
+  <url>https://github.com/Open-JDBC-Proxy/ojp</url>
+  <developers>
+    <developer>
+      <id>rrobetti</id>
+      <name>Rogerio Robetti</name>
+    </developer>
+    <developer>
+      <id>petruki</id>
+      <name>Roger Floriano</name>
+    </developer>
+  </developers>
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <connection>scm:git:https://github.com/Open-JDBC-Proxy/ojp.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com:Open-JDBC-Proxy/ojp.git</developerConnection>
+    <url>https://github.com/Open-JDBC-Proxy/ojp</url>
+  </scm>
   <build>
     <plugins>
       <plugin>
@@ -16,6 +41,30 @@
         <configuration>
           <runOrder>alphabetical</runOrder>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.2.1</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.6.3</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
@@ -35,6 +84,28 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
+        <version>0.8.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <publishingServerId>central</publishingServerId>
+        </configuration>
       </plugin>
     </plugins>
   </build>

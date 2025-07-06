@@ -10,7 +10,7 @@
     <parent>
         <groupId>org.openjdbcproxy</groupId>
         <artifactId>ojp-parent</artifactId>
-        <version>>0.0.4-alpha</version>
+        <version>0.0.4-alpha</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
