@@ -38,6 +38,8 @@ jobs:
         run: |
             mvn install -N -DskipTests
             mvn install -pl ojp-grpc-commons -DskipTests
+            mvn install -N -DskipTests
+            mvn install -pl ojp-grpc-commons -DskipTests
             mvn compile jib:build -pl ojp-server \
             -Djib.to.auth.username="${DOCKERHUB_USER}" \
             -Djib.to.auth.password="${DOCKERHUB_TOKEN}" \
