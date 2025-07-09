@@ -255,35 +255,49 @@ public class H2PreparedStatementExtensiveTests {
     public void testResultAndGeneratedKeysMethods(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
 
-        Statement stmt = connection.createStatement();
-        stmt.execute("INSERT INTO test_table (id, name, age) VALUES (100, 'A', 1)");
-        ResultSet rs = stmt.executeQuery("SELECT * FROM test_table");
+        PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table (id, name, age) VALUES (?, ?, ?)");
+        ps.setLong(1, 100);
+        ps.setString(2, "A");
+        ps.setInt(3, 1);
+        int updatedRows = ps.executeUpdate();
+        assertEquals(1, updatedRows);
+        Statement stmtQuery = connection.createStatement();
+        ResultSet rs = stmtQuery.executeQuery("SELECT * FROM test_table");
         assertNotNull(rs);
         assertTrue(rs.next());
-        int updateCount = stmt.executeUpdate("UPDATE test_table SET age = 99 WHERE id = 100");
+
+        PreparedStatement psUpdt = connection.prepareStatement("UPDATE test_table SET age = ? WHERE id = ?");
+        psUpdt.setInt(1, 99);
+        psUpdt.setInt(2, 100);
+        int updateCount = psUpdt.executeUpdate();
         assertEquals(1, updateCount);
 
         // getResultSet, getUpdateCount, getMoreResults
-        stmt.execute("SELECT * FROM test_table");
-        ResultSet rs2 = stmt.getResultSet();
+        stmtQuery.execute("SELECT * FROM test_table");
+        ResultSet rs2 = stmtQuery.getResultSet();
         assertNotNull(rs2);
-        int count = stmt.getUpdateCount();
+        int count = stmtQuery.getUpdateCount();
         assertTrue(count >= -1);
-        assertFalse(stmt.getMoreResults());
-        assertFalse(stmt.getMoreResults(Statement.CLOSE_CURRENT_RESULT));
+        assertFalse(stmtQuery.getMoreResults());
+        assertFalse(stmtQuery.getMoreResults(Statement.CLOSE_CURRENT_RESULT));
 
         // Generated Keys
-        stmt.executeUpdate("INSERT INTO test_table (id, name, age) VALUES (101, 'B', 2)", Statement.RETURN_GENERATED_KEYS);
-        ResultSet keys = stmt.getGeneratedKeys();
+        PreparedStatement psInsert = connection.prepareStatement("INSERT INTO test_table (id, name, age) VALUES (?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS);
+        psInsert.setInt(1, 101);
+        psInsert.setString(2, "B");
+        psInsert.setInt(3, 2);
+        psInsert.executeUpdate();
+        ResultSet keys = psInsert.getGeneratedKeys();
         assertNotNull(keys);
-        keys.next();
-        Long id = keys.getLong(1);
+        boolean hasNext = keys.next();
+        assertTrue(hasNext);
+        Integer id = keys.getInt(1);
         assertNotNull(id);
 
         // Various execute overloads
-        stmt.execute("SELECT * FROM test_table", Statement.NO_GENERATED_KEYS);
-        stmt.execute("SELECT * FROM test_table", new int[]{1});
-        stmt.execute("SELECT * FROM test_table", new String[]{"id"});
+        stmtQuery.execute("SELECT * FROM test_table", Statement.NO_GENERATED_KEYS);
+        stmtQuery.execute("SELECT * FROM test_table", new int[]{1});
+        stmtQuery.execute("SELECT * FROM test_table", new String[]{"id"});
     }
 
     @ParameterizedTest

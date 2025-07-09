@@ -49,6 +49,7 @@ message OpResult {
     SessionInfo session = 1;
     ResultType type = 2;
     bytes value = 3;
+    string uuid = 4;
 }
 
 message StatementRequest {

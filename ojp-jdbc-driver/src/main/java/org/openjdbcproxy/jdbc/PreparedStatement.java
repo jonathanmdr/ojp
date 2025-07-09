@@ -123,6 +123,9 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
         OpResult result = this.statementService.executeUpdate(this.connection.getSession(), this.sql,
                 new ArrayList<>(this.paramsMap.values()), this.getStatementUUID(), this.properties);
         this.connection.setSession(result.getSession());
+        if (StringUtils.isNotBlank(result.getUuid())) {
+            this.setStatementUUID(result.getUuid());
+        }
         return deserialize(result.getValue().toByteArray(), Integer.class);
     }
 
