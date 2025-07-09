@@ -4,6 +4,7 @@ import com.openjdbcproxy.grpc.LobDataBlock;
 import com.openjdbcproxy.grpc.LobReference;
 import com.openjdbcproxy.grpc.LobType;
 import io.grpc.StatusRuntimeException;
+import lombok.extern.slf4j.Slf4j;
 import org.openjdbcproxy.grpc.client.StatementService;
 
 import java.io.BufferedInputStream;
@@ -16,13 +17,16 @@ import java.util.Iterator;
 
 import static org.openjdbcproxy.grpc.client.GrpcExceptionHandler.handle;
 
+@Slf4j
 public class Blob extends Lob implements java.sql.Blob {
+
     public Blob(Connection connection, LobService lobService, StatementService statementService, LobReference lobReference) {
         super(connection, lobService, statementService, lobReference);
     }
 
     @Override
     public byte[] getBytes(long pos, int length) throws SQLException {
+        log.debug("getBytes: pos={}, length={}", pos, length);
         try {
             this.haveLobReferenceValidation();
             Iterator<LobDataBlock> dataBlocks = this.statementService.readLob(this.lobReference.get(), pos, length);
@@ -40,21 +44,25 @@ public class Blob extends Lob implements java.sql.Blob {
 
     @Override
     public InputStream getBinaryStream() throws SQLException {
+        log.debug("getBinaryStream called");
         return super.getBinaryStream(1, Long.MAX_VALUE);
     }
 
     @Override
     public long position(byte[] pattern, long start) throws SQLException {
+        log.debug("position: <byte[]>, {}", start);
         return 0;
     }
 
     @Override
     public long position(java.sql.Blob pattern, long start) throws SQLException {
+        log.debug("position: <Blob>, {}", start);
         return 0;
     }
 
     @Override
     public int setBytes(long pos, byte[] bytes) throws SQLException {
+        log.debug("setBytes: {}, <byte[]>", pos);
         InputStream is = new ByteArrayInputStream(bytes);
         OutputStream os = this.setBinaryStream(pos);
         int byteRead;
@@ -73,26 +81,29 @@ public class Blob extends Lob implements java.sql.Blob {
 
     @Override
     public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
+        log.debug("setBytes: {}, <byte[]>, {}, {}", pos, offset, len);
         return 0;
     }
 
     @Override
     public OutputStream setBinaryStream(long pos) throws SQLException {
+        log.debug("setBinaryStream: {}", pos);
         return super.setBinaryStream(LobType.LT_BLOB, pos);
     }
 
     @Override
     public void truncate(long len) throws SQLException {
-
+        log.debug("truncate: {}", len);
     }
 
     @Override
     public void free() throws SQLException {
-
+        log.debug("free called");
     }
 
     @Override
     public InputStream getBinaryStream(long pos, long length) throws SQLException {
+        log.debug("getBinaryStream: {}, {}", pos, length);
         return super.getBinaryStream(pos, length);
     }
 }

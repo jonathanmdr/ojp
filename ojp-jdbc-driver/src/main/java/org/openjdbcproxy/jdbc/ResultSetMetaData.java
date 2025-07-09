@@ -6,6 +6,7 @@ import com.openjdbcproxy.grpc.CallResourceResponse;
 import com.openjdbcproxy.grpc.CallType;
 import com.openjdbcproxy.grpc.ResourceType;
 import com.openjdbcproxy.grpc.TargetCall;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.openjdbcproxy.grpc.client.StatementService;
 
@@ -16,7 +17,9 @@ import java.util.List;
 import static org.openjdbcproxy.grpc.SerializationHandler.deserialize;
 import static org.openjdbcproxy.grpc.SerializationHandler.serialize;
 
+@Slf4j
 public class ResultSetMetaData implements java.sql.ResultSetMetaData {
+
     private final StatementService statementService;
     private final RemoteProxyResultSet resultSet;
     private final PreparedStatement ps;
@@ -35,6 +38,7 @@ public class ResultSetMetaData implements java.sql.ResultSetMetaData {
 
     @Override
     public int getColumnCount() throws SQLException {
+        log.debug("getColumnCount called");
         if (resultSet instanceof org.openjdbcproxy.jdbc.ResultSet) {
             org.openjdbcproxy.jdbc.ResultSet rs = (org.openjdbcproxy.jdbc.ResultSet) resultSet;
             return rs.getLabelsMap().size();
@@ -44,6 +48,7 @@ public class ResultSetMetaData implements java.sql.ResultSetMetaData {
     }
 
     private CallResourceRequest.Builder newCallBuilder() throws SQLException {
+        log.debug("newCallBuilder called");
         if (this.resultSet != null) {
             return CallResourceRequest.newBuilder()
                     .setSession(this.resultSet.getConnection().getSession())
@@ -55,7 +60,7 @@ public class ResultSetMetaData implements java.sql.ResultSetMetaData {
                     .setResourceType(ResourceType.RES_PREPARED_STATEMENT)
                     .setProperties(ByteString.copyFrom(serialize(this.ps.getProperties())));
             if (StringUtils.isNotBlank(this.ps.getStatementUUID())) {
-                    builder.setResourceUUID(this.ps.getStatementUUID());
+                builder.setResourceUUID(this.ps.getStatementUUID());
             }
             return builder;
         }
@@ -64,115 +69,138 @@ public class ResultSetMetaData implements java.sql.ResultSetMetaData {
 
     @Override
     public boolean isAutoIncrement(int column) throws SQLException {
+        log.debug("isAutoIncrement: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_IS, "AutoIncrement", column, Boolean.class);
     }
 
     @Override
     public boolean isCaseSensitive(int column) throws SQLException {
+        log.debug("isCaseSensitive: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_IS, "CaseSensitive", column, Boolean.class);
     }
 
     @Override
     public boolean isSearchable(int column) throws SQLException {
+        log.debug("isSearchable: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_IS, "Searchable", column, Boolean.class);
     }
 
     @Override
     public boolean isCurrency(int column) throws SQLException {
+        log.debug("isCurrency: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_IS, "Currency", column, Boolean.class);
     }
 
     @Override
     public int isNullable(int column) throws SQLException {
+        log.debug("isNullable: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_IS, "Nullable", column, Integer.class);
     }
 
     @Override
     public boolean isSigned(int column) throws SQLException {
+        log.debug("isSigned: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_IS, "Signed", column, Boolean.class);
     }
 
     @Override
     public int getColumnDisplaySize(int column) throws SQLException {
+        log.debug("getColumnDisplaySize: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_GET, "ColumnDisplaySize", column, Integer.class);
     }
 
     @Override
     public String getColumnLabel(int column) throws SQLException {
+        log.debug("getColumnLabel: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_GET, "ColumnLabel", column, String.class);
     }
 
     @Override
     public String getColumnName(int column) throws SQLException {
+        log.debug("getColumnName: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_GET, "ColumnName", column, String.class);
     }
 
     @Override
     public String getSchemaName(int column) throws SQLException {
+        log.debug("getSchemaName: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_GET, "SchemaName", column, String.class);
     }
 
     @Override
     public int getPrecision(int column) throws SQLException {
+        log.debug("getPrecision: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_GET, "Precision", column, Integer.class);
     }
 
     @Override
     public int getScale(int column) throws SQLException {
+        log.debug("getScale: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_GET, "Scale", column, Integer.class);
     }
 
     @Override
     public String getTableName(int column) throws SQLException {
+        log.debug("getTableName: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_GET, "TableName", column, String.class);
     }
 
     @Override
     public String getCatalogName(int column) throws SQLException {
+        log.debug("getCatalogName: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_GET, "CatalogName", column, String.class);
     }
 
     @Override
     public int getColumnType(int column) throws SQLException {
+        log.debug("getColumnType: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_GET, "ColumnType", column, Integer.class);
     }
 
     @Override
     public String getColumnTypeName(int column) throws SQLException {
+        log.debug("getColumnTypeName: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_GET, "ColumnTypeName", column, String.class);
     }
 
     @Override
     public boolean isReadOnly(int column) throws SQLException {
+        log.debug("isReadOnly: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_IS, "ReadOnly", column, Boolean.class);
     }
 
     @Override
     public boolean isWritable(int column) throws SQLException {
+        log.debug("isWritable: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_IS, "Writable", column, Boolean.class);
     }
 
     @Override
     public boolean isDefinitelyWritable(int column) throws SQLException {
+        log.debug("isDefinitelyWritable: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_IS, "DefinitelyWritable", column, Boolean.class);
     }
 
     @Override
     public String getColumnClassName(int column) throws SQLException {
+        log.debug("getColumnClassName: {}", column);
         return this.retrieveMetadataAttribute(CallType.CALL_GET, "ColumnClassName", column, String.class);
     }
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
+        log.debug("unwrap: {}", iface);
         throw new SQLException("Unwrap not supported.");
     }
 
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        log.debug("isWrapperFor: {}", iface);
         throw new SQLException("isWrappedFor not supported.");
     }
 
     private <T> T retrieveMetadataAttribute(CallType callType, String attrName, Integer column,  Class returnType) throws SQLException {
+        log.debug("retrieveMetadataAttribute: {}, {}, {}, {}", callType, attrName, column, returnType);
         CallResourceRequest.Builder reqBuilder = this.newCallBuilder();
         List<Object> params = Constants.EMPTY_OBJECT_LIST;
         if (column > -1) {

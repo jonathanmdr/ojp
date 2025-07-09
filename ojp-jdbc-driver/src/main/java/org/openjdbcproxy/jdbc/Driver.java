@@ -2,25 +2,30 @@ package org.openjdbcproxy.jdbc;
 
 import com.openjdbcproxy.grpc.ConnectionDetails;
 import com.openjdbcproxy.grpc.SessionInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.openjdbcproxy.grpc.client.StatementService;
 import org.openjdbcproxy.grpc.client.StatementServiceGrpcClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
-import java.util.logging.Logger;
 
 import static org.openjdbcproxy.jdbc.Constants.PASSWORD;
 import static org.openjdbcproxy.jdbc.Constants.USER;
 
+@Slf4j
 public class Driver implements java.sql.Driver {
 
     static {
         try {
+            log.debug("Registering OpenJDBCProxy Driver");
             DriverManager.registerDriver(new Driver());
         } catch (SQLException var1) {
+            log.error("Can't register driver!", var1);
             throw new RuntimeException("Can't register driver!");
         }
     }
@@ -31,6 +36,7 @@ public class Driver implements java.sql.Driver {
         if (statementService == null) {
             synchronized (Driver.class) {
                 if (statementService == null) {
+                    log.debug("Initializing StatementServiceGrpcClient");
                     statementService = new StatementServiceGrpcClient();
                 }
             }
@@ -39,10 +45,13 @@ public class Driver implements java.sql.Driver {
 
     @Override
     public java.sql.Connection connect(String url, Properties info) throws SQLException {
+        log.debug("connect: url={}, info={}", url, info);
         if (url.toUpperCase().contains("H2:")) {
             DbInfo.setH2DB(true);
+            log.debug("H2DB detected");
         } else {
             DbInfo.setH2DB(false);
+            log.debug("Non-H2DB detected");
         }
         SessionInfo sessionInfo = statementService
                 .connect(ConnectionDetails.newBuilder()
@@ -53,38 +62,50 @@ public class Driver implements java.sql.Driver {
                         .build()
                 );
         //TODO create centralized handling of exceptions returned that coverts automatically to SQLException.
+        log.debug("Returning new Connection with sessionInfo: {}", sessionInfo);
         return new Connection(sessionInfo, statementService);
     }
 
     @Override
     public boolean acceptsURL(String url) throws SQLException {
+        log.debug("acceptsURL: {}", url);
         if (url == null) {
+            log.error("URL is null");
             throw new SQLException("URL is null");
-        } else return url.startsWith("jdbc:ojp");
+        } else {
+            boolean accepts = url.startsWith("jdbc:ojp");
+            log.debug("acceptsURL returns: {}", accepts);
+            return accepts;
+        }
     }
 
     @Override
     public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
+        log.debug("getPropertyInfo: url={}, info={}", url, info);
         return new DriverPropertyInfo[0];
     }
 
     @Override
     public int getMajorVersion() {
+        log.debug("getMajorVersion called");
         return 0;
     }
 
     @Override
     public int getMinorVersion() {
+        log.debug("getMinorVersion called");
         return 0;
     }
 
     @Override
     public boolean jdbcCompliant() {
+        log.debug("jdbcCompliant called");
         return false;
     }
 
     @Override
-    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+    public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
+        log.debug("getParentLogger called");
         return null;
     }
 }

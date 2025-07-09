@@ -77,6 +77,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public boolean next() throws SQLException {
+        log.debug("next called");
         if (this.inProxyMode) {
             return super.next();
         }
@@ -93,17 +94,18 @@ public class ResultSet extends RemoteProxyResultSet {
                 throw handle(e);
             }
         }
-
         return blockIdx.get() < currentDataBlock.size();
     }
 
     private OpResult nextWithSessionUpdate(OpResult next) throws SQLException {
+        log.debug("nextWithSessionUpdate called");
         ((Connection)this.statement.getConnection()).setSession(next.getSession());
         return next;
     }
 
     @Override
     public void close() throws SQLException {
+        log.debug("close called");
         this.closed = true;
         this.blockIdx = null;
         this.itResults = null;
@@ -113,6 +115,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public boolean wasNull() throws SQLException {
+        log.debug("wasNull called");
         if (this.inProxyMode) {
             return super.wasNull();
         }
@@ -121,6 +124,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public String getString(int columnIndex) throws SQLException {
+        log.debug("getString: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getString(columnIndex);
         }
@@ -130,6 +134,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public boolean getBoolean(int columnIndex) throws SQLException {
+        log.debug("getBoolean: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getBoolean(columnIndex);
         }
@@ -139,6 +144,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public byte getByte(int columnIndex) throws SQLException {
+        log.debug("getByte: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getByte(columnIndex);
         }
@@ -148,6 +154,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public short getShort(int columnIndex) throws SQLException {
+        log.debug("getShort: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getShort(columnIndex);
         }
@@ -157,6 +164,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public int getInt(int columnIndex) throws SQLException {
+        log.debug("getInt: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getInt(columnIndex);
         }
@@ -172,6 +180,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public long getLong(int columnIndex) throws SQLException {
+        log.debug("getLong: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getLong(columnIndex);
         }
@@ -181,6 +190,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public float getFloat(int columnIndex) throws SQLException {
+        log.debug("getFloat: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getFloat(columnIndex);
         }
@@ -195,6 +205,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public double getDouble(int columnIndex) throws SQLException {
+        log.debug("getDouble: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getDouble(columnIndex);
         }
@@ -209,6 +220,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
+        log.debug("getBigDecimal: {}, {}", columnIndex, scale);
         if (this.inProxyMode) {
             return super.getBigDecimal(columnIndex, scale);
         }
@@ -218,6 +230,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public byte[] getBytes(int columnIndex) throws SQLException {
+        log.debug("getBytes: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getBytes(columnIndex);
         }
@@ -227,6 +240,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Date getDate(int columnIndex) throws SQLException {
+        log.debug("getDate: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getDate(columnIndex);
         }
@@ -241,6 +255,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Time getTime(int columnIndex) throws SQLException {
+        log.debug("getTime: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getTime(columnIndex);
         }
@@ -250,6 +265,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Timestamp getTimestamp(int columnIndex) throws SQLException {
+        log.debug("getTimestamp: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getTimestamp(columnIndex);
         }
@@ -259,6 +275,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public InputStream getAsciiStream(int columnIndex) throws SQLException {
+        log.debug("getAsciiStream: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getAsciiStream(columnIndex);
         }
@@ -268,6 +285,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public InputStream getUnicodeStream(int columnIndex) throws SQLException {
+        log.debug("getUnicodeStream: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getUnicodeStream(columnIndex);
         }
@@ -277,6 +295,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public InputStream getBinaryStream(int columnIndex) throws SQLException {
+        log.debug("getBinaryStream: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getBinaryStream(columnIndex);
         }
@@ -297,6 +316,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public String getString(String columnLabel) throws SQLException {
+        log.debug("getString: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getString(columnLabel);
         }
@@ -306,6 +326,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public boolean getBoolean(String columnLabel) throws SQLException {
+        log.debug("getBoolean: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getBoolean(columnLabel);
         }
@@ -315,6 +336,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public byte getByte(String columnLabel) throws SQLException {
+        log.debug("getByte: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getByte(columnLabel);
         }
@@ -324,6 +346,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public short getShort(String columnLabel) throws SQLException {
+        log.debug("getShort: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getShort(columnLabel);
         }
@@ -333,6 +356,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public int getInt(String columnLabel) throws SQLException {
+        log.debug("getInt: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getInt(columnLabel);
         }
@@ -349,6 +373,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public long getLong(String columnLabel) throws SQLException {
+        log.debug("getLong: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getLong(columnLabel);
         }
@@ -359,6 +384,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public float getFloat(String columnLabel) throws SQLException {
+        log.debug("getFloat: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getFloat(columnLabel);
         }
@@ -374,6 +400,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public double getDouble(String columnLabel) throws SQLException {
+        log.debug("getDouble: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getDouble(columnLabel);
         }
@@ -389,6 +416,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
+        log.debug("getBigDecimal: {}, {}", columnLabel, scale);
         if (this.inProxyMode) {
             return super.getBigDecimal(columnLabel, scale);
         }
@@ -398,6 +426,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public byte[] getBytes(String columnLabel) throws SQLException {
+        log.debug("getBytes: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getBytes(columnLabel);
         }
@@ -407,6 +436,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Date getDate(String columnLabel) throws SQLException {
+        log.debug("getDate: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getDate(columnLabel);
         }
@@ -422,6 +452,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Time getTime(String columnLabel) throws SQLException {
+        log.debug("getTime: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getTime(columnLabel);
         }
@@ -431,6 +462,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Timestamp getTimestamp(String columnLabel) throws SQLException {
+        log.debug("getTimestamp: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getTimestamp(columnLabel);
         }
@@ -440,6 +472,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public InputStream getAsciiStream(String columnLabel) throws SQLException {
+        log.debug("getAsciiStream: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getAsciiStream(columnLabel);
         }
@@ -449,6 +482,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public InputStream getUnicodeStream(String columnLabel) throws SQLException {
+        log.debug("getUnicodeStream: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getUnicodeStream(columnLabel);
         }
@@ -458,6 +492,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public InputStream getBinaryStream(String columnLabel) throws SQLException {
+        log.debug("getBinaryStream: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getBinaryStream(columnLabel);
         }
@@ -468,11 +503,13 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public SQLWarning getWarnings() throws SQLException {
+        log.debug("getWarnings called");
         return super.getWarnings();
     }
 
     @Override
     public void clearWarnings() throws SQLException {
+        log.debug("clearWarnings called");
         if (this.inProxyMode) {
             super.clearWarnings();
         }
@@ -480,6 +517,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public String getCursorName() throws SQLException {
+        log.debug("getCursorName called");
         if (this.inProxyMode) {
             return super.getCursorName();
         }
@@ -488,6 +526,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public java.sql.ResultSetMetaData getMetaData() throws SQLException {
+        log.debug("getMetaData called");
         if (this.inProxyMode) {
             return super.getMetaData();
         }
@@ -502,6 +541,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Object getObject(int columnIndex) throws SQLException {
+        log.debug("getObject: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getObject(columnIndex);
         }
@@ -511,6 +551,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Object getObject(String columnLabel) throws SQLException {
+        log.debug("getObject: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getObject(columnLabel);
         }
@@ -520,6 +561,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public int findColumn(String columnLabel) throws SQLException {
+        log.debug("findColumn: {}", columnLabel);
         if (this.inProxyMode) {
             return super.findColumn(columnLabel);
         }
@@ -528,6 +570,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Reader getCharacterStream(int columnIndex) throws SQLException {
+        log.debug("getCharacterStream: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getCharacterStream(columnIndex);
         }
@@ -537,6 +580,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Reader getCharacterStream(String columnLabel) throws SQLException {
+        log.debug("getCharacterStream: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getCharacterStream(columnLabel);
         }
@@ -546,6 +590,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
+        log.debug("getBigDecimal: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getBigDecimal(columnIndex);
         }
@@ -555,6 +600,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public BigDecimal getBigDecimal(String columnLabel) throws SQLException {
+        log.debug("getBigDecimal: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getBigDecimal(columnLabel);
         }
@@ -564,6 +610,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public boolean isBeforeFirst() throws SQLException {
+        log.debug("isBeforeFirst called");
         if (this.inProxyMode) {
             return super.isBeforeFirst();
         }
@@ -572,12 +619,14 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public boolean first() throws SQLException {
+        log.debug("first called");
         this.inProxyMode = true;
         return super.first();
     }
 
     @Override
     public boolean isAfterLast() throws SQLException {
+        log.debug("isAfterLast called");
         if (this.inProxyMode) {
             return super.isAfterLast();
         }
@@ -586,6 +635,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public synchronized boolean isFirst() throws SQLException {
+        log.debug("isFirst called");
         if (this.inProxyMode) {
             return super.isFirst();
         }
@@ -594,6 +644,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public boolean isLast() throws SQLException {
+        log.debug("isLast called");
         if (this.inProxyMode) {
             return super.isLast();
         }
@@ -602,24 +653,28 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void beforeFirst() throws SQLException {
+        log.debug("beforeFirst called");
         this.inProxyMode = true;
         super.beforeFirst();
     }
 
     @Override
     public void afterLast() throws SQLException {
+        log.debug("afterLast called");
         this.inProxyMode = true;
         super.afterLast();
     }
 
     @Override
     public boolean last() throws SQLException {
+        log.debug("last called");
         this.inProxyMode = true;
         return super.last();
     }
 
     @Override
     public int getRow() throws SQLException {
+        log.debug("getRow called");
         if (this.inProxyMode) {
             return super.getRow();
         }
@@ -628,18 +683,21 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public boolean absolute(int row) throws SQLException {
+        log.debug("absolute: {}", row);
         this.inProxyMode = true;
         return super.absolute(row);
     }
 
     @Override
     public boolean relative(int rows) throws SQLException {
+        log.debug("relative: {}", rows);
         this.inProxyMode = true;
         return super.relative(rows);
     }
 
     @Override
     public boolean previous() throws SQLException {
+        log.debug("previous called");
         if (this.inProxyMode) {
             return super.previous();
         }
@@ -649,17 +707,20 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void setFetchDirection(int direction) throws SQLException {
+        log.debug("setFetchDirection: {}", direction);
         super.setFetchDirection(direction);
         this.inProxyMode = true;
     }
 
     @Override
     public int getFetchDirection() throws SQLException {
+        log.debug("getFetchDirection called");
         return super.getFetchDirection();
     }
 
     @Override
     public void setFetchSize(int rows) throws SQLException {
+        log.debug("setFetchSize: {}", rows);
         if (this.inProxyMode) {
             super.setFetchSize(rows);
         }
@@ -668,6 +729,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public int getFetchSize() throws SQLException {
+        log.debug("getFetchSize called");
         if (this.inProxyMode) {
             return super.getFetchSize();
         }
@@ -676,6 +738,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public int getType() throws SQLException {
+        log.debug("getType called");
         if (this.inProxyMode) {
             return super.getType();
         }
@@ -684,6 +747,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public int getConcurrency() throws SQLException {
+        log.debug("getConcurrency called");
         if (this.inProxyMode) {
             return super.getConcurrency();
         }
@@ -692,6 +756,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public boolean rowUpdated() throws SQLException {
+        log.debug("rowUpdated called");
         if (this.inProxyMode) {
             return super.rowUpdated();
         }
@@ -700,6 +765,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public boolean rowInserted() throws SQLException {
+        log.debug("rowInserted called");
         if (this.inProxyMode) {
             return super.rowInserted();
         }
@@ -708,6 +774,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public boolean rowDeleted() throws SQLException {
+        log.debug("rowDeleted called");
         if (this.inProxyMode) {
             return super.rowDeleted();
         }
@@ -716,6 +783,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateNull(int columnIndex) throws SQLException {
+        log.debug("updateNull: {}", columnIndex);
         this.inProxyMode = true;
         super.absolute(this.currentIdx.get());
         super.updateNull(columnIndex);
@@ -723,6 +791,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBoolean(int columnIndex, boolean x) throws SQLException {
+        log.debug("updateBoolean: {}, {}", columnIndex, x);
         this.inProxyMode = true;
         super.absolute(this.currentIdx.get());
         super.updateBoolean(columnIndex, x);
@@ -730,6 +799,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateByte(int columnIndex, byte x) throws SQLException {
+        log.debug("updateByte: {}, {}", columnIndex, x);
         if (this.inProxyMode) {
             super.updateByte(columnIndex, x);
             return;
@@ -739,6 +809,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateShort(int columnIndex, short x) throws SQLException {
+        log.debug("updateShort: {}, {}", columnIndex, x);
         if (this.inProxyMode) {
             super.updateShort(columnIndex, x);
             return;
@@ -748,6 +819,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateInt(int columnIndex, int x) throws SQLException {
+        log.debug("updateInt: {}, {}", columnIndex, x);
         if (this.inProxyMode) {
             super.updateInt(columnIndex, x);
             return;
@@ -757,6 +829,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateLong(int columnIndex, long x) throws SQLException {
+        log.debug("updateLong: {}, {}", columnIndex, x);
         if (this.inProxyMode) {
             super.updateLong(columnIndex, x);
             return;
@@ -766,6 +839,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateFloat(int columnIndex, float x) throws SQLException {
+        log.debug("updateFloat: {}, {}", columnIndex, x);
         if (this.inProxyMode) {
             super.updateFloat(columnIndex, x);
             return;
@@ -775,6 +849,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateDouble(int columnIndex, double x) throws SQLException {
+        log.debug("updateDouble: {}, {}", columnIndex, x);
         if (this.inProxyMode) {
             super.updateDouble(columnIndex, x);
             return;
@@ -784,6 +859,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBigDecimal(int columnIndex, BigDecimal x) throws SQLException {
+        log.debug("updateBigDecimal: {}, {}", columnIndex, x);
         if (this.inProxyMode) {
             super.updateBigDecimal(columnIndex, x);
             return;
@@ -793,6 +869,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateString(int columnIndex, String x) throws SQLException {
+        log.debug("updateString: {}, {}", columnIndex, x);
         if (this.inProxyMode) {
             super.updateString(columnIndex, x);
             return;
@@ -802,6 +879,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBytes(int columnIndex, byte[] x) throws SQLException {
+        log.debug("updateBytes: {}, <byte[]>", columnIndex);
         if (this.inProxyMode) {
             super.updateBytes(columnIndex, x);
             return;
@@ -811,6 +889,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateDate(int columnIndex, Date x) throws SQLException {
+        log.debug("updateDate: {}, {}", columnIndex, x);
         if (this.inProxyMode) {
             super.updateDate(columnIndex, x);
             return;
@@ -820,6 +899,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateTime(int columnIndex, Time x) throws SQLException {
+        log.debug("updateTime: {}, {}", columnIndex, x);
         if (this.inProxyMode) {
             super.updateTime(columnIndex, x);
             return;
@@ -829,6 +909,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateTimestamp(int columnIndex, Timestamp x) throws SQLException {
+        log.debug("updateTimestamp: {}, {}", columnIndex, x);
         if (this.inProxyMode) {
             super.updateTimestamp(columnIndex, x);
             return;
@@ -838,6 +919,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateAsciiStream(int columnIndex, InputStream x, int length) throws SQLException {
+        log.debug("updateAsciiStream: {}, <InputStream>, {}", columnIndex, length);
         if (this.inProxyMode) {
             super.updateAsciiStream(columnIndex, x, length);
             return;
@@ -847,6 +929,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBinaryStream(int columnIndex, InputStream x, int length) throws SQLException {
+        log.debug("updateBinaryStream: {}, <InputStream>, {}", columnIndex, length);
         if (this.inProxyMode) {
             super.updateBinaryStream(columnIndex, x, length);
             return;
@@ -856,6 +939,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateCharacterStream(int columnIndex, Reader x, int length) throws SQLException {
+        log.debug("updateCharacterStream: {}, <Reader>, {}", columnIndex, length);
         if (this.inProxyMode) {
             super.updateCharacterStream(columnIndex, x, length);
             return;
@@ -865,6 +949,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateObject(int columnIndex, Object x, int scaleOrLength) throws SQLException {
+        log.debug("updateObject: {}, {}, {}", columnIndex, x, scaleOrLength);
         if (this.inProxyMode) {
             super.updateObject(columnIndex, x, scaleOrLength);
             return;
@@ -874,6 +959,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateObject(int columnIndex, Object x) throws SQLException {
+        log.debug("updateObject: {}, {}", columnIndex, x);
         if (this.inProxyMode) {
             super.updateObject(columnIndex, x);
             return;
@@ -883,6 +969,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateNull(String columnLabel) throws SQLException {
+        log.debug("updateNull: {}", columnLabel);
         if (this.inProxyMode) {
             super.updateNull(columnLabel);
             return;
@@ -892,6 +979,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBoolean(String columnLabel, boolean x) throws SQLException {
+        log.debug("updateBoolean: {}, {}", columnLabel, x);
         if (this.inProxyMode) {
             super.updateBoolean(columnLabel, x);
             return;
@@ -901,6 +989,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateByte(String columnLabel, byte x) throws SQLException {
+        log.debug("updateByte: {}, {}", columnLabel, x);
         if (this.inProxyMode) {
             super.updateByte(columnLabel, x);
             return;
@@ -910,6 +999,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateShort(String columnLabel, short x) throws SQLException {
+        log.debug("updateShort: {}, {}", columnLabel, x);
         if (this.inProxyMode) {
             super.updateShort(columnLabel, x);
             return;
@@ -919,6 +1009,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateInt(String columnLabel, int x) throws SQLException {
+        log.debug("updateInt: {}, {}", columnLabel, x);
         if (this.inProxyMode) {
             super.updateInt(columnLabel, x);
             return;
@@ -928,6 +1019,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateLong(String columnLabel, long x) throws SQLException {
+        log.debug("updateLong: {}, {}", columnLabel, x);
         if (this.inProxyMode) {
             super.updateLong(columnLabel, x);
             return;
@@ -937,6 +1029,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateFloat(String columnLabel, float x) throws SQLException {
+        log.debug("updateFloat: {}, {}", columnLabel, x);
         if (this.inProxyMode) {
             super.updateFloat(columnLabel, x);
             return;
@@ -946,6 +1039,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateDouble(String columnLabel, double x) throws SQLException {
+        log.debug("updateDouble: {}, {}", columnLabel, x);
         if (this.inProxyMode) {
             super.updateDouble(columnLabel, x);
             return;
@@ -955,6 +1049,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBigDecimal(String columnLabel, BigDecimal x) throws SQLException {
+        log.debug("updateBigDecimal: {}, {}", columnLabel, x);
         if (this.inProxyMode) {
             super.updateBigDecimal(columnLabel, x);
             return;
@@ -964,6 +1059,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateString(String columnLabel, String x) throws SQLException {
+        log.debug("updateString: {}, {}", columnLabel, x);
         if (this.inProxyMode) {
             super.updateString(columnLabel, x);
             return;
@@ -973,6 +1069,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBytes(String columnLabel, byte[] x) throws SQLException {
+        log.debug("updateBytes: {}, <byte[]>", columnLabel);
         if (this.inProxyMode) {
             super.updateBytes(columnLabel, x);
             return;
@@ -982,6 +1079,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateDate(String columnLabel, Date x) throws SQLException {
+        log.debug("updateDate: {}, {}", columnLabel, x);
         if (this.inProxyMode) {
             super.updateDate(columnLabel, x);
             return;
@@ -991,6 +1089,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateTime(String columnLabel, Time x) throws SQLException {
+        log.debug("updateTime: {}, {}", columnLabel, x);
         if (this.inProxyMode) {
             super.updateTime(columnLabel, x);
             return;
@@ -1000,6 +1099,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateTimestamp(String columnLabel, Timestamp x) throws SQLException {
+        log.debug("updateTimestamp: {}, {}", columnLabel, x);
         if (this.inProxyMode) {
             super.updateTimestamp(columnLabel, x);
             return;
@@ -1009,6 +1109,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateAsciiStream(String columnLabel, InputStream x, int length) throws SQLException {
+        log.debug("updateAsciiStream: {}, <InputStream>, {}", columnLabel, length);
         if (this.inProxyMode) {
             super.updateAsciiStream(columnLabel, x, length);
             return;
@@ -1018,6 +1119,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBinaryStream(String columnLabel, InputStream x, int length) throws SQLException {
+        log.debug("updateBinaryStream: {}, <InputStream>, {}", columnLabel, length);
         if (this.inProxyMode) {
             super.updateBinaryStream(columnLabel, x, length);
             return;
@@ -1027,6 +1129,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateCharacterStream(String columnLabel, Reader reader, int length) throws SQLException {
+        log.debug("updateCharacterStream: {}, <Reader>, {}", columnLabel, length);
         if (this.inProxyMode) {
             super.updateCharacterStream(columnLabel, reader, length);
             return;
@@ -1036,6 +1139,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateObject(String columnLabel, Object x, int scaleOrLength) throws SQLException {
+        log.debug("updateObject: {}, {}, {}", columnLabel, x, scaleOrLength);
         if (this.inProxyMode) {
             super.updateObject(columnLabel, x, scaleOrLength);
             return;
@@ -1045,6 +1149,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateObject(String columnLabel, Object x) throws SQLException {
+        log.debug("updateObject: {}, {}", columnLabel, x);
         if (this.inProxyMode) {
             super.updateObject(columnLabel, x);
             return;
@@ -1054,6 +1159,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void insertRow() throws SQLException {
+        log.debug("insertRow called");
         if (this.inProxyMode) {
             super.insertRow();
             return;
@@ -1063,6 +1169,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateRow() throws SQLException {
+        log.debug("updateRow called");
         if (this.inProxyMode) {
             super.updateRow();
             return;
@@ -1072,6 +1179,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void deleteRow() throws SQLException {
+        log.debug("deleteRow called");
         if (this.inProxyMode) {
             super.deleteRow();
             return;
@@ -1081,6 +1189,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void refreshRow() throws SQLException {
+        log.debug("refreshRow called");
         if (this.inProxyMode) {
             super.refreshRow();
             return;
@@ -1090,6 +1199,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void cancelRowUpdates() throws SQLException {
+        log.debug("cancelRowUpdates called");
         if (this.inProxyMode) {
             super.cancelRowUpdates();
             return;
@@ -1099,18 +1209,21 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void moveToInsertRow() throws SQLException {
+        log.debug("moveToInsertRow called");
         super.moveToInsertRow();
         this.inProxyMode = true;
     }
 
     @Override
     public void moveToCurrentRow() throws SQLException {
+        log.debug("moveToCurrentRow called");
         super.moveToCurrentRow();
         this.inProxyMode = true;
     }
 
     @Override
     public java.sql.Statement getStatement() throws SQLException {
+        log.debug("getStatement called");
         if (this.inProxyMode) {
             return super.getStatement();
         }
@@ -1119,6 +1232,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Object getObject(int columnIndex, Map<String, Class<?>> map) throws SQLException {
+        log.debug("getObject: {}, <Map>", columnIndex);
         if (this.inProxyMode) {
             return super.getObject(columnIndex, map);
         }
@@ -1128,6 +1242,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Ref getRef(int columnIndex) throws SQLException {
+        log.debug("getRef: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getRef(columnIndex);
         }
@@ -1137,6 +1252,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Blob getBlob(int columnIndex) throws SQLException {
+        log.debug("getBlob: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getBlob(columnIndex);
         }
@@ -1155,6 +1271,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Clob getClob(int columnIndex) throws SQLException {
+        log.debug("getClob: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getClob(columnIndex);
         }
@@ -1173,6 +1290,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Array getArray(int columnIndex) throws SQLException {
+        log.debug("getArray: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getArray(columnIndex);
         }
@@ -1182,6 +1300,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Object getObject(String columnLabel, Map<String, Class<?>> map) throws SQLException {
+        log.debug("getObject: {}, <Map>", columnLabel);
         if (this.inProxyMode) {
             return super.getObject(columnLabel, map);
         }
@@ -1191,6 +1310,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Ref getRef(String columnLabel) throws SQLException {
+        log.debug("getRef: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getRef(columnLabel);
         }
@@ -1200,6 +1320,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Blob getBlob(String columnLabel) throws SQLException {
+        log.debug("getBlob: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getBlob(columnLabel);
         }
@@ -1217,6 +1338,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Clob getClob(String columnLabel) throws SQLException {
+        log.debug("getClob: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getClob(columnLabel);
         }
@@ -1226,6 +1348,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Array getArray(String columnLabel) throws SQLException {
+        log.debug("getArray: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getArray(columnLabel);
         }
@@ -1235,6 +1358,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Date getDate(int columnIndex, Calendar cal) throws SQLException {
+        log.debug("getDate: {}, <Calendar>", columnIndex);
         if (this.inProxyMode) {
             return super.getDate(columnIndex, cal);
         }
@@ -1244,6 +1368,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Date getDate(String columnLabel, Calendar cal) throws SQLException {
+        log.debug("getDate: {}, <Calendar>", columnLabel);
         if (this.inProxyMode) {
             return super.getDate(columnLabel, cal);
         }
@@ -1253,6 +1378,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Time getTime(int columnIndex, Calendar cal) throws SQLException {
+        log.debug("getTime: {}, <Calendar>", columnIndex);
         if (this.inProxyMode) {
             return super.getTime(columnIndex, cal);
         }
@@ -1262,6 +1388,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Time getTime(String columnLabel, Calendar cal) throws SQLException {
+        log.debug("getTime: {}, <Calendar>", columnLabel);
         if (this.inProxyMode) {
             return super.getTime(columnLabel, cal);
         }
@@ -1271,6 +1398,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Timestamp getTimestamp(int columnIndex, Calendar cal) throws SQLException {
+        log.debug("getTimestamp: {}, <Calendar>", columnIndex);
         if (this.inProxyMode) {
             return super.getTimestamp(columnIndex, cal);
         }
@@ -1280,6 +1408,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Timestamp getTimestamp(String columnLabel, Calendar cal) throws SQLException {
+        log.debug("getTimestamp: {}, <Calendar>", columnLabel);
         if (this.inProxyMode) {
             return super.getTimestamp(columnLabel, cal);
         }
@@ -1289,6 +1418,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public URL getURL(int columnIndex) throws SQLException {
+        log.debug("getURL: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getURL(columnIndex);
         }
@@ -1298,6 +1428,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public URL getURL(String columnLabel) throws SQLException {
+        log.debug("getURL: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getURL(columnLabel);
         }
@@ -1307,6 +1438,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateRef(int columnIndex, Ref x) throws SQLException {
+        log.debug("updateRef: {}, {}", columnIndex, x);
         if (this.inProxyMode) {
             super.updateRef(columnIndex, x);
             return;
@@ -1316,6 +1448,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateRef(String columnLabel, Ref x) throws SQLException {
+        log.debug("updateRef: {}, {}", columnLabel, x);
         if (this.inProxyMode) {
             super.updateRef(columnLabel, x);
             return;
@@ -1325,6 +1458,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBlob(int columnIndex, Blob x) throws SQLException {
+        log.debug("updateBlob: {}, <Blob>", columnIndex);
         if (this.inProxyMode) {
             super.updateBlob(columnIndex, x);
             return;
@@ -1334,6 +1468,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBlob(String columnLabel, Blob x) throws SQLException {
+        log.debug("updateBlob: {}, <Blob>", columnLabel);
         if (this.inProxyMode) {
             super.updateBlob(columnLabel, x);
             return;
@@ -1343,6 +1478,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateClob(int columnIndex, Clob x) throws SQLException {
+        log.debug("updateClob: {}, <Clob>", columnIndex);
         if (this.inProxyMode) {
             super.updateClob(columnIndex, x);
             return;
@@ -1352,6 +1488,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateClob(String columnLabel, Clob x) throws SQLException {
+        log.debug("updateClob: {}, <Clob>", columnLabel);
         if (this.inProxyMode) {
             super.updateClob(columnLabel, x);
             return;
@@ -1361,6 +1498,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateArray(int columnIndex, Array x) throws SQLException {
+        log.debug("updateArray: {}, <Array>", columnIndex);
         if (this.inProxyMode) {
             super.updateArray(columnIndex, x);
             return;
@@ -1370,6 +1508,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateArray(String columnLabel, Array x) throws SQLException {
+        log.debug("updateArray: {}, <Array>", columnLabel);
         if (this.inProxyMode) {
             super.updateArray(columnLabel, x);
             return;
@@ -1379,6 +1518,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public RowId getRowId(int columnIndex) throws SQLException {
+        log.debug("getRowId: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getRowId(columnIndex);
         }
@@ -1388,6 +1528,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public RowId getRowId(String columnLabel) throws SQLException {
+        log.debug("getRowId: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getRowId(columnLabel);
         }
@@ -1397,6 +1538,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateRowId(int columnIndex, RowId x) throws SQLException {
+        log.debug("updateRowId: {}, <RowId>", columnIndex);
         if (this.inProxyMode) {
             super.updateRowId(columnIndex, x);
             return;
@@ -1406,6 +1548,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateRowId(String columnLabel, RowId x) throws SQLException {
+        log.debug("updateRowId: {}, <RowId>", columnLabel);
         if (this.inProxyMode) {
             super.updateRowId(columnLabel, x);
             return;
@@ -1415,6 +1558,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public int getHoldability() throws SQLException {
+        log.debug("getHoldability called");
         if (this.inProxyMode) {
             return super.getHoldability();
         }
@@ -1423,6 +1567,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public boolean isClosed() throws SQLException {
+        log.debug("isClosed called");
         if (this.inProxyMode) {
             return super.isClosed();
         }
@@ -1431,6 +1576,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateNString(int columnIndex, String nString) throws SQLException {
+        log.debug("updateNString: {}, {}", columnIndex, nString);
         if (this.inProxyMode) {
             super.updateNString(columnIndex, nString);
             return;
@@ -1440,6 +1586,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateNString(String columnLabel, String nString) throws SQLException {
+        log.debug("updateNString: {}, {}", columnLabel, nString);
         if (this.inProxyMode) {
             super.updateNString(columnLabel, nString);
             return;
@@ -1449,6 +1596,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateNClob(int columnIndex, NClob nClob) throws SQLException {
+        log.debug("updateNClob: {}, <NClob>", columnIndex);
         if (this.inProxyMode) {
             super.updateNClob(columnIndex, nClob);
             return;
@@ -1458,6 +1606,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateNClob(String columnLabel, NClob nClob) throws SQLException {
+        log.debug("updateNClob: {}, <NClob>", columnLabel);
         if (this.inProxyMode) {
             super.updateNClob(columnLabel, nClob);
             return;
@@ -1467,6 +1616,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public NClob getNClob(int columnIndex) throws SQLException {
+        log.debug("getNClob: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getNClob(columnIndex);
         }
@@ -1476,6 +1626,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public NClob getNClob(String columnLabel) throws SQLException {
+        log.debug("getNClob: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getNClob(columnLabel);
         }
@@ -1485,6 +1636,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public SQLXML getSQLXML(int columnIndex) throws SQLException {
+        log.debug("getSQLXML: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getSQLXML(columnIndex);
         }
@@ -1494,6 +1646,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public SQLXML getSQLXML(String columnLabel) throws SQLException {
+        log.debug("getSQLXML: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getSQLXML(columnLabel);
         }
@@ -1503,6 +1656,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateSQLXML(int columnIndex, SQLXML xmlObject) throws SQLException {
+        log.debug("updateSQLXML: {}, <SQLXML>", columnIndex);
         if (this.inProxyMode) {
             super.updateSQLXML(columnIndex, xmlObject);
             return;
@@ -1512,6 +1666,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateSQLXML(String columnLabel, SQLXML xmlObject) throws SQLException {
+        log.debug("updateSQLXML: {}, <SQLXML>", columnLabel);
         if (this.inProxyMode) {
             super.updateSQLXML(columnLabel, xmlObject);
             return;
@@ -1521,6 +1676,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public String getNString(int columnIndex) throws SQLException {
+        log.debug("getNString: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getNString(columnIndex);
         }
@@ -1530,6 +1686,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public String getNString(String columnLabel) throws SQLException {
+        log.debug("getNString: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getNString(columnLabel);
         }
@@ -1539,6 +1696,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Reader getNCharacterStream(int columnIndex) throws SQLException {
+        log.debug("getNCharacterStream: {}", columnIndex);
         if (this.inProxyMode) {
             return super.getNCharacterStream(columnIndex);
         }
@@ -1548,6 +1706,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public Reader getNCharacterStream(String columnLabel) throws SQLException {
+        log.debug("getNCharacterStream: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getNCharacterStream(columnLabel);
         }
@@ -1557,6 +1716,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateNCharacterStream(int columnIndex, Reader x, long length) throws SQLException {
+        log.debug("updateNCharacterStream: {}, <Reader>, {}", columnIndex, length);
         if (this.inProxyMode) {
             super.updateNCharacterStream(columnIndex, x, length);
             return;
@@ -1566,6 +1726,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateNCharacterStream(String columnLabel, Reader reader, long length) throws SQLException {
+        log.debug("updateNCharacterStream: {}, <Reader>, {}", columnLabel, length);
         if (this.inProxyMode) {
             super.updateNCharacterStream(columnLabel, reader, length);
             return;
@@ -1575,6 +1736,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateAsciiStream(int columnIndex, InputStream x, long length) throws SQLException {
+        log.debug("updateAsciiStream: {}, <InputStream>, {}", columnIndex, length);
         if (this.inProxyMode) {
             super.updateAsciiStream(columnIndex, x, length);
             return;
@@ -1584,6 +1746,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBinaryStream(int columnIndex, InputStream x, long length) throws SQLException {
+        log.debug("updateBinaryStream: {}, <InputStream>, {}", columnIndex, length);
         if (this.inProxyMode) {
             super.updateBinaryStream(columnIndex, x, length);
             return;
@@ -1593,6 +1756,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateCharacterStream(int columnIndex, Reader x, long length) throws SQLException {
+        log.debug("updateCharacterStream: {}, <Reader>, {}", columnIndex, length);
         if (this.inProxyMode) {
             super.updateCharacterStream(columnIndex, x, length);
             return;
@@ -1602,6 +1766,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateAsciiStream(String columnLabel, InputStream x, long length) throws SQLException {
+        log.debug("updateAsciiStream: {}, <InputStream>, {}", columnLabel, length);
         if (this.inProxyMode) {
             super.updateAsciiStream(columnLabel, x, length);
             return;
@@ -1611,6 +1776,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBinaryStream(String columnLabel, InputStream x, long length) throws SQLException {
+        log.debug("updateBinaryStream: {}, <InputStream>, {}", columnLabel, length);
         if (this.inProxyMode) {
             super.updateBinaryStream(columnLabel, x, length);
             return;
@@ -1620,6 +1786,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateCharacterStream(String columnLabel, Reader reader, long length) throws SQLException {
+        log.debug("updateCharacterStream: {}, <Reader>, {}", columnLabel, length);
         if (this.inProxyMode) {
             super.updateCharacterStream(columnLabel, reader, length);
             return;
@@ -1629,6 +1796,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBlob(int columnIndex, InputStream inputStream, long length) throws SQLException {
+        log.debug("updateBlob: {}, <InputStream>, {}", columnIndex, length);
         if (this.inProxyMode) {
             super.updateBlob(columnIndex, inputStream, length);
             return;
@@ -1638,6 +1806,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBlob(String columnLabel, InputStream inputStream, long length) throws SQLException {
+        log.debug("updateBlob: {}, <InputStream>, {}", columnLabel, length);
         if (this.inProxyMode) {
             super.updateBlob(columnLabel, inputStream, length);
             return;
@@ -1647,6 +1816,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateClob(int columnIndex, Reader reader, long length) throws SQLException {
+        log.debug("updateClob: {}, <Reader>, {}", columnIndex, length);
         if (this.inProxyMode) {
             super.updateClob(columnIndex, reader, length);
             return;
@@ -1656,6 +1826,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateClob(String columnLabel, Reader reader, long length) throws SQLException {
+        log.debug("updateClob: {}, <Reader>, {}", columnLabel, length);
         if (this.inProxyMode) {
             super.updateClob(columnLabel, reader, length);
             return;
@@ -1665,6 +1836,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateNClob(int columnIndex, Reader reader, long length) throws SQLException {
+        log.debug("updateNClob: {}, <Reader>, {}", columnIndex, length);
         if (this.inProxyMode) {
             super.updateNClob(columnIndex, reader, length);
             return;
@@ -1674,6 +1846,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateNClob(String columnLabel, Reader reader, long length) throws SQLException {
+        log.debug("updateNClob: {}, <Reader>, {}", columnLabel, length);
         if (this.inProxyMode) {
             super.updateNClob(columnLabel, reader, length);
             return;
@@ -1683,6 +1856,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateNCharacterStream(int columnIndex, Reader x) throws SQLException {
+        log.debug("updateNCharacterStream: {}, <Reader>", columnIndex);
         if (this.inProxyMode) {
             super.updateNCharacterStream(columnIndex, x);
             return;
@@ -1692,6 +1866,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateNCharacterStream(String columnLabel, Reader reader) throws SQLException {
+        log.debug("updateNCharacterStream: {}, <Reader>", columnLabel);
         if (this.inProxyMode) {
             super.updateNCharacterStream(columnLabel, reader);
             return;
@@ -1701,6 +1876,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateAsciiStream(int columnIndex, InputStream x) throws SQLException {
+        log.debug("updateAsciiStream: {}, <InputStream>", columnIndex);
         if (this.inProxyMode) {
             super.updateAsciiStream(columnIndex, x);
             return;
@@ -1710,6 +1886,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBinaryStream(int columnIndex, InputStream x) throws SQLException {
+        log.debug("updateBinaryStream: {}, <InputStream>", columnIndex);
         if (this.inProxyMode) {
             super.updateBinaryStream(columnIndex, x);
             return;
@@ -1719,6 +1896,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateCharacterStream(int columnIndex, Reader x) throws SQLException {
+        log.debug("updateCharacterStream: {}, <Reader>", columnIndex);
         if (this.inProxyMode) {
             super.updateCharacterStream(columnIndex, x);
             return;
@@ -1728,6 +1906,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateAsciiStream(String columnLabel, InputStream x) throws SQLException {
+        log.debug("updateAsciiStream: {}, <InputStream>", columnLabel);
         if (this.inProxyMode) {
             super.updateAsciiStream(columnLabel, x);
             return;
@@ -1737,6 +1916,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBinaryStream(String columnLabel, InputStream x) throws SQLException {
+        log.debug("updateBinaryStream: {}, <InputStream>", columnLabel);
         if (this.inProxyMode) {
             super.updateBinaryStream(columnLabel, x);
             return;
@@ -1746,6 +1926,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateCharacterStream(String columnLabel, Reader reader) throws SQLException {
+        log.debug("updateCharacterStream: {}, <Reader>", columnLabel);
         if (this.inProxyMode) {
             super.updateCharacterStream(columnLabel, reader);
             return;
@@ -1755,6 +1936,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBlob(int columnIndex, InputStream inputStream) throws SQLException {
+        log.debug("updateBlob: {}, <InputStream>", columnIndex);
         if (this.inProxyMode) {
             super.updateBlob(columnIndex, inputStream);
             return;
@@ -1764,6 +1946,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateBlob(String columnLabel, InputStream inputStream) throws SQLException {
+        log.debug("updateBlob: {}, <InputStream>", columnLabel);
         if (this.inProxyMode) {
             super.updateBlob(columnLabel, inputStream);
             return;
@@ -1773,6 +1956,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateClob(int columnIndex, Reader reader) throws SQLException {
+        log.debug("updateClob: {}, <Reader>", columnIndex);
         //TODO review if we could fall back to proxy when these update methods are called, would have to reposition the curor to the current row being read before doing the update though
         if (this.inProxyMode) {
             super.updateClob(columnIndex, reader);
@@ -1783,6 +1967,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateClob(String columnLabel, Reader reader) throws SQLException {
+        log.debug("updateClob: {}, <Reader>", columnLabel);
         if (this.inProxyMode) {
             super.updateClob(columnLabel, reader);
             return;
@@ -1792,6 +1977,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateNClob(int columnIndex, Reader reader) throws SQLException {
+        log.debug("updateNClob: {}, <Reader>", columnIndex);
         if (this.inProxyMode) {
             super.updateNClob(columnIndex, reader);
             return;
@@ -1801,6 +1987,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public void updateNClob(String columnLabel, Reader reader) throws SQLException {
+        log.debug("updateNClob: {}, <Reader>", columnLabel);
         if (this.inProxyMode) {
             super.updateNClob(columnLabel, reader);
             return;
@@ -1810,6 +1997,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
+        log.debug("getObject: {}, {}", columnIndex, type);
         if (this.inProxyMode) {
             return super.getObject(columnIndex, type);
         }
@@ -1819,6 +2007,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
+        log.debug("getObject: {}, {}", columnLabel, type);
         if (this.inProxyMode) {
             return super.getObject(columnLabel, type);
         }
@@ -1828,11 +2017,13 @@ public class ResultSet extends RemoteProxyResultSet {
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
+        log.debug("unwrap: {}", iface);
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        log.debug("isWrapperFor: {}", iface);
         if (this.inProxyMode) {
             return super.isWrapperFor(iface);
         }

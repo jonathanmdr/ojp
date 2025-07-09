@@ -6,6 +6,7 @@ import com.openjdbcproxy.grpc.LobReference;
 import com.openjdbcproxy.grpc.LobType;
 import io.grpc.StatusRuntimeException;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.openjdbcproxy.grpc.client.StatementService;
 
 import java.io.IOException;
@@ -22,13 +23,16 @@ import java.util.concurrent.ExecutionException;
 import static org.openjdbcproxy.constants.CommonConstants.MAX_LOB_DATA_BLOCK_SIZE;
 import static org.openjdbcproxy.grpc.client.GrpcExceptionHandler.handle;
 
+@Slf4j
 public class Lob {
+
     protected final Connection connection;
     protected final LobService lobService;
     protected final StatementService statementService;
     protected final SettableFuture<LobReference> lobReference = SettableFuture.create();
 
     public Lob(Connection connection, LobService lobService, StatementService statementService, LobReference lobReference) {
+        log.debug("Lob constructor called");
         this.connection = connection;
         this.lobService = lobService;
         this.statementService = statementService;
@@ -38,20 +42,25 @@ public class Lob {
     }
 
     public String getUUID() {
+        log.debug("getUUID called");
         try {
             return (this.lobReference != null) ? this.lobReference.get().getUuid() : null;
         } catch (InterruptedException e) {
+            log.error("InterruptedException in getUUID", e);
             throw new RuntimeException(e);//TODO review
         } catch (ExecutionException e) {
+            log.error("ExecutionException in getUUID", e);
             throw new RuntimeException(e);//TODO review
         }
     }
 
     public long length() throws SQLException {
+        log.debug("length called");
         return 0; //TODO implement
     }
 
     protected OutputStream setBinaryStream(LobType lobType, long pos) {
+        log.debug("setBinaryStream called: {}, {}", lobType, pos);
         try {
             //connect the pipes. Makes the OutputStream written by the caller feed into the InputStream read by the sender.
             PipedInputStream in = new PipedInputStream();
@@ -61,14 +70,17 @@ public class Lob {
                 try {
                     this.lobReference.set(this.lobService.sendBytes(lobType, pos, in));
                 } catch (SQLException e) {
+                    log.error("SQLException in setBinaryStream async - sendBytes", e);
                     throw new RuntimeException(e);
                 }
                 //Refresh Session object.
                 try {
                     this.connection.setSession(this.lobReference.get().getSession());
                 } catch (InterruptedException e) {
+                    log.error("InterruptedException in setBinaryStream async - setSession", e);
                     throw new RuntimeException(e);
                 } catch (ExecutionException e) {
+                    log.error("ExecutionException in setBinaryStream async - setSession", e);
                     throw new RuntimeException(e);
                 }
                 return null;
@@ -76,35 +88,40 @@ public class Lob {
 
             return out;
         } catch (Exception e) {
-            e.printStackTrace();//TODO treat exception
+            log.error("Exception in setBinaryStream", e);
             throw new RuntimeException(e);
         }
     }
 
     protected LobReference sendBinaryStream(LobType lobType, InputStream inputStream, Map<Integer, Object> metadata) {
+        log.debug("sendBinaryStream called: {}, <InputStream>, <metadata>", lobType);
         try {
             try {
                 this.lobReference.set(this.lobService.sendBytes(lobType, 1, inputStream, metadata));
             } catch (SQLException e) {
+                log.error("SQLException in sendBinaryStream - sendBytes", e);
                 throw new RuntimeException(e);
             }
             //Refresh Session object. Will wait until lobReference is set to progress.
             this.connection.setSession(this.lobReference.get().getSession());
             return this.lobReference.get();
         } catch (Exception e) {
-            e.printStackTrace();//TODO treat exception
+            log.error("Exception in sendBinaryStream", e);
             throw new RuntimeException(e);
         }
     }
 
     @SneakyThrows
     protected void haveLobReferenceValidation() throws SQLException {
+        log.debug("haveLobReferenceValidation called");
         if (this.lobReference.get() == null) {
+            log.error("No reference to a LOB object found.");
             throw new SQLException("No reference to a LOB object found.");
         }
     }
 
     protected InputStream getBinaryStream(long pos, long length) throws SQLException {
+        log.debug("getBinaryStream called: {}, {}", pos, length);
         try {
             this.haveLobReferenceValidation();
 
@@ -127,14 +144,17 @@ public class Lob {
                             this.currentBlockInputStream = lobService.parseReceivedBlocks(dataBlocks);
                             currentByte = this.currentBlockInputStream.read();
                         } catch (SQLException e) {
+                            log.error("SQLException in getBinaryStream InputStream.read() - readLob/parseReceivedBlocks", e);
                             throw new RuntimeException(e);
                         } catch (StatusRuntimeException e) {
                             try {
                                 throw handle(e);
                             } catch (SQLException ex) {
+                                log.error("SQLException in handle(StatusRuntimeException)", ex);
                                 throw new RuntimeException(ex);
                             }
                         } catch (Exception e) {
+                            log.error("Exception in getBinaryStream InputStream.read()", e);
                             throw new RuntimeException(e);
                         }
                     }
@@ -152,10 +172,13 @@ public class Lob {
                 }
             };
         } catch (SQLException e) {
+            log.error("SQLException in getBinaryStream", e);
             throw e;
         } catch (StatusRuntimeException e) {
+            log.error("StatusRuntimeException in getBinaryStream", e);
             throw handle(e);
         } catch (Exception e) {
+            log.error("Exception in getBinaryStream", e);
             throw new SQLException("Unable to read all bytes from LOB object: " + e.getMessage(), e);
         }
     }
