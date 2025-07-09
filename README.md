@@ -60,10 +60,35 @@ The ojp-server is a gRPC server that manages a Hikari connection pool and abstra
 
 #### How to start a docker image
 
-> docker run --rm -d -p 1059:1059 rrobetti/ojp:0.0.3-alpha
+> docker run --rm -d -p 1059:1059 rrobetti/ojp:0.0.4-alpha
 
 ### ojp-jdbc-driver
 The ojp-jdbc-driver is an implementation of the JDBC specification. It connects to the ojp-server via the gRPC protocol, sending SQL statements to be executed against the database and reading the responses. The driver works with virtual connections provided by the ojp-server, allowing the application to interact with the database without directly managing real database connections.
+
+Latest version:
+
+         <dependency>
+             <groupId>org.openjdbcproxy</groupId>
+             <artifactId>ojp-jdbc-driver</artifactId>
+             <version>0.0.4-alpha</version>
+         </dependency>
+
+
+#### Disable your connection pool 
+
+##### Spring boot
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+            <exclusions>
+                <!--When using OJP proxied connection pool the local pool needs to be removed -->
+                <exclusion>
+                    <groupId>com.zaxxer</groupId>
+                    <artifactId>HikariCP</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
 ### ojp-grpc-commons
 The ojp-grpc-commons module contains the shared gRPC contracts used between the ojp-server and ojp-jdbc-driver. These contracts define the communication protocol and structure for requests and responses exchanged between the server and the driver.
