@@ -67,7 +67,7 @@ jobs:
           cache: maven
 
       - name: Build (ojp-grpc-commons, ojp-jdbc-driver)
-        run: mvn clean install -pl ojp-grpc-commons,ojp-jdbc-driver -DskipTests
+        run: mvn clean install -pl ojp-grpc-commons,ojp-jdbc-driver -DskipTests -Dgpg.skip=true
 
       - name: Test (ojp-grpc-commons, ojp-jdbc-driver)
         run: mvn test -pl ojp-grpc-commons,ojp-jdbc-driver -Dgpg.skip=true
