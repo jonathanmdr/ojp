@@ -48,7 +48,7 @@ jobs:
           cache: maven
 
       - name: Build (ojp-server)
-        run: mvn clean install -DskipTests
+        run: mvn clean install -DskipTests  -Dgpg.skip=true
 
       - name: Test (ojp-server)
         run: mvn test -pl ojp-server
