@@ -70,4 +70,4 @@ jobs:
         run: mvn clean install -pl ojp-grpc-commons,ojp-jdbc-driver -DskipTests
 
       - name: Test (ojp-grpc-commons, ojp-jdbc-driver)
-        run: mvn test -pl ojp-grpc-commons,ojp-jdbc-driver
+        run: mvn test -pl ojp-grpc-commons,ojp-jdbc-driver -Dgpg.skip=true
