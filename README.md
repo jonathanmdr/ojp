@@ -9,6 +9,8 @@ A JDBC driver and proxy server to decouple applications from relational database
 #### How to replace native JDBC drivers seamlessly?
 #### How to support multiple relational databases at once?
 
+### [Setup docs for: Spring Boot, Quarkus](documents/java-frameworks)
+
 ## High Level Design
 
 ### [Architectural decision records (ADRs)](documents/ADRs)
@@ -74,21 +76,7 @@ Latest version:
          </dependency>
 
 
-#### Disable your connection pool 
-
-##### Spring boot
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-jdbc</artifactId>
-            <exclusions>
-                <!--When using OJP proxied connection pool the local pool needs to be removed -->
-                <exclusion>
-                    <groupId>com.zaxxer</groupId>
-                    <artifactId>HikariCP</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+#### Disable your connection pool
 
 ### ojp-grpc-commons
 The ojp-grpc-commons module contains the shared gRPC contracts used between the ojp-server and ojp-jdbc-driver. These contracts define the communication protocol and structure for requests and responses exchanged between the server and the driver.
