@@ -139,9 +139,9 @@ Optional flags:
 - ✅ Circuit Breaker.
 - ❌ Slow queries segregation.
 - ✅ Docker image implementation.
-- ❌ Support for Spring Boot/Spring Data.
+- ✅ Support for Spring Boot/Spring Data.
 - ❌ Support for Micronaut.
-- ❌ Support for Quarkus.
+- 🕓 Support for Quarkus.
 - ❌ Support for Helidon.
 - ❌ BLOB and CLOB advanced features.
 - ❌ Configurable data sources by user and/or database. 
