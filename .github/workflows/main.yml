@@ -71,3 +71,14 @@ jobs:
 
       - name: Test (ojp-grpc-commons, ojp-jdbc-driver)
         run: mvn test -pl ojp-grpc-commons,ojp-jdbc-driver -Dgpg.skip=true
+
+  notify-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger OJP Framework Integration Repo Workflow
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.INTEGRATION_REPO_PAT }}
+          repository: Open-JDBC-Proxy/ojp-framework-integration
+          event-type: ojp-updated
+          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
