@@ -1,4 +1,4 @@
-# Spring boot
+# Quarkus
 
 To integrate OJP into your Quarkus project follow the steps:
 
