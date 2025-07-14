@@ -9,7 +9,7 @@ A JDBC driver and proxy server to decouple applications from relational database
 #### How to replace native JDBC drivers seamlessly?
 #### How to support multiple relational databases at once?
 
-### [Setup docs for: Spring Boot, Quarkus](documents/java-frameworks)
+### [Setup docs for: Spring Boot, Quarkus and Micronaut](documents/java-frameworks)
 
 ## High Level Design
 

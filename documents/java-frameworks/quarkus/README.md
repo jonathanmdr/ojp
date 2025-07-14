@@ -7,7 +7,7 @@ To integrate OJP into your Quarkus project follow the steps:
          <dependency>
              <groupId>org.openjdbcproxy</groupId>
              <artifactId>ojp-jdbc-driver</artifactId>
-             <version>0.0.4-alpha</version>
+             <version>[TBD]</version>
          </dependency>
 
 ## 2 Disable quarkus default connection pool
