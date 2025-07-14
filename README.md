@@ -128,9 +128,8 @@ Optional flags:
 - ❌ Slow queries segregation.
 - ✅ Docker image implementation.
 - ✅ Support for Spring Boot/Spring Data.
-- ❌ Support for Micronaut.
-- 🕓 Support for Quarkus.
-- ❌ Support for Helidon.
+- ✅ Support for Micronaut.
+- ✅ Support for Quarkus.
 - ❌ BLOB and CLOB advanced features.
 - ❌ Configurable data sources by user and/or database. 
 - ❌ RAFT consensus POC.
@@ -138,7 +137,7 @@ Optional flags:
 
 
 #### Other feature candidates: 
-Query Routing, Sharding, Query Caching, Read/Write Splitting, Multi-Cloud/Distributed Clustering, Authentication Integration, Advanced Security Features, Failover and Automatic Replication Awareness 
+Query Routing, Sharding, Query Caching, Read/Write Splitting, Multi-Cloud/Distributed Clustering, Authentication Integration, Advanced Security Features, Failover and Automatic Replication Awareness, Helidon support.
 
 ✅ - Done
 ❌ - Not started
