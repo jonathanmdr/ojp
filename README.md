@@ -1,6 +1,6 @@
 # OJP - Open JDBC Proxy
 
-A JDBC driver and proxy server to decouple applications from relational database connection management.
+A JDBC Driver and Layer 7 Proxy Server to decouple applications from relational database connection management.
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/wqoejbve8z)
 
