@@ -18,7 +18,7 @@ A JDBC Driver and Layer 7 Proxy Server to decouple applications from relational 
 
 ## High Level Design
 
-<img src="documents/designs/ojp_high_level_desing.gif" alt="OJP High Level Design" />
+<img src="documents/designs/ojp_high_level_design.gif" alt="OJP High Level Design" />
 
 
 * The OJB JDBC driver is used as a replacement for the native JDBC driver(s) previously used with minimum change, the only change required being prefixing the connection URL with ojp_. For example: 
