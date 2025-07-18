@@ -12,7 +12,7 @@ A JDBC Driver and Layer 7 Proxy Server to decouple applications from relational 
 ## Documentation
 
 - [Architectural decision records (ADRs)](documents/ADRs)
-- [Setup for: Spring Boot, Quarkus and Micronaut](documents/java-frameworks)
+- [Get started: Spring Boot, Quarkus and Micronaut](documents/java-frameworks)
 - [Connection Pool Configuration](documents/configuration/CONNECTION_POOL_CONFIG.md)
 - [Telemetry and Observability](documents/telemetry/README.md)
 
