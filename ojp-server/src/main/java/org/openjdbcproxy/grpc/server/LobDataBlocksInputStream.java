@@ -74,7 +74,7 @@ public class LobDataBlocksInputStream extends InputStream {
                 }
             }
             synchronized (this) {
-                LobDataBlock nextBlock = this.blocksReceived.removeFirst();
+                LobDataBlock nextBlock = this.blocksReceived.remove(0);
                 this.currentBlock = nextBlock.getData().toByteArray();
             }
             this.currentIdx = -1;

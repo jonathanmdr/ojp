@@ -65,10 +65,10 @@ public class ConnectionPoolConfigurationTest {
         
         if (properties != null) {
             // If properties file exists in test resources, verify it loads correctly
-            assertEquals("20", properties.getProperty("maximumPoolSize"));
-            assertEquals("8", properties.getProperty("minimumIdle"));
-            assertEquals("false", properties.getProperty("autoCommit"));
-            assertEquals("TestHikariPool-Integration", properties.getProperty("poolName"));
+            assertEquals("20", properties.getProperty("ojp.connection.pool.maximumPoolSize"));
+            assertEquals("8", properties.getProperty("ojp.connection.pool.minimumIdle"));
+            assertEquals("false", properties.getProperty("ojp.connection.pool.autoCommit"));
+            assertEquals("TestHikariPool-Integration", properties.getProperty("ojp.connection.pool.poolName"));
         }
         // If properties is null, that's fine - no properties file found, which is a valid case
     }

@@ -427,19 +427,21 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
 
                     int bytesWritten = 0;
                     switch (this.lobType) {
-                        case LT_BLOB -> {
+                        case LT_BLOB: {
                             Blob blob = sessionManager.getLob(dto.getSession(), this.lobUUID);
                             byte[] byteArrayData = lobDataBlock.getData().toByteArray();
                             bytesWritten = blob.setBytes(lobDataBlock.getPosition(), byteArrayData);
+                            break;
                         }
-                        case LT_CLOB -> {
+                        case LT_CLOB: {
                             Clob clob = sessionManager.getLob(dto.getSession(), this.lobUUID);
                             byte[] byteArrayData = lobDataBlock.getData().toByteArray();
                             Writer writer = clob.setCharacterStream(lobDataBlock.getPosition());
                             writer.write(new String(byteArrayData, StandardCharsets.UTF_8).toCharArray());
                             bytesWritten = byteArrayData.length;
+                            break;
                         }
-                        case LT_BINARY_STREAM -> {
+                        case LT_BINARY_STREAM: {
                             if (this.lobUUID == null) {
                                 byte[] metadataBytes = lobDataBlock.getMetadata().toByteArray();
                                 if (metadataBytes == null && metadataBytes.length < 1) {
@@ -467,6 +469,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                             } else {
                                 lobDataBlocksInputStream.addBlock(lobDataBlock);
                             }
+                            break;
                         }
                     }
                     this.countBytesWritten.addAndGet(bytesWritten);
@@ -621,7 +624,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         LobReference lobReference = request.getLobReference();
         ReadLobContext.ReadLobContextBuilder readLobContextBuilder = ReadLobContext.builder();
         switch (request.getLobReference().getLobType()) {
-            case LobType.LT_BLOB -> {
+            case LT_BLOB: {
                 Blob blob = this.sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
                 long lobLength = blob.length();
                 readLobContextBuilder.lobLength(Optional.of(lobLength));
@@ -629,12 +632,14 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         (int) (lobLength - request.getPosition() + 1);
                 readLobContextBuilder.availableLength(Optional.of(availableLength));
                 inputStream = blob.getBinaryStream(request.getPosition(), availableLength);
+                break;
             }
-            case LobType.LT_BINARY_STREAM -> {
+            case LT_BINARY_STREAM: {
                 readLobContextBuilder.lobLength(Optional.empty());
                 readLobContextBuilder.availableLength(Optional.empty());
                 inputStream = sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
                 inputStream.reset();//Might be a second read of the same stream, this guarantees that the position is at the start.
+                break;
             }
         }
         readLobContextBuilder.inputStream(inputStream);
@@ -770,10 +775,15 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
 
             CallResourceResponse.Builder responseBuilder = CallResourceResponse.newBuilder();
 
-            Object resource = switch (request.getResourceType()) {
-                case RES_RESULT_SET -> sessionManager.getResultSet(request.getSession(), request.getResourceUUID());
-                case RES_LOB -> sessionManager.getLob(request.getSession(), request.getResourceUUID());
-                case RES_STATEMENT -> {
+            Object resource;
+            switch (request.getResourceType()) {
+                case RES_RESULT_SET:
+                    resource = sessionManager.getResultSet(request.getSession(), request.getResourceUUID());
+                    break;
+                case RES_LOB:
+                    resource = sessionManager.getLob(request.getSession(), request.getResourceUUID());
+                    break;
+                case RES_STATEMENT: {
                     ConnectionSessionDTO csDto = sessionConnection(request.getSession(), true);
                     responseBuilder.setSession(csDto.getSession());
                     Statement statement = null;
@@ -784,9 +794,10 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         String uuid = sessionManager.registerStatement(csDto.getSession(), statement);
                         responseBuilder.setResourceUUID(uuid);
                     }
-                    yield statement;
+                    resource = statement;
+                    break;
                 }
-                case RES_PREPARED_STATEMENT -> {
+                case RES_PREPARED_STATEMENT: {
                     ConnectionSessionDTO csDto = sessionConnection(request.getSession(), true);
                     responseBuilder.setSession(csDto.getSession());
                     PreparedStatement ps = null;
@@ -801,18 +812,24 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         String uuid = sessionManager.registerPreparedStatement(csDto.getSession(), ps);
                         responseBuilder.setResourceUUID(uuid);
                     }
-                    yield ps;
+                    resource = ps;
+                    break;
                 }
-                case RES_CALLABLE_STATEMENT ->
-                        sessionManager.getCallableStatement(request.getSession(), request.getResourceUUID());
-                case RES_CONNECTION -> {
+                case RES_CALLABLE_STATEMENT:
+                    resource = sessionManager.getCallableStatement(request.getSession(), request.getResourceUUID());
+                    break;
+                case RES_CONNECTION: {
                     ConnectionSessionDTO csDto = sessionConnection(request.getSession(), true);
                     responseBuilder.setSession(csDto.getSession());
-                    yield csDto.getConnection();
+                    resource = csDto.getConnection();
+                    break;
                 }
-                case RES_SAVEPOINT -> sessionManager.getAttr(request.getSession(), request.getResourceUUID());
-                default -> throw new RuntimeException("Resource type invalid");
-            };
+                case RES_SAVEPOINT:
+                    resource = sessionManager.getAttr(request.getSession(), request.getResourceUUID());
+                    break;
+                default:
+                    throw new RuntimeException("Resource type invalid");
+            }
 
             if (responseBuilder.getSession() == null || StringUtils.isBlank(responseBuilder.getSession().getSessionUUID())) {
                 responseBuilder.setSession(request.getSession());
@@ -835,16 +852,19 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             Object resultFirstLevel = null;
             if (params != null && params.length > 0) {
                 resultFirstLevel = method.invoke(resource, paramsReceived.toArray());
-                if (resultFirstLevel instanceof CallableStatement cs) {
+                if (resultFirstLevel instanceof CallableStatement) {
+                    CallableStatement cs = (CallableStatement) resultFirstLevel;
                     resultFirstLevel = this.sessionManager.registerCallableStatement(responseBuilder.getSession(), cs);
                 }
             } else {
                 resultFirstLevel = method.invoke(resource);
-                if (resultFirstLevel instanceof Savepoint sp) {
+                if (resultFirstLevel instanceof Savepoint) {
+                    Savepoint sp = (Savepoint) resultFirstLevel;
                     String uuid = UUID.randomUUID().toString();
                     resultFirstLevel = uuid;
                     this.sessionManager.registerAttr(responseBuilder.getSession(), uuid, sp);
-                } else if (resultFirstLevel instanceof ResultSet rs) {
+                } else if (resultFirstLevel instanceof ResultSet) {
+                    ResultSet rs = (ResultSet) resultFirstLevel;
                     resultFirstLevel = this.sessionManager.registerResultSet(responseBuilder.getSession(), rs);
                 }
             }
@@ -863,7 +883,8 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 } else {
                     resultSecondLevel = methodNext.invoke(resultFirstLevel);
                 }
-                if (resultSecondLevel instanceof ResultSet rs) {
+                if (resultSecondLevel instanceof ResultSet) {
+                    ResultSet rs = (ResultSet) resultSecondLevel;
                     resultSecondLevel = this.sessionManager.registerResultSet(responseBuilder.getSession(), rs);
                 }
                 responseBuilder.setValues(ByteString.copyFrom(serialize(resultSecondLevel)));
@@ -876,7 +897,8 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         } catch (SQLException se) {
             sendSQLExceptionMetadata(se, responseObserver);
         } catch (InvocationTargetException e) {
-            if (e.getTargetException() instanceof SQLException sqlException) {
+            if (e.getTargetException() instanceof SQLException) {
+                SQLException sqlException = (SQLException) e.getTargetException();
                 sendSQLExceptionMetadata(sqlException, responseObserver);
             } else {
                 sendSQLExceptionMetadata(new SQLException("Unable to call resource: " + e.getTargetException().getMessage()),
@@ -927,56 +949,154 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
     }
 
     private String methodName(TargetCall target) throws SQLException {
-        String prefix = switch (target.getCallType()) {
-            case CALL_IS -> "is";
-            case CALL_GET -> "get";
-            case CALL_SET -> "set";
-            case CALL_ALL -> "all";
-            case CALL_NULLS -> "nulls";
-            case CALL_USES -> "uses";
-            case CALL_SUPPORTS -> "supports";
-            case CALL_STORES -> "stores";
-            case CALL_NULL -> "null";
-            case CALL_DOES -> "does";
-            case CALL_DATA -> "data";
-            case CALL_NEXT -> "next";
-            case CALL_CLOSE -> "close";
-            case CALL_WAS -> "was";
-            case CALL_CLEAR -> "clear";
-            case CALL_FIND -> "find";
-            case CALL_BEFORE -> "before";
-            case CALL_AFTER -> "after";
-            case CALL_FIRST -> "first";
-            case CALL_LAST -> "last";
-            case CALL_ABSOLUTE -> "absolute";
-            case CALL_RELATIVE -> "relative";
-            case CALL_PREVIOUS -> "previous";
-            case CALL_ROW -> "row";
-            case CALL_UPDATE -> "update";
-            case CALL_INSERT -> "insert";
-            case CALL_DELETE -> "delete";
-            case CALL_REFRESH -> "refresh";
-            case CALL_CANCEL -> "cancel";
-            case CALL_MOVE -> "move";
-            case CALL_OWN -> "own";
-            case CALL_OTHERS -> "others";
-            case CALL_UPDATES -> "updates";
-            case CALL_DELETES -> "deletes";
-            case CALL_INSERTS -> "inserts";
-            case CALL_LOCATORS -> "locators";
-            case CALL_AUTO -> "auto";
-            case CALL_GENERATED -> "generated";
-            case CALL_RELEASE -> "release";
-            case CALL_NATIVE -> "native";
-            case CALL_PREPARE -> "prepare";
-            case CALL_ROLLBACK -> "rollback";
-            case CALL_ABORT -> "abort";
-            case CALL_EXECUTE -> "execute";
-            case CALL_ADD -> "add";
-            case CALL_ENQUOTE -> "enquote";
-            case CALL_REGISTER -> "register";
-            case UNRECOGNIZED -> throw new SQLException("CALL type not supported.");
-        };
+        String prefix;
+        switch (target.getCallType()) {
+            case CALL_IS:
+                prefix = "is";
+                break;
+            case CALL_GET:
+                prefix = "get";
+                break;
+            case CALL_SET:
+                prefix = "set";
+                break;
+            case CALL_ALL:
+                prefix = "all";
+                break;
+            case CALL_NULLS:
+                prefix = "nulls";
+                break;
+            case CALL_USES:
+                prefix = "uses";
+                break;
+            case CALL_SUPPORTS:
+                prefix = "supports";
+                break;
+            case CALL_STORES:
+                prefix = "stores";
+                break;
+            case CALL_NULL:
+                prefix = "null";
+                break;
+            case CALL_DOES:
+                prefix = "does";
+                break;
+            case CALL_DATA:
+                prefix = "data";
+                break;
+            case CALL_NEXT:
+                prefix = "next";
+                break;
+            case CALL_CLOSE:
+                prefix = "close";
+                break;
+            case CALL_WAS:
+                prefix = "was";
+                break;
+            case CALL_CLEAR:
+                prefix = "clear";
+                break;
+            case CALL_FIND:
+                prefix = "find";
+                break;
+            case CALL_BEFORE:
+                prefix = "before";
+                break;
+            case CALL_AFTER:
+                prefix = "after";
+                break;
+            case CALL_FIRST:
+                prefix = "first";
+                break;
+            case CALL_LAST:
+                prefix = "last";
+                break;
+            case CALL_ABSOLUTE:
+                prefix = "absolute";
+                break;
+            case CALL_RELATIVE:
+                prefix = "relative";
+                break;
+            case CALL_PREVIOUS:
+                prefix = "previous";
+                break;
+            case CALL_ROW:
+                prefix = "row";
+                break;
+            case CALL_UPDATE:
+                prefix = "update";
+                break;
+            case CALL_INSERT:
+                prefix = "insert";
+                break;
+            case CALL_DELETE:
+                prefix = "delete";
+                break;
+            case CALL_REFRESH:
+                prefix = "refresh";
+                break;
+            case CALL_CANCEL:
+                prefix = "cancel";
+                break;
+            case CALL_MOVE:
+                prefix = "move";
+                break;
+            case CALL_OWN:
+                prefix = "own";
+                break;
+            case CALL_OTHERS:
+                prefix = "others";
+                break;
+            case CALL_UPDATES:
+                prefix = "updates";
+                break;
+            case CALL_DELETES:
+                prefix = "deletes";
+                break;
+            case CALL_INSERTS:
+                prefix = "inserts";
+                break;
+            case CALL_LOCATORS:
+                prefix = "locators";
+                break;
+            case CALL_AUTO:
+                prefix = "auto";
+                break;
+            case CALL_GENERATED:
+                prefix = "generated";
+                break;
+            case CALL_RELEASE:
+                prefix = "release";
+                break;
+            case CALL_NATIVE:
+                prefix = "native";
+                break;
+            case CALL_PREPARE:
+                prefix = "prepare";
+                break;
+            case CALL_ROLLBACK:
+                prefix = "rollback";
+                break;
+            case CALL_ABORT:
+                prefix = "abort";
+                break;
+            case CALL_EXECUTE:
+                prefix = "execute";
+                break;
+            case CALL_ADD:
+                prefix = "add";
+                break;
+            case CALL_ENQUOTE:
+                prefix = "enquote";
+                break;
+            case CALL_REGISTER:
+                prefix = "register";
+                break;
+            case UNRECOGNIZED:
+                throw new SQLException("CALL type not supported.");
+            default:
+                throw new SQLException("CALL type not supported.");
+        }
         return prefix + target.getResourceName();
     }
 
@@ -1048,17 +1168,19 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 Object currentValue = null;
                 //Postgres uses type BYTEA which translates to type VARBINARY
                 switch (colType) {
-                    case Types.BLOB -> {
+                    case Types.BLOB: {
                         Blob blob = rs.getBlob(i + 1);
                         currentValue = UUID.randomUUID().toString();
                         this.sessionManager.registerLob(session, blob, currentValue.toString());
+                        break;
                     }
-                    case Types.CLOB -> {
+                    case Types.CLOB: {
                         Clob clob = rs.getClob(i + 1);
                         currentValue = UUID.randomUUID().toString();
                         this.sessionManager.registerLob(session, clob, currentValue.toString());
+                        break;
                     }
-                    case Types.BINARY -> {
+                    case Types.BINARY: {
                         int precision = rs.getMetaData().getPrecision(i + 1);
                         String catalogName = rs.getMetaData().getCatalogName(i + 1);
                         if (precision == 1) { //it is a single byte
@@ -1070,9 +1192,11 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                             currentValue = UUID.randomUUID().toString();
                             this.sessionManager.registerLob(session, inputStream, currentValue.toString());
                         }
+                        break;
                     }
-                    default -> {
+                    default: {
                         currentValue = rs.getObject(i + 1);
+                        break;
                     }
                 }
                 rowValues[i] = currentValue;
@@ -1115,36 +1239,64 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
     private void addParam(SessionInfo session, int idx, PreparedStatement ps, Parameter param) throws SQLException {
         log.info("Adding parameter idx {} type {}", idx, param.getType().toString());
         switch (param.getType()) {
-            case INT -> ps.setInt(idx, (int) param.getValues().getFirst());
-            case DOUBLE -> ps.setDouble(idx, (double) param.getValues().getFirst());
-            case STRING -> ps.setString(idx, (String) param.getValues().getFirst());
-            case LONG -> ps.setLong(idx, (long) param.getValues().getFirst());
-            case BOOLEAN -> ps.setBoolean(idx, (boolean) param.getValues().getFirst());
-            case BIG_DECIMAL -> ps.setBigDecimal(idx, (BigDecimal) param.getValues().getFirst());
-            case FLOAT -> ps.setFloat(idx, (float) param.getValues().getFirst());
-            case BYTES -> ps.setBytes(idx, (byte[]) param.getValues().getFirst());
-            case BYTE ->
-                    ps.setByte(idx, ((byte[]) param.getValues().getFirst())[0]);//Comes as an array of bytes with one element.
-            case DATE -> ps.setDate(idx, (Date) param.getValues().getFirst());
-            case TIME -> ps.setTime(idx, (Time) param.getValues().getFirst());
-            case TIMESTAMP -> ps.setTimestamp(idx, (Timestamp) param.getValues().getFirst());
+            case INT:
+                ps.setInt(idx, (int) param.getValues().get(0));
+                break;
+            case DOUBLE:
+                ps.setDouble(idx, (double) param.getValues().get(0));
+                break;
+            case STRING:
+                ps.setString(idx, (String) param.getValues().get(0));
+                break;
+            case LONG:
+                ps.setLong(idx, (long) param.getValues().get(0));
+                break;
+            case BOOLEAN:
+                ps.setBoolean(idx, (boolean) param.getValues().get(0));
+                break;
+            case BIG_DECIMAL:
+                ps.setBigDecimal(idx, (BigDecimal) param.getValues().get(0));
+                break;
+            case FLOAT:
+                ps.setFloat(idx, (float) param.getValues().get(0));
+                break;
+            case BYTES:
+                ps.setBytes(idx, (byte[]) param.getValues().get(0));
+                break;
+            case BYTE:
+                ps.setByte(idx, ((byte[]) param.getValues().get(0))[0]);//Comes as an array of bytes with one element.
+                break;
+            case DATE:
+                ps.setDate(idx, (Date) param.getValues().get(0));
+                break;
+            case TIME:
+                ps.setTime(idx, (Time) param.getValues().get(0));
+                break;
+            case TIMESTAMP:
+                ps.setTimestamp(idx, (Timestamp) param.getValues().get(0));
+                break;
             //LOB types
-            case BLOB ->
-                    ps.setBlob(idx, this.sessionManager.<Blob>getLob(session, (String) param.getValues().getFirst()));
-            case CLOB -> {
-                Clob clob = this.sessionManager.getLob(session, (String) param.getValues().getFirst());
+            case BLOB:
+                ps.setBlob(idx, this.sessionManager.<Blob>getLob(session, (String) param.getValues().get(0)));
+                break;
+            case CLOB: {
+                Clob clob = this.sessionManager.getLob(session, (String) param.getValues().get(0));
                 ps.setClob(idx, clob.getCharacterStream());
+                break;
             }
-            case BINARY_STREAM -> {
-                InputStream is = (InputStream) param.getValues().getFirst();
+            case BINARY_STREAM: {
+                InputStream is = (InputStream) param.getValues().get(0);
                 if (param.getValues().size() > 1) {
                     Long size = (Long) param.getValues().get(1);
                     ps.setBinaryStream(idx, is, size);
                 } else {
                     ps.setBinaryStream(idx, is);
                 }
+                break;
             }
-            default -> ps.setObject(idx, param.getValues().getFirst());
+            default:
+                ps.setObject(idx, param.getValues().get(0));
+                break;
         }
     }
 
@@ -1185,17 +1337,17 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
         
         // Configure HikariCP pool settings using client properties or defaults
-        config.setMaximumPoolSize(getIntProperty(clientProperties, "maximumPoolSize", CommonConstants.DEFAULT_MAXIMUM_POOL_SIZE));
-        config.setMinimumIdle(getIntProperty(clientProperties, "minimumIdle", CommonConstants.DEFAULT_MINIMUM_IDLE));
-        config.setIdleTimeout(getLongProperty(clientProperties, "idleTimeout", CommonConstants.DEFAULT_IDLE_TIMEOUT));
-        config.setMaxLifetime(getLongProperty(clientProperties, "maxLifetime", CommonConstants.DEFAULT_MAX_LIFETIME));
-        config.setConnectionTimeout(getLongProperty(clientProperties, "connectionTimeout", CommonConstants.DEFAULT_CONNECTION_TIMEOUT));
-        config.setAutoCommit(getBooleanProperty(clientProperties, "autoCommit", CommonConstants.DEFAULT_AUTO_COMMIT));
-        config.setPoolName(getStringProperty(clientProperties, "poolName", CommonConstants.DEFAULT_POOL_NAME));
-        config.setValidationTimeout(getLongProperty(clientProperties, "validationTimeout", CommonConstants.DEFAULT_VALIDATION_TIMEOUT));
-        config.setLeakDetectionThreshold(getLongProperty(clientProperties, "leakDetectionThreshold", CommonConstants.DEFAULT_LEAK_DETECTION_THRESHOLD));
-        config.setIsolateInternalQueries(getBooleanProperty(clientProperties, "isolateInternalQueries", CommonConstants.DEFAULT_ISOLATE_INTERNAL_QUERIES));
-        config.setAllowPoolSuspension(getBooleanProperty(clientProperties, "allowPoolSuspension", CommonConstants.DEFAULT_ALLOW_POOL_SUSPENSION));
+        config.setMaximumPoolSize(getIntProperty(clientProperties, "ojp.connection.pool.maximumPoolSize", CommonConstants.DEFAULT_MAXIMUM_POOL_SIZE));
+        config.setMinimumIdle(getIntProperty(clientProperties, "ojp.connection.pool.minimumIdle", CommonConstants.DEFAULT_MINIMUM_IDLE));
+        config.setIdleTimeout(getLongProperty(clientProperties, "ojp.connection.pool.idleTimeout", CommonConstants.DEFAULT_IDLE_TIMEOUT));
+        config.setMaxLifetime(getLongProperty(clientProperties, "ojp.connection.pool.maxLifetime", CommonConstants.DEFAULT_MAX_LIFETIME));
+        config.setConnectionTimeout(getLongProperty(clientProperties, "ojp.connection.pool.connectionTimeout", CommonConstants.DEFAULT_CONNECTION_TIMEOUT));
+        config.setAutoCommit(getBooleanProperty(clientProperties, "ojp.connection.pool.autoCommit", CommonConstants.DEFAULT_AUTO_COMMIT));
+        config.setPoolName(getStringProperty(clientProperties, "ojp.connection.pool.poolName", CommonConstants.DEFAULT_POOL_NAME));
+        config.setValidationTimeout(getLongProperty(clientProperties, "ojp.connection.pool.validationTimeout", CommonConstants.DEFAULT_VALIDATION_TIMEOUT));
+        config.setLeakDetectionThreshold(getLongProperty(clientProperties, "ojp.connection.pool.leakDetectionThreshold", CommonConstants.DEFAULT_LEAK_DETECTION_THRESHOLD));
+        config.setIsolateInternalQueries(getBooleanProperty(clientProperties, "ojp.connection.pool.isolateInternalQueries", CommonConstants.DEFAULT_ISOLATE_INTERNAL_QUERIES));
+        config.setAllowPoolSuspension(getBooleanProperty(clientProperties, "ojp.connection.pool.allowPoolSuspension", CommonConstants.DEFAULT_ALLOW_POOL_SUSPENSION));
         
         log.info("HikariCP configured with maximumPoolSize={}, minimumIdle={}, poolName={}", 
                 config.getMaximumPoolSize(), config.getMinimumIdle(), config.getPoolName());

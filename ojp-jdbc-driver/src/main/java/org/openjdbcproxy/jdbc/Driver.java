@@ -83,19 +83,8 @@ public class Driver implements java.sql.Driver {
     private Properties loadOjpProperties() {
         Properties properties = new Properties();
         
-        // Try to load from root of classpath first
+        // Only try to load from resources/ojp.properties in the classpath
         try (InputStream is = Driver.class.getClassLoader().getResourceAsStream("ojp.properties")) {
-            if (is != null) {
-                properties.load(is);
-                log.debug("Loaded ojp.properties from root of classpath");
-                return properties;
-            }
-        } catch (IOException e) {
-            log.debug("Could not load ojp.properties from root of classpath: {}", e.getMessage());
-        }
-        
-        // Try to load from resources folder
-        try (InputStream is = Driver.class.getClassLoader().getResourceAsStream("resources/ojp.properties")) {
             if (is != null) {
                 properties.load(is);
                 log.debug("Loaded ojp.properties from resources folder");
