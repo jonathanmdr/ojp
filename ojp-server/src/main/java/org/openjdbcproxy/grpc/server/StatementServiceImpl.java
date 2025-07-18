@@ -1337,17 +1337,17 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
         
         // Configure HikariCP pool settings using client properties or defaults
-        config.setMaximumPoolSize(getIntProperty(clientProperties, "maximumPoolSize", CommonConstants.DEFAULT_MAXIMUM_POOL_SIZE));
-        config.setMinimumIdle(getIntProperty(clientProperties, "minimumIdle", CommonConstants.DEFAULT_MINIMUM_IDLE));
-        config.setIdleTimeout(getLongProperty(clientProperties, "idleTimeout", CommonConstants.DEFAULT_IDLE_TIMEOUT));
-        config.setMaxLifetime(getLongProperty(clientProperties, "maxLifetime", CommonConstants.DEFAULT_MAX_LIFETIME));
-        config.setConnectionTimeout(getLongProperty(clientProperties, "connectionTimeout", CommonConstants.DEFAULT_CONNECTION_TIMEOUT));
-        config.setAutoCommit(getBooleanProperty(clientProperties, "autoCommit", CommonConstants.DEFAULT_AUTO_COMMIT));
-        config.setPoolName(getStringProperty(clientProperties, "poolName", CommonConstants.DEFAULT_POOL_NAME));
-        config.setValidationTimeout(getLongProperty(clientProperties, "validationTimeout", CommonConstants.DEFAULT_VALIDATION_TIMEOUT));
-        config.setLeakDetectionThreshold(getLongProperty(clientProperties, "leakDetectionThreshold", CommonConstants.DEFAULT_LEAK_DETECTION_THRESHOLD));
-        config.setIsolateInternalQueries(getBooleanProperty(clientProperties, "isolateInternalQueries", CommonConstants.DEFAULT_ISOLATE_INTERNAL_QUERIES));
-        config.setAllowPoolSuspension(getBooleanProperty(clientProperties, "allowPoolSuspension", CommonConstants.DEFAULT_ALLOW_POOL_SUSPENSION));
+        config.setMaximumPoolSize(getIntProperty(clientProperties, "ojp.connection.pool.maximumPoolSize", CommonConstants.DEFAULT_MAXIMUM_POOL_SIZE));
+        config.setMinimumIdle(getIntProperty(clientProperties, "ojp.connection.pool.minimumIdle", CommonConstants.DEFAULT_MINIMUM_IDLE));
+        config.setIdleTimeout(getLongProperty(clientProperties, "ojp.connection.pool.idleTimeout", CommonConstants.DEFAULT_IDLE_TIMEOUT));
+        config.setMaxLifetime(getLongProperty(clientProperties, "ojp.connection.pool.maxLifetime", CommonConstants.DEFAULT_MAX_LIFETIME));
+        config.setConnectionTimeout(getLongProperty(clientProperties, "ojp.connection.pool.connectionTimeout", CommonConstants.DEFAULT_CONNECTION_TIMEOUT));
+        config.setAutoCommit(getBooleanProperty(clientProperties, "ojp.connection.pool.autoCommit", CommonConstants.DEFAULT_AUTO_COMMIT));
+        config.setPoolName(getStringProperty(clientProperties, "ojp.connection.pool.poolName", CommonConstants.DEFAULT_POOL_NAME));
+        config.setValidationTimeout(getLongProperty(clientProperties, "ojp.connection.pool.validationTimeout", CommonConstants.DEFAULT_VALIDATION_TIMEOUT));
+        config.setLeakDetectionThreshold(getLongProperty(clientProperties, "ojp.connection.pool.leakDetectionThreshold", CommonConstants.DEFAULT_LEAK_DETECTION_THRESHOLD));
+        config.setIsolateInternalQueries(getBooleanProperty(clientProperties, "ojp.connection.pool.isolateInternalQueries", CommonConstants.DEFAULT_ISOLATE_INTERNAL_QUERIES));
+        config.setAllowPoolSuspension(getBooleanProperty(clientProperties, "ojp.connection.pool.allowPoolSuspension", CommonConstants.DEFAULT_ALLOW_POOL_SUSPENSION));
         
         log.info("HikariCP configured with maximumPoolSize={}, minimumIdle={}, poolName={}", 
                 config.getMaximumPoolSize(), config.getMinimumIdle(), config.getPoolName());
