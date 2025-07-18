@@ -11,13 +11,12 @@ A JDBC Driver and Layer 7 Proxy Server to decouple applications from relational 
 
 ## Documentation
 
+- [Architectural decision records (ADRs)](documents/ADRs)
 - [Setup for: Spring Boot, Quarkus and Micronaut](documents/java-frameworks)
 - [Connection Pool Configuration](documents/configuration/CONNECTION_POOL_CONFIG.md)
 - [Telemetry and Observability](documents/telemetry/README.md)
 
 ## High Level Design
-
-### [Architectural decision records (ADRs)](documents/ADRs)
 
 <img src="documents/designs/ojp_high_level_desing.gif" alt="OJP High Level Design" />
 
@@ -127,7 +126,7 @@ Optional flags:
 - ❌ CLOB support.
 - ✅ Statement and Prepared statement advanced features.
 - ✅ Connection advanced features.
-- 🕓 OpenTelemetry implementation.
+- ✅ OpenTelemetry implementation.
 - ✅ Circuit Breaker.
 - ❌ Slow queries segregation.
 - ✅ Docker image implementation.
@@ -135,7 +134,7 @@ Optional flags:
 - ✅ Support for Micronaut.
 - ✅ Support for Quarkus.
 - ❌ BLOB and CLOB advanced features.
-- ❌ Configurable data sources by user and/or database. 
+- ✅ Configurable data sources. 
 - ❌ RAFT consensus POC.
 - ❌ RAFT and connection smart balancing and resizing.
 
