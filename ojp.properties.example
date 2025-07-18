@@ -1,0 +1,36 @@
+# OJP Connection Pool Configuration Properties
+# This file should be placed in the root of the classpath or in the resources folder
+# All properties are optional - if not specified, default values will be used
+
+# Maximum number of connections in the pool (default: 10)
+maximumPoolSize=10
+
+# Minimum number of idle connections maintained (default: 10)
+minimumIdle=10
+
+# Maximum amount of time that a connection is allowed to sit idle in the pool (default: 600000ms = 10 minutes)
+idleTimeout=600000
+
+# Maximum lifetime of a connection in the pool (default: 1800000ms = 30 minutes)
+maxLifetime=1800000
+
+# Maximum amount of time that a client will wait for a connection from the pool (default: 30000ms = 30 seconds)
+connectionTimeout=30000
+
+# Default auto-commit behavior of connections returned from the pool (default: true)
+autoCommit=true
+
+# User-defined name for the connection pool (default: HikariPool-1)
+poolName=HikariPool-1
+
+# Maximum amount of time that a connection will be tested for aliveness (default: 5000ms = 5 seconds)
+validationTimeout=5000
+
+# Amount of time that a connection can be out of the pool before a message is logged indicating a possible connection leak (default: 0 = disabled)
+leakDetectionThreshold=0
+
+# Whether to isolate internal pool queries, such as the connection alive test (default: false)
+isolateInternalQueries=false
+
+# Whether to allow pool suspension (default: false)
+allowPoolSuspension=false
