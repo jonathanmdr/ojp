@@ -11,8 +11,9 @@ A JDBC Driver and Layer 7 Proxy Server to decouple applications from relational 
 
 ## Documentation
 
-- [Setup docs for: Spring Boot, Quarkus and Micronaut](documents/java-frameworks)
-- [Telemetry and Observability](documents/telemetry/README.md) - OpenTelemetry tracing and Prometheus metrics configuration.
+- [Setup for: Spring Boot, Quarkus and Micronaut](documents/java-frameworks)
+- [Connection Pool Configuration](documents/configuration/CONNECTION_POOL_CONFIG.md)
+- [Telemetry and Observability](documents/telemetry/README.md)
 
 ## High Level Design
 
