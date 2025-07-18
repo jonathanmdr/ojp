@@ -21,4 +21,17 @@ public class CommonConstants {
     public static final String STATEMENT_COLUMN_NAMES_KEY = "STATEMENT_COLUMN_NAMES_KEY";
     public static final int DEFAULT_PORT_NUMBER = 1059;
     public static final String OJP_REGEX_PATTERN = "ojp\\[([^\\]]+)\\]";
+
+    // HikariCP default connection pool settings
+    public static final int DEFAULT_MAXIMUM_POOL_SIZE = 10;
+    public static final int DEFAULT_MINIMUM_IDLE = 10;
+    public static final long DEFAULT_IDLE_TIMEOUT = 600000;
+    public static final long DEFAULT_MAX_LIFETIME = 1800000;
+    public static final long DEFAULT_CONNECTION_TIMEOUT = 30000;
+    public static final boolean DEFAULT_AUTO_COMMIT = true;
+    public static final String DEFAULT_POOL_NAME = "HikariPool-1";
+    public static final long DEFAULT_VALIDATION_TIMEOUT = 5000;
+    public static final long DEFAULT_LEAK_DETECTION_THRESHOLD = 0;
+    public static final boolean DEFAULT_ISOLATE_INTERNAL_QUERIES = false;
+    public static final boolean DEFAULT_ALLOW_POOL_SUSPENSION = false;
 }

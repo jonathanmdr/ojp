@@ -108,13 +108,11 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             config.setJdbcUrl(this.parseUrl(connectionDetails.getUrl()));
             config.setUsername(connectionDetails.getUser());
             config.setPassword(connectionDetails.getPassword());
-            config.addDataSourceProperty("cachePrepStmts", "true");
-            config.addDataSourceProperty("prepStmtCacheSize", "250");
-            config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-            config.addDataSourceProperty("maximumPoolSize", 5);
-            config.addDataSourceProperty("minimumPoolSize", 2);
+            
+            // Configure HikariCP using client properties or defaults
+            configureHikariPool(config, connectionDetails);
+            
             ds = new HikariDataSource(config);
-
             this.datasourceMap.put(connHash, ds);
         }
 
@@ -1165,6 +1163,79 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void configureHikariPool(HikariConfig config, ConnectionDetails connectionDetails) {
+        Properties clientProperties = null;
+        
+        // Try to deserialize properties from client if provided
+        if (!connectionDetails.getProperties().isEmpty()) {
+            try {
+                clientProperties = deserialize(connectionDetails.getProperties().toByteArray(), Properties.class);
+                log.info("Received {} properties from client for connection pool configuration", clientProperties.size());
+            } catch (Exception e) {
+                log.warn("Failed to deserialize client properties, using defaults: {}", e.getMessage());
+            }
+        }
+        
+        // Configure basic connection pool settings first
+        config.addDataSourceProperty("cachePrepStmts", "true");
+        config.addDataSourceProperty("prepStmtCacheSize", "250");
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+        
+        // Configure HikariCP pool settings using client properties or defaults
+        config.setMaximumPoolSize(getIntProperty(clientProperties, "maximumPoolSize", CommonConstants.DEFAULT_MAXIMUM_POOL_SIZE));
+        config.setMinimumIdle(getIntProperty(clientProperties, "minimumIdle", CommonConstants.DEFAULT_MINIMUM_IDLE));
+        config.setIdleTimeout(getLongProperty(clientProperties, "idleTimeout", CommonConstants.DEFAULT_IDLE_TIMEOUT));
+        config.setMaxLifetime(getLongProperty(clientProperties, "maxLifetime", CommonConstants.DEFAULT_MAX_LIFETIME));
+        config.setConnectionTimeout(getLongProperty(clientProperties, "connectionTimeout", CommonConstants.DEFAULT_CONNECTION_TIMEOUT));
+        config.setAutoCommit(getBooleanProperty(clientProperties, "autoCommit", CommonConstants.DEFAULT_AUTO_COMMIT));
+        config.setPoolName(getStringProperty(clientProperties, "poolName", CommonConstants.DEFAULT_POOL_NAME));
+        config.setValidationTimeout(getLongProperty(clientProperties, "validationTimeout", CommonConstants.DEFAULT_VALIDATION_TIMEOUT));
+        config.setLeakDetectionThreshold(getLongProperty(clientProperties, "leakDetectionThreshold", CommonConstants.DEFAULT_LEAK_DETECTION_THRESHOLD));
+        config.setIsolateInternalQueries(getBooleanProperty(clientProperties, "isolateInternalQueries", CommonConstants.DEFAULT_ISOLATE_INTERNAL_QUERIES));
+        config.setAllowPoolSuspension(getBooleanProperty(clientProperties, "allowPoolSuspension", CommonConstants.DEFAULT_ALLOW_POOL_SUSPENSION));
+        
+        log.info("HikariCP configured with maximumPoolSize={}, minimumIdle={}, poolName={}", 
+                config.getMaximumPoolSize(), config.getMinimumIdle(), config.getPoolName());
+    }
+    
+    private int getIntProperty(Properties properties, String key, int defaultValue) {
+        if (properties == null || !properties.containsKey(key)) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(properties.getProperty(key));
+        } catch (NumberFormatException e) {
+            log.warn("Invalid integer value for property '{}': {}, using default: {}", key, properties.getProperty(key), defaultValue);
+            return defaultValue;
+        }
+    }
+    
+    private long getLongProperty(Properties properties, String key, long defaultValue) {
+        if (properties == null || !properties.containsKey(key)) {
+            return defaultValue;
+        }
+        try {
+            return Long.parseLong(properties.getProperty(key));
+        } catch (NumberFormatException e) {
+            log.warn("Invalid long value for property '{}': {}, using default: {}", key, properties.getProperty(key), defaultValue);
+            return defaultValue;
+        }
+    }
+    
+    private boolean getBooleanProperty(Properties properties, String key, boolean defaultValue) {
+        if (properties == null || !properties.containsKey(key)) {
+            return defaultValue;
+        }
+        return Boolean.parseBoolean(properties.getProperty(key));
+    }
+    
+    private String getStringProperty(Properties properties, String key, String defaultValue) {
+        if (properties == null || !properties.containsKey(key)) {
+            return defaultValue;
+        }
+        return properties.getProperty(key);
     }
 
 }
