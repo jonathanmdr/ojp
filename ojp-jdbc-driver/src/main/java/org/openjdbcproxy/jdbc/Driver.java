@@ -1,13 +1,17 @@
 package org.openjdbcproxy.jdbc;
 
+import com.google.protobuf.ByteString;
 import com.openjdbcproxy.grpc.ConnectionDetails;
 import com.openjdbcproxy.grpc.SessionInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.openjdbcproxy.grpc.SerializationHandler;
 import org.openjdbcproxy.grpc.client.StatementService;
 import org.openjdbcproxy.grpc.client.StatementServiceGrpcClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
@@ -53,17 +57,56 @@ public class Driver implements java.sql.Driver {
             DbInfo.setH2DB(false);
             log.debug("Non-H2DB detected");
         }
+        
+        // Load ojp.properties file if it exists
+        Properties ojpProperties = loadOjpProperties();
+        ByteString propertiesBytes = ByteString.EMPTY;
+        if (ojpProperties != null && !ojpProperties.isEmpty()) {
+            propertiesBytes = ByteString.copyFrom(SerializationHandler.serialize(ojpProperties));
+            log.debug("Loaded ojp.properties with {} properties", ojpProperties.size());
+        }
+        
         SessionInfo sessionInfo = statementService
                 .connect(ConnectionDetails.newBuilder()
                         .setUrl(url)
                         .setUser((String) ((info.get(USER) != null)? info.get(USER) : ""))
                         .setPassword((String) ((info.get(PASSWORD) != null) ? info.get(PASSWORD) : ""))
                         .setClientUUID(ClientUUID.getUUID())
+                        .setProperties(propertiesBytes)
                         .build()
                 );
         //TODO create centralized handling of exceptions returned that coverts automatically to SQLException.
         log.debug("Returning new Connection with sessionInfo: {}", sessionInfo);
         return new Connection(sessionInfo, statementService);
+    }
+    
+    private Properties loadOjpProperties() {
+        Properties properties = new Properties();
+        
+        // Try to load from root of classpath first
+        try (InputStream is = Driver.class.getClassLoader().getResourceAsStream("ojp.properties")) {
+            if (is != null) {
+                properties.load(is);
+                log.debug("Loaded ojp.properties from root of classpath");
+                return properties;
+            }
+        } catch (IOException e) {
+            log.debug("Could not load ojp.properties from root of classpath: {}", e.getMessage());
+        }
+        
+        // Try to load from resources folder
+        try (InputStream is = Driver.class.getClassLoader().getResourceAsStream("resources/ojp.properties")) {
+            if (is != null) {
+                properties.load(is);
+                log.debug("Loaded ojp.properties from resources folder");
+                return properties;
+            }
+        } catch (IOException e) {
+            log.debug("Could not load ojp.properties from resources folder: {}", e.getMessage());
+        }
+        
+        log.debug("No ojp.properties file found, using server defaults");
+        return null;
     }
 
     @Override

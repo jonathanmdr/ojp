@@ -7,6 +7,7 @@ message ConnectionDetails {
     string user = 2;
     string password = 3;
     string clientUUID = 4;
+    bytes properties = 5;
 }
 
 enum SessionStatus {
