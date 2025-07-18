@@ -9,11 +9,10 @@ A JDBC Driver and Layer 7 Proxy Server to decouple applications from relational 
 #### How to replace native JDBC drivers seamlessly?
 #### How to support multiple relational databases at once?
 
-### [Setup docs for: Spring Boot, Quarkus and Micronaut](documents/java-frameworks)
-
 ## Documentation
 
-- [Telemetry and Observability](documents/telemetry/README.md) - OpenTelemetry tracing and Prometheus metrics configuration
+- [Setup docs for: Spring Boot, Quarkus and Micronaut](documents/java-frameworks)
+- [Telemetry and Observability](documents/telemetry/README.md) - OpenTelemetry tracing and Prometheus metrics configuration.
 
 ## High Level Design
 
