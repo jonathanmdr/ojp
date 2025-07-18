@@ -24,11 +24,11 @@ public class ConnectionPoolServerConfigurationTest {
         
         // Create test properties that a client would send
         Properties clientProperties = new Properties();
-        clientProperties.setProperty("maximumPoolSize", "25");
-        clientProperties.setProperty("minimumIdle", "7");
-        clientProperties.setProperty("autoCommit", "false");
-        clientProperties.setProperty("poolName", "TestIntegrationPool");
-        clientProperties.setProperty("validationTimeout", "8000");
+        clientProperties.setProperty("ojp.connection.pool.maximumPoolSize", "25");
+        clientProperties.setProperty("ojp.connection.pool.minimumIdle", "7");
+        clientProperties.setProperty("ojp.connection.pool.autoCommit", "false");
+        clientProperties.setProperty("ojp.connection.pool.poolName", "TestIntegrationPool");
+        clientProperties.setProperty("ojp.connection.pool.validationTimeout", "8000");
         
         // Serialize properties as the client would
         byte[] serializedProperties = SerializationHandler.serialize(clientProperties);
@@ -111,10 +111,10 @@ public class ConnectionPoolServerConfigurationTest {
         
         // Create test properties with invalid values
         Properties clientProperties = new Properties();
-        clientProperties.setProperty("maximumPoolSize", "invalid_number");
-        clientProperties.setProperty("minimumIdle", "not_a_number");
-        clientProperties.setProperty("autoCommit", "true"); // This one is valid
-        clientProperties.setProperty("poolName", "ValidPoolName"); // This one is valid
+        clientProperties.setProperty("ojp.connection.pool.maximumPoolSize", "invalid_number");
+        clientProperties.setProperty("ojp.connection.pool.minimumIdle", "not_a_number");
+        clientProperties.setProperty("ojp.connection.pool.autoCommit", "true"); // This one is valid
+        clientProperties.setProperty("ojp.connection.pool.poolName", "ValidPoolName"); // This one is valid
         
         // Serialize properties as the client would
         byte[] serializedProperties = SerializationHandler.serialize(clientProperties);
