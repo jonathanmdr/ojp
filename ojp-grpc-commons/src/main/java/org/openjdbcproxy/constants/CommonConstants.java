@@ -28,10 +28,4 @@ public class CommonConstants {
     public static final long DEFAULT_IDLE_TIMEOUT = 600000;
     public static final long DEFAULT_MAX_LIFETIME = 1800000;
     public static final long DEFAULT_CONNECTION_TIMEOUT = 30000;
-    public static final boolean DEFAULT_AUTO_COMMIT = true;
-    public static final String DEFAULT_POOL_NAME = "HikariPool-1";
-    public static final long DEFAULT_VALIDATION_TIMEOUT = 5000;
-    public static final long DEFAULT_LEAK_DETECTION_THRESHOLD = 0;
-    public static final boolean DEFAULT_ISOLATE_INTERNAL_QUERIES = false;
-    public static final boolean DEFAULT_ALLOW_POOL_SUSPENSION = false;
 }

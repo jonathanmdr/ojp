@@ -1,6 +1,5 @@
 package org.openjdbcproxy.jdbc;
 
-import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.Test;
 import org.openjdbcproxy.constants.CommonConstants;
 import org.openjdbcproxy.grpc.SerializationHandler;
@@ -10,7 +9,10 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test for connection pool configuration functionality.
@@ -24,12 +26,6 @@ public class ConnectionPoolConfigurationTest {
         assertEquals(600000L, CommonConstants.DEFAULT_IDLE_TIMEOUT);
         assertEquals(1800000L, CommonConstants.DEFAULT_MAX_LIFETIME);
         assertEquals(30000L, CommonConstants.DEFAULT_CONNECTION_TIMEOUT);
-        assertEquals(true, CommonConstants.DEFAULT_AUTO_COMMIT);
-        assertEquals("HikariPool-1", CommonConstants.DEFAULT_POOL_NAME);
-        assertEquals(5000L, CommonConstants.DEFAULT_VALIDATION_TIMEOUT);
-        assertEquals(0L, CommonConstants.DEFAULT_LEAK_DETECTION_THRESHOLD);
-        assertEquals(false, CommonConstants.DEFAULT_ISOLATE_INTERNAL_QUERIES);
-        assertEquals(false, CommonConstants.DEFAULT_ALLOW_POOL_SUSPENSION);
     }
 
     @Test
@@ -67,8 +63,6 @@ public class ConnectionPoolConfigurationTest {
             // If properties file exists in test resources, verify it loads correctly
             assertEquals("20", properties.getProperty("ojp.connection.pool.maximumPoolSize"));
             assertEquals("8", properties.getProperty("ojp.connection.pool.minimumIdle"));
-            assertEquals("false", properties.getProperty("ojp.connection.pool.autoCommit"));
-            assertEquals("TestHikariPool-Integration", properties.getProperty("ojp.connection.pool.poolName"));
         }
         // If properties is null, that's fine - no properties file found, which is a valid case
     }

@@ -26,10 +26,7 @@ public class ConnectionPoolServerConfigurationTest {
         Properties clientProperties = new Properties();
         clientProperties.setProperty("ojp.connection.pool.maximumPoolSize", "25");
         clientProperties.setProperty("ojp.connection.pool.minimumIdle", "7");
-        clientProperties.setProperty("ojp.connection.pool.autoCommit", "false");
-        clientProperties.setProperty("ojp.connection.pool.poolName", "TestIntegrationPool");
-        clientProperties.setProperty("ojp.connection.pool.validationTimeout", "8000");
-        
+
         // Serialize properties as the client would
         byte[] serializedProperties = SerializationHandler.serialize(clientProperties);
         
@@ -56,10 +53,8 @@ public class ConnectionPoolServerConfigurationTest {
         // Verify that client properties were applied
         assertEquals(25, config.getMaximumPoolSize());
         assertEquals(7, config.getMinimumIdle());
-        assertEquals(false, config.isAutoCommit());
-        assertEquals("TestIntegrationPool", config.getPoolName());
-        assertEquals(8000, config.getValidationTimeout());
-        
+        assertEquals(true, config.isAutoCommit());
+
         // Verify that properties not provided use defaults
         assertEquals(CommonConstants.DEFAULT_IDLE_TIMEOUT, config.getIdleTimeout());
         assertEquals(CommonConstants.DEFAULT_MAX_LIFETIME, config.getMaxLifetime());
@@ -93,15 +88,9 @@ public class ConnectionPoolServerConfigurationTest {
         // Verify that all default values are applied
         assertEquals(CommonConstants.DEFAULT_MAXIMUM_POOL_SIZE, config.getMaximumPoolSize());
         assertEquals(CommonConstants.DEFAULT_MINIMUM_IDLE, config.getMinimumIdle());
-        assertEquals(CommonConstants.DEFAULT_AUTO_COMMIT, config.isAutoCommit());
-        assertEquals(CommonConstants.DEFAULT_POOL_NAME, config.getPoolName());
-        assertEquals(CommonConstants.DEFAULT_VALIDATION_TIMEOUT, config.getValidationTimeout());
         assertEquals(CommonConstants.DEFAULT_IDLE_TIMEOUT, config.getIdleTimeout());
         assertEquals(CommonConstants.DEFAULT_MAX_LIFETIME, config.getMaxLifetime());
         assertEquals(CommonConstants.DEFAULT_CONNECTION_TIMEOUT, config.getConnectionTimeout());
-        assertEquals(CommonConstants.DEFAULT_LEAK_DETECTION_THRESHOLD, config.getLeakDetectionThreshold());
-        assertEquals(CommonConstants.DEFAULT_ISOLATE_INTERNAL_QUERIES, config.isIsolateInternalQueries());
-        assertEquals(CommonConstants.DEFAULT_ALLOW_POOL_SUSPENSION, config.isAllowPoolSuspension());
     }
 
     @Test
@@ -113,9 +102,7 @@ public class ConnectionPoolServerConfigurationTest {
         Properties clientProperties = new Properties();
         clientProperties.setProperty("ojp.connection.pool.maximumPoolSize", "invalid_number");
         clientProperties.setProperty("ojp.connection.pool.minimumIdle", "not_a_number");
-        clientProperties.setProperty("ojp.connection.pool.autoCommit", "true"); // This one is valid
-        clientProperties.setProperty("ojp.connection.pool.poolName", "ValidPoolName"); // This one is valid
-        
+
         // Serialize properties as the client would
         byte[] serializedProperties = SerializationHandler.serialize(clientProperties);
         
@@ -143,6 +130,5 @@ public class ConnectionPoolServerConfigurationTest {
         assertEquals(CommonConstants.DEFAULT_MAXIMUM_POOL_SIZE, config.getMaximumPoolSize()); // Falls back to default
         assertEquals(CommonConstants.DEFAULT_MINIMUM_IDLE, config.getMinimumIdle()); // Falls back to default
         assertEquals(true, config.isAutoCommit()); // Valid value applied
-        assertEquals("ValidPoolName", config.getPoolName()); // Valid value applied
     }
 }

@@ -16,21 +16,3 @@ ojp.connection.pool.maxLifetime=1800000
 
 # Maximum amount of time that a client will wait for a connection from the pool (default: 30000ms = 30 seconds)
 ojp.connection.pool.connectionTimeout=30000
-
-# Default auto-commit behavior of connections returned from the pool (default: true)
-ojp.connection.pool.autoCommit=true
-
-# User-defined name for the connection pool (default: HikariPool-1)
-ojp.connection.pool.poolName=HikariPool-1
-
-# Maximum amount of time that a connection will be tested for aliveness (default: 5000ms = 5 seconds)
-ojp.connection.pool.validationTimeout=5000
-
-# Amount of time that a connection can be out of the pool before a message is logged indicating a possible connection leak (default: 0 = disabled)
-ojp.connection.pool.leakDetectionThreshold=0
-
-# Whether to isolate internal pool queries, such as the connection alive test (default: false)
-ojp.connection.pool.isolateInternalQueries=false
-
-# Whether to allow pool suspension (default: false)
-ojp.connection.pool.allowPoolSuspension=false

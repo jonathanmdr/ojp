@@ -18,7 +18,7 @@ class OjpServerTelemetryTest {
 	@BeforeAll
 	static void setUp() {
 		OjpServerTelemetry instrument = new OjpServerTelemetry();
-		grpcTelemetry = instrument.createGrpcTelemetry();
+		grpcTelemetry = instrument.createGrpcTelemetry(9191);//Change port for tests as per ojp-server might already running prometheus on the default port 9090
 	}
 
 	@Test
@@ -30,7 +30,7 @@ class OjpServerTelemetryTest {
 
 	@Test
 	void shouldExposePrometheusMetricsEndpoint() throws IOException {
-		HttpURLConnection connection = (HttpURLConnection) URI.create("http://localhost:9090/metrics").toURL().openConnection();
+		HttpURLConnection connection = (HttpURLConnection) URI.create("http://localhost:9191/metrics").toURL().openConnection();
 		connection.setRequestMethod("GET");
 		connection.setConnectTimeout(5000);
 		connection.setReadTimeout(5000);
