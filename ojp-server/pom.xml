@@ -15,8 +15,8 @@
     </parent>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
 
         <grpc.version>1.70.0</grpc.version>
         <slf4j.version>2.0.17</slf4j.version>
@@ -193,7 +193,7 @@
                 <version>${jib.plugin.version}</version>
                 <configuration>
                     <from>
-                        <image>eclipse-temurin:22-jre</image>
+                        <image>eclipse-temurin:11-jre</image>
                     </from>
                     <to>
                         <image>rrobetti/ojp:0.0.5-alpha</image>
