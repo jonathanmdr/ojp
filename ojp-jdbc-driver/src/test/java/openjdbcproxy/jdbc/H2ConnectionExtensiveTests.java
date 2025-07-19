@@ -2,6 +2,7 @@ package openjdbcproxy.jdbc;
 
 import io.grpc.StatusRuntimeException;
 import lombok.SneakyThrows;
+import openjdbcproxy.jdbc.testutil.TestDBUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
@@ -44,7 +45,7 @@ public class H2ConnectionExtensiveTests {
 
     @AfterEach
     public void tearDown() throws SQLException {
-        if (connection != null) connection.close();
+        TestDBUtils.closeQuietly(connection);
     }
 
     @ParameterizedTest
@@ -78,19 +79,14 @@ public class H2ConnectionExtensiveTests {
         this.setUp(driverClass, url, user, password);
         connection.setAutoCommit(false);
 
-        try {
-            connection.createStatement().execute("DROP TABLE test_table");
-        } catch (Exception e) {
-            //Do nothing.
-        }
-        connection.createStatement().execute("CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(255))");
-        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (1, 'Alice')");
+        TestDBUtils.createBasicTestTable(connection, true); // Use H2 syntax
+        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
         connection.rollback();
 
-        ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM test_table");
+        ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM test_table WHERE id = 3");
         assertEquals(false, rs.next());
 
-        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (1, 'Alice')");
+        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
         connection.commit();
 
         rs = connection.createStatement().executeQuery("SELECT * FROM test_table");
@@ -102,25 +98,20 @@ public class H2ConnectionExtensiveTests {
     public void testSavepoints(String driverClass, String url, String user, String password) throws SQLException {
         this.setUp(driverClass, url, user, password);
         connection.setAutoCommit(false);
-        try {
-            connection.createStatement().execute("DROP TABLE test_table");
-        } catch (Exception e) {
-            //Do nothing.
-        }
-        connection.createStatement().execute("CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(255))");
+        TestDBUtils.createBasicTestTable(connection, true); // Use H2 syntax
 
         Savepoint sp1 = connection.setSavepoint("Savepoint1");
-        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (1, 'Alice')");
+        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
         connection.rollback(sp1);
 
-        ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM test_table");
+        ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM test_table WHERE id = 3");
         assertEquals(false, rs.next());
 
-        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (1, 'Alice')");
+        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
         connection.releaseSavepoint(sp1);
         connection.commit();
 
-        rs = connection.createStatement().executeQuery("SELECT * FROM test_table");
+        rs = connection.createStatement().executeQuery("SELECT * FROM test_table WHERE id = 3");
         assertEquals(true, rs.next());
     }
 

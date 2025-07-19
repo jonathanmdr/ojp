@@ -1,5 +1,6 @@
 package openjdbcproxy.jdbc;
 
+import openjdbcproxy.jdbc.testutil.TestDBUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
@@ -27,21 +28,12 @@ public class H2StatementExtensiveTests {
     public void setUp(String driverClass, String url, String user, String password) throws Exception {
         connection = DriverManager.getConnection(url, user, password);
         statement = connection.createStatement();
-
-        try {
-            statement.execute("DROP TABLE test_table");
-        } catch (Exception e) {
-            //Ignore
-        }
-        statement.execute("CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(255))");
-        statement.execute("INSERT INTO test_table (id, name) VALUES (1, 'Alice')");
-        statement.execute("INSERT INTO test_table (id, name) VALUES (2, 'Bob')");
+        TestDBUtils.createBasicTestTable(connection, true); // Use H2 syntax
     }
 
     @AfterEach
     public void tearDown() throws Exception {
-        if (statement != null && !statement.isClosed()) statement.close();
-        if (connection != null && !connection.isClosed()) connection.close();
+        TestDBUtils.closeQuietly(statement, connection);
     }
 
     @ParameterizedTest
@@ -247,10 +239,7 @@ public class H2StatementExtensiveTests {
     @CsvFileSource(resources = "/h2_connection.csv")
     public void testGeneratedKeys(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        try {
-            statement.execute("DROP TABLE test_auto_keys");
-        } catch (Exception e) { /*Ignore*/}
-        statement.execute("CREATE TABLE test_auto_keys (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255))");
+        TestDBUtils.createAutoIncrementTestTable(connection, "test_auto_keys", true); // H2 syntax
         int affected = statement.executeUpdate("INSERT INTO test_auto_keys (name) VALUES ('foo')", Statement.RETURN_GENERATED_KEYS);
         assertEquals(1, affected);
         ResultSet keys = statement.getGeneratedKeys();
@@ -263,11 +252,7 @@ public class H2StatementExtensiveTests {
     @CsvFileSource(resources = "/h2_connection.csv")
     public void testExecuteUpdateVariants(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-
-        try {
-            statement.execute("DROP TABLE test_cols");
-        } catch (Exception e) {/* Ignore. */}
-        statement.execute("CREATE TABLE test_cols (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255))");
+        TestDBUtils.createAutoIncrementTestTable(connection, "test_cols", true); // H2 syntax
         int a = statement.executeUpdate("INSERT INTO test_cols (name) VALUES ('bar')", Statement.RETURN_GENERATED_KEYS);
         assertEquals(1, a);
 
@@ -284,10 +269,7 @@ public class H2StatementExtensiveTests {
     @CsvFileSource(resources = "/h2_connection.csv")
     public void testExecuteVariants(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        try {
-            statement.execute("DROP TABLE test_exec");
-        } catch (Exception e) {/* Ignore. */}
-        statement.execute("CREATE TABLE test_exec (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255))");
+        TestDBUtils.createAutoIncrementTestTable(connection, "test_exec", true); // H2 syntax
         boolean b = statement.execute("INSERT INTO test_exec (name) VALUES ('v1')", Statement.RETURN_GENERATED_KEYS);
         assertFalse(b);
 

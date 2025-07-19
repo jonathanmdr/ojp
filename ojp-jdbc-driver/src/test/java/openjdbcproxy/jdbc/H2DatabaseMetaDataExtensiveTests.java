@@ -1,5 +1,6 @@
 package openjdbcproxy.jdbc;
 
+import openjdbcproxy.jdbc.testutil.TestDBUtils;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
@@ -12,22 +13,12 @@ public class H2DatabaseMetaDataExtensiveTests {
 
     public void setUp(String driverClass, String url, String user, String password) throws Exception {
         connection = DriverManager.getConnection(url, user, password);
-        try {
-            connection.createStatement().execute(
-                    "DROP TABLE test_table"
-            );
-        } catch (SQLException e) {
-            //Do nothing.
-        }
-
-        connection.createStatement().execute(
-                "CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(255))"
-        );
+        TestDBUtils.createBasicTestTable(connection, true); // Use H2 syntax
     }
 
     @AfterAll
     public static void teardown() throws Exception {
-        connection.close();
+        TestDBUtils.closeQuietly(connection);
     }
 
     @ParameterizedTest
@@ -305,28 +296,6 @@ public class H2DatabaseMetaDataExtensiveTests {
     }
 
     private void validateAllRows(ResultSet rs) throws SQLException {
-        Assertions.assertNotNull(rs, "ResultSet should not be null");
-        ResultSetMetaData rsmd = rs.getMetaData();
-        Assertions.assertNotNull(rsmd, "ResultSetMetaData should not be null");
-        int cols = rsmd.getColumnCount();
-        Assertions.assertTrue(cols >= 0, "Column count should be >= 0");
-        int rowCount = 0;
-        while (rs.next()) {
-            for (int i = 1; i <= cols; i++) {
-                // Always validate column value can be read (nulls are acceptable)
-                try {
-                    Object value = rs.getObject(i);
-                    // If not null, assert string conversion doesn't throw
-                    if (value != null) {
-                        value.toString();
-                    }
-                } catch (Exception e) {
-                    Assertions.fail("Reading column " + i + " failed: " + e.getMessage());
-                }
-            }
-            rowCount++;
-            if (rowCount > 100) break; // Limit for test runtime
-        }
-        Assertions.assertTrue(rowCount >= 0, "Row count should be >= 0");
+        TestDBUtils.validateAllRows(rs);
     }
 }
