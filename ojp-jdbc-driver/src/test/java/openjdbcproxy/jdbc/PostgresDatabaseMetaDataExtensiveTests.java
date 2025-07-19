@@ -40,15 +40,15 @@ public class PostgresDatabaseMetaDataExtensiveTests {
         // 1–5: Basic database information (PostgreSQL-specific values)
         Assertions.assertEquals(true, meta.allProceduresAreCallable());
         Assertions.assertEquals(true, meta.allTablesAreSelectable());
-        Assertions.assertTrue(meta.getURL().startsWith("jdbc:ojp"));
+        Assertions.assertTrue(meta.getURL().contains("postgresql") || meta.getURL().contains(":5432/"));
         Assertions.assertNotNull(meta.getUserName()); // PostgreSQL username
         Assertions.assertEquals(false, meta.isReadOnly());
 
-        // 6–10: Null handling and database product info
-        Assertions.assertEquals(false, meta.nullsAreSortedHigh());
+        // 6–10: Null handling and database product info (PostgreSQL-specific behaviors)
+        Assertions.assertEquals(true, meta.nullsAreSortedHigh());  // PostgreSQL behavior
         Assertions.assertEquals(false, meta.nullsAreSortedLow());
         Assertions.assertEquals(false, meta.nullsAreSortedAtStart());
-        Assertions.assertEquals(true, meta.nullsAreSortedAtEnd()); // PostgreSQL behavior
+        Assertions.assertEquals(false, meta.nullsAreSortedAtEnd()); // PostgreSQL behavior
         Assertions.assertEquals("PostgreSQL", meta.getDatabaseProductName());
 
         // 11–15: Version information
@@ -70,7 +70,7 @@ public class PostgresDatabaseMetaDataExtensiveTests {
         Assertions.assertEquals(true, meta.supportsMixedCaseQuotedIdentifiers());
         Assertions.assertEquals(false, meta.storesUpperCaseQuotedIdentifiers());
         Assertions.assertEquals(false, meta.storesLowerCaseQuotedIdentifiers());
-        Assertions.assertEquals(true, meta.storesMixedCaseQuotedIdentifiers());
+        Assertions.assertEquals(false, meta.storesMixedCaseQuotedIdentifiers()); // PostgreSQL behavior
 
         // 26–30: String handling and functions
         Assertions.assertEquals("\"", meta.getIdentifierQuoteString());

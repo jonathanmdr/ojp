@@ -34,11 +34,13 @@ public class TestDBUtils {
     public static void createBasicTestTable(Connection connection, SqlSyntax sqlSyntax) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             // Drop table if exists
-            try {
-                statement.execute("DROP TABLE test_table");
-            } catch (SQLException e) {
-                // Ignore - table might not exist
+            String dropTableSql;
+            if (sqlSyntax == SqlSyntax.H2) {
+                dropTableSql = "DROP TABLE IF EXISTS test_table";
+            } else { // PostgreSQL
+                dropTableSql = "DROP TABLE IF EXISTS test_table";
             }
+            statement.execute(dropTableSql);
 
             // Create table with appropriate syntax
             String createTableSql;
@@ -65,11 +67,8 @@ public class TestDBUtils {
     public static void createAutoIncrementTestTable(Connection connection, String tableName, SqlSyntax sqlSyntax) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             // Drop table if exists
-            try {
-                statement.execute("DROP TABLE " + tableName);
-            } catch (SQLException e) {
-                // Ignore - table might not exist
-            }
+            String dropTableSql = "DROP TABLE IF EXISTS " + tableName;
+            statement.execute(dropTableSql);
 
             // Create table with appropriate auto-increment syntax
             String createTableSql;
@@ -91,11 +90,8 @@ public class TestDBUtils {
     public static void createMultiTypeTestTable(Connection connection, SqlSyntax sqlSyntax) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             // Drop table if exists
-            try {
-                statement.execute("DROP TABLE test_table");
-            } catch (SQLException e) {
-                // Ignore - table might not exist
-            }
+            String dropTableSql = "DROP TABLE IF EXISTS test_table";
+            statement.execute(dropTableSql);
 
             // Create table with appropriate data type syntax
             String createTableSql;
