@@ -1,4 +1,4 @@
-<img src="documents/images/ojp_banner.png" alt="OJP Banner" />
+<img src="documents/images/ojp_logo.png" alt="OJP Banner" />
 
 # Open JDBC Proxy
 
