@@ -91,8 +91,8 @@ public class PostgresDatabaseMetaDataExtensiveTests {
         // 36–40: Query features
         Assertions.assertEquals(true, meta.supportsColumnAliasing());
         Assertions.assertEquals(true, meta.nullPlusNonNullIsNull());
-        Assertions.assertEquals(true, meta.supportsConvert());
-        Assertions.assertEquals(true, meta.supportsConvert(Types.INTEGER, Types.VARCHAR));
+        Assertions.assertEquals(false, meta.supportsConvert()); // PostgreSQL behavior differs from H2
+        Assertions.assertEquals(false, meta.supportsConvert(Types.INTEGER, Types.VARCHAR)); // PostgreSQL behavior
         Assertions.assertEquals(true, meta.supportsTableCorrelationNames());
 
         // 41–45: More query features
@@ -105,7 +105,7 @@ public class PostgresDatabaseMetaDataExtensiveTests {
         // 46–50: Advanced query features
         Assertions.assertEquals(true, meta.supportsGroupByBeyondSelect());
         Assertions.assertEquals(true, meta.supportsLikeEscapeClause());
-        Assertions.assertEquals(false, meta.supportsMultipleResultSets());
+        Assertions.assertEquals(true, meta.supportsMultipleResultSets()); // PostgreSQL supports multiple result sets
         Assertions.assertEquals(true, meta.supportsMultipleTransactions());
         Assertions.assertEquals(true, meta.supportsNonNullableColumns());
 
