@@ -18,7 +18,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class PostgresMultipleTypesIntegrationTest {
 
@@ -33,8 +32,6 @@ public class PostgresMultipleTypesIntegrationTest {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, ParseException {
         assumeFalse(isTestDisabled, "Postgres tests are disabled");
-        assumeTrue(TestDBUtils.isInfrastructureAvailable(driverClass, url, user, pwd), 
-                   "OJP server or PostgreSQL infrastructure not available - skipping integration test");
         
         Connection conn = DriverManager.getConnection(url, user, pwd);
 
@@ -117,8 +114,6 @@ public class PostgresMultipleTypesIntegrationTest {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void testPostgresSpecificTypes(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "Postgres tests are disabled");
-        assumeTrue(TestDBUtils.isInfrastructureAvailable(driverClass, url, user, pwd), 
-                   "OJP server or PostgreSQL infrastructure not available - skipping integration test");
         
         Connection conn = DriverManager.getConnection(url, user, pwd);
 

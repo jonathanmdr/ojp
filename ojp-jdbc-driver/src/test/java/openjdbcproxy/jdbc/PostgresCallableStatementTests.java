@@ -28,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class PostgresCallableStatementTests {
 
@@ -44,8 +43,6 @@ public class PostgresCallableStatementTests {
 
     public void setUp(String driverClass, String url, String user, String password) throws Exception {
         assumeFalse(isTestDisabled, "Postgres tests are disabled");
-        assumeTrue(TestDBUtils.isInfrastructureAvailable(driverClass, url, user, password), 
-                   "OJP server or PostgreSQL infrastructure not available - skipping integration test");
         
         // Connect to the PostgreSQL database
         connection = DriverManager.getConnection(url, user, password);

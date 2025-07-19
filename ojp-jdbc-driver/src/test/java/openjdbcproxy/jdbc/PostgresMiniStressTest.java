@@ -25,7 +25,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Slf4j
 public class PostgresMiniStressTest {
@@ -54,8 +53,6 @@ public class PostgresMiniStressTest {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void testConnectionProperties(String driverClass, String url, String user, String password) throws SQLException {
         assumeFalse(isTestDisabled, "Postgres tests are disabled");
-        assumeTrue(TestDBUtils.isInfrastructureAvailable(driverClass, url, user, password), 
-                   "OJP server or PostgreSQL infrastructure not available - skipping integration test");
         
         this.setUp();
         // 1. Schema and seeding (not timed)

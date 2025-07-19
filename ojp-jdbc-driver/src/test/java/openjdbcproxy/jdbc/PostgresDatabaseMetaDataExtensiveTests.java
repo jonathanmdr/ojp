@@ -8,7 +8,6 @@ import org.junit.jupiter.params.provider.CsvFileSource;
 import java.sql.*;
 
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class PostgresDatabaseMetaDataExtensiveTests {
 
@@ -22,8 +21,6 @@ public class PostgresDatabaseMetaDataExtensiveTests {
 
     public void setUp(String driverClass, String url, String user, String password) throws Exception {
         assumeFalse(isTestDisabled, "Postgres tests are disabled");
-        assumeTrue(TestDBUtils.isInfrastructureAvailable(driverClass, url, user, password), 
-                   "OJP server or PostgreSQL infrastructure not available - skipping integration test");
         
         connection = DriverManager.getConnection(url, user, password);
         TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.POSTGRES);

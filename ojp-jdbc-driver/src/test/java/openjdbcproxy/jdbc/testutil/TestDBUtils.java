@@ -212,31 +212,7 @@ public class TestDBUtils {
         return disablePostgresTests && isPostgresTest;
     }
 
-    /**
-     * Checks if the OJP server and database infrastructure are available for testing.
-     * This method attempts a simple connection test to verify both the OJP server
-     * and the target database are accessible.
-     * @param driverClass JDBC driver class
-     * @param url JDBC URL 
-     * @param user Database username
-     * @param password Database password
-     * @return true if infrastructure is available, false otherwise
-     */
-    public static boolean isInfrastructureAvailable(String driverClass, String url, String user, String password) {
-        try {
-            Class.forName(driverClass);
-            try (Connection connection = java.sql.DriverManager.getConnection(url, user, password)) {
-                // Try a simple query to verify the connection works
-                try (Statement statement = connection.createStatement()) {
-                    statement.executeQuery("SELECT 1");
-                    return true;
-                }
-            }
-        } catch (Exception e) {
-            // Infrastructure not available - this is expected in some environments
-            return false;
-        }
-    }
+
 
     /**
      * Safely closes database resources without throwing exceptions.
