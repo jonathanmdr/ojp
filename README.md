@@ -34,13 +34,13 @@ docker run --rm -d -p 1059:1059 rrobetti/ojp:0.0.4-alpha
 ```
 
 ### 3. Update your JDBC URL
-Replace your existing connection URL by prefixing with `ojp_[host:port]`:
+Replace your existing connection URL by prefixing with `ojp[host:port]_`:
 ```java
 // Before
 "jdbc:postgresql://user@localhost/mydb"
 
 // After  
-"jdbc:ojp_[localhost:1059]postgresql://user@localhost/mydb"
+"jdbc:ojp[localhost:1059]_postgresql://user@localhost/mydb"
 ```
 
 That's it! Your application now uses intelligent connection pooling through OJP.
@@ -49,7 +49,7 @@ That's it! Your application now uses intelligent connection pooling through OJP.
 
 - [Architectural decision records (ADRs)](documents/ADRs) - Technical decisions and rationale behind OJP's architecture
 - [Get started: Spring Boot, Quarkus and Micronaut](documents/java-frameworks) - Framework-specific integration guides and examples
-- [Connection Pool Configuration](documents/configuration/CONNECTION_POOL_CONFIG.md) - HikariCP pool settings and tuning parameters
+- [Connection Pool Configuration](documents/configuration/CONNECTION_POOL_CONFIG.md) - OJP connection pool settings and tuning parameters
 - [OJP Server Configuration](documents/configuration/ojp-server-configuration.md) - Server startup options and runtime configuration
 - [Telemetry and Observability](documents/telemetry/README.md) - OpenTelemetry integration and monitoring setup
 
@@ -60,7 +60,7 @@ That's it! Your application now uses intelligent connection pooling through OJP.
 
 * The OJP JDBC driver is used as a replacement for the native JDBC driver(s) previously used with minimal change, the only change required being prefixing the connection URL with `ojp_`. For example: 
 ```
-ojp_[localhost:1059]postgresql://user@localhost
+ojp[localhost:1059]_postgresql://user@localhost
 ```
 instead of:
 ```
@@ -116,6 +116,8 @@ Latest version:
 
 When using OJP, disable any existing connection pooling in your application (such as HikariCP, C3P0, or DBCP2) since OJP handles connection pooling at the proxy level. This prevents double-pooling and ensures optimal performance.
 
+**Important**: OJP will not work properly if another connection pool is enabled on the application side. Make sure to disable all application-level connection pooling before using OJP.
+
 ### ojp-grpc-commons
 The ojp-grpc-commons module contains the shared gRPC contracts used between the ojp-server and ojp-jdbc-driver. These contracts define the communication protocol and structure for requests and responses exchanged between the server and the driver.
 
@@ -146,9 +148,11 @@ Welcome to OJP! We appreciate your interest in contributing. This guide will hel
    mvn verify -pl ojp-server -Prun-ojp-server
    ```
 
-4. **Run tests**
+4. **Run integration tests**
+   Navigate to the ojp-jdbc-driver folder first:
    ```bash
-   mvn test
+   cd ojp-jdbc-driver
+   mvn test -DdisablePostgresTests
    ```
 
 ### Testing Configuration
