@@ -1,5 +1,6 @@
 package openjdbcproxy.jdbc;
 
+import openjdbcproxy.jdbc.testutil.TestDBUtils;
 import org.junit.Assert;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,6 +17,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import static openjdbcproxy.helpers.SqlHelper.executeUpdate;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class BinaryStreamIntegrationTest {
 
@@ -30,6 +32,8 @@ public class BinaryStreamIntegrationTest {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void createAndReadingBinaryStreamSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         Assumptions.assumeFalse(isTestDisabled, "Skipping Postgres tests");
+        assumeTrue(TestDBUtils.isInfrastructureAvailable(driverClass, url, user, pwd), 
+                   "OJP server or database infrastructure not available - skipping integration test");
 
         Connection conn = DriverManager.getConnection(url, user, pwd);
 
@@ -92,6 +96,8 @@ public class BinaryStreamIntegrationTest {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void createAndReadingLargeBinaryStreamSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         Assumptions.assumeFalse(isTestDisabled, "Skipping Postgres tests");
+        assumeTrue(TestDBUtils.isInfrastructureAvailable(driverClass, url, user, pwd), 
+                   "OJP server or database infrastructure not available - skipping integration test");
 
         Connection conn = DriverManager.getConnection(url, user, pwd);
 
