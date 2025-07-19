@@ -13,7 +13,7 @@ public class H2DatabaseMetaDataExtensiveTests {
 
     public void setUp(String driverClass, String url, String user, String password) throws Exception {
         connection = DriverManager.getConnection(url, user, password);
-        TestDBUtils.createBasicTestTable(connection, true); // Use H2 syntax
+        TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.H2);
     }
 
     @AfterAll

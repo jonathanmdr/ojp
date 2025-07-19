@@ -27,7 +27,7 @@ public class H2MultipleTypesIntegrationTest {
 
         System.out.println("Testing for url -> " + url);
 
-        TestDBUtils.createMultiTypeTestTable(conn, true); // Use H2 syntax
+        TestDBUtils.createMultiTypeTestTable(conn, TestDBUtils.SqlSyntax.H2);
 
         java.sql.PreparedStatement psInsert = conn.prepareStatement(
                 "insert into test_table (val_int, val_varchar, val_double_precision, val_bigint, val_tinyint, " +

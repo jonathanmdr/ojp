@@ -37,7 +37,7 @@ public class PostgresMultipleTypesIntegrationTest {
 
         System.out.println("Testing for url -> " + url);
 
-        TestDBUtils.createMultiTypeTestTable(conn, false); // Use PostgreSQL syntax
+        TestDBUtils.createMultiTypeTestTable(conn, TestDBUtils.SqlSyntax.POSTGRES);
 
         java.sql.PreparedStatement psInsert = conn.prepareStatement(
                 "insert into test_table (val_int, val_varchar, val_double_precision, val_bigint, val_tinyint, " +

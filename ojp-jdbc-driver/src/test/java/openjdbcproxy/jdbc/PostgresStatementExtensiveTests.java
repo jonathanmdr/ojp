@@ -40,7 +40,7 @@ public class PostgresStatementExtensiveTests {
         connection = DriverManager.getConnection(url, user, password);
         statement = connection.createStatement();
 
-        TestDBUtils.createBasicTestTable(connection, false); // Use PostgreSQL syntax
+        TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.POSTGRES);
     }
 
     @AfterEach
@@ -251,7 +251,7 @@ public class PostgresStatementExtensiveTests {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void testGeneratedKeys(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        TestDBUtils.createAutoIncrementTestTable(connection, "test_auto_keys", false); // PostgreSQL syntax
+        TestDBUtils.createAutoIncrementTestTable(connection, "test_auto_keys", TestDBUtils.SqlSyntax.POSTGRES);
         
         int affected = statement.executeUpdate("INSERT INTO test_auto_keys (name) VALUES ('foo')", Statement.RETURN_GENERATED_KEYS);
         assertEquals(1, affected);
@@ -266,7 +266,7 @@ public class PostgresStatementExtensiveTests {
     public void testExecuteUpdateVariants(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
 
-        TestDBUtils.createAutoIncrementTestTable(connection, "test_cols", false); // PostgreSQL syntax
+        TestDBUtils.createAutoIncrementTestTable(connection, "test_cols", TestDBUtils.SqlSyntax.POSTGRES);
         
         int a = statement.executeUpdate("INSERT INTO test_cols (name) VALUES ('bar')", Statement.RETURN_GENERATED_KEYS);
         assertEquals(1, a);
@@ -284,7 +284,7 @@ public class PostgresStatementExtensiveTests {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void testExecuteVariants(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        TestDBUtils.createAutoIncrementTestTable(connection, "test_exec", false); // PostgreSQL syntax
+        TestDBUtils.createAutoIncrementTestTable(connection, "test_exec", TestDBUtils.SqlSyntax.POSTGRES);
         
         boolean b = statement.execute("INSERT INTO test_exec (name) VALUES ('v1')", Statement.RETURN_GENERATED_KEYS);
         assertFalse(b);

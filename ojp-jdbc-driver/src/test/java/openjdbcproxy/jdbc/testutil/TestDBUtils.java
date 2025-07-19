@@ -18,12 +18,20 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class TestDBUtils {
 
     /**
+     * Enum representing different SQL syntax variations for database-specific operations.
+     */
+    public enum SqlSyntax {
+        H2,
+        POSTGRES
+    }
+
+    /**
      * Creates a basic test table for integration tests.
      * @param connection The database connection
-     * @param useH2Syntax If true, uses H2-specific syntax; if false, uses PostgreSQL syntax
+     * @param sqlSyntax The SQL syntax to use (H2 or POSTGRES)
      * @throws SQLException if table creation fails
      */
-    public static void createBasicTestTable(Connection connection, boolean useH2Syntax) throws SQLException {
+    public static void createBasicTestTable(Connection connection, SqlSyntax sqlSyntax) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             // Drop table if exists
             try {
@@ -34,7 +42,7 @@ public class TestDBUtils {
 
             // Create table with appropriate syntax
             String createTableSql;
-            if (useH2Syntax) {
+            if (sqlSyntax == SqlSyntax.H2) {
                 createTableSql = "CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(255))";
             } else {
                 createTableSql = "CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(255))";
@@ -51,10 +59,10 @@ public class TestDBUtils {
      * Creates a test table with auto-increment capabilities.
      * @param connection The database connection
      * @param tableName The name of the table to create
-     * @param useH2Syntax If true, uses H2-specific syntax; if false, uses PostgreSQL syntax
+     * @param sqlSyntax The SQL syntax to use (H2 or POSTGRES)
      * @throws SQLException if table creation fails
      */
-    public static void createAutoIncrementTestTable(Connection connection, String tableName, boolean useH2Syntax) throws SQLException {
+    public static void createAutoIncrementTestTable(Connection connection, String tableName, SqlSyntax sqlSyntax) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             // Drop table if exists
             try {
@@ -65,7 +73,7 @@ public class TestDBUtils {
 
             // Create table with appropriate auto-increment syntax
             String createTableSql;
-            if (useH2Syntax) {
+            if (sqlSyntax == SqlSyntax.H2) {
                 createTableSql = "CREATE TABLE " + tableName + " (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255))";
             } else {
                 createTableSql = "CREATE TABLE " + tableName + " (id SERIAL PRIMARY KEY, name VARCHAR(255))";
@@ -77,10 +85,10 @@ public class TestDBUtils {
     /**
      * Creates a comprehensive test table with multiple data types.
      * @param connection The database connection
-     * @param useH2Syntax If true, uses H2-specific syntax; if false, uses PostgreSQL syntax
+     * @param sqlSyntax The SQL syntax to use (H2 or POSTGRES)
      * @throws SQLException if table creation fails
      */
-    public static void createMultiTypeTestTable(Connection connection, boolean useH2Syntax) throws SQLException {
+    public static void createMultiTypeTestTable(Connection connection, SqlSyntax sqlSyntax) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             // Drop table if exists
             try {
@@ -91,7 +99,7 @@ public class TestDBUtils {
 
             // Create table with appropriate data type syntax
             String createTableSql;
-            if (useH2Syntax) {
+            if (sqlSyntax == SqlSyntax.H2) {
                 createTableSql = "CREATE TABLE test_table(" +
                         " val_int INT NOT NULL," +
                         " val_varchar VARCHAR(50) NOT NULL," +

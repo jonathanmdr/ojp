@@ -28,7 +28,7 @@ public class H2StatementExtensiveTests {
     public void setUp(String driverClass, String url, String user, String password) throws Exception {
         connection = DriverManager.getConnection(url, user, password);
         statement = connection.createStatement();
-        TestDBUtils.createBasicTestTable(connection, true); // Use H2 syntax
+        TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.H2);
     }
 
     @AfterEach
@@ -239,7 +239,7 @@ public class H2StatementExtensiveTests {
     @CsvFileSource(resources = "/h2_connection.csv")
     public void testGeneratedKeys(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        TestDBUtils.createAutoIncrementTestTable(connection, "test_auto_keys", true); // H2 syntax
+        TestDBUtils.createAutoIncrementTestTable(connection, "test_auto_keys", TestDBUtils.SqlSyntax.H2);
         int affected = statement.executeUpdate("INSERT INTO test_auto_keys (name) VALUES ('foo')", Statement.RETURN_GENERATED_KEYS);
         assertEquals(1, affected);
         ResultSet keys = statement.getGeneratedKeys();
@@ -252,7 +252,7 @@ public class H2StatementExtensiveTests {
     @CsvFileSource(resources = "/h2_connection.csv")
     public void testExecuteUpdateVariants(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        TestDBUtils.createAutoIncrementTestTable(connection, "test_cols", true); // H2 syntax
+        TestDBUtils.createAutoIncrementTestTable(connection, "test_cols", TestDBUtils.SqlSyntax.H2);
         int a = statement.executeUpdate("INSERT INTO test_cols (name) VALUES ('bar')", Statement.RETURN_GENERATED_KEYS);
         assertEquals(1, a);
 
@@ -269,7 +269,7 @@ public class H2StatementExtensiveTests {
     @CsvFileSource(resources = "/h2_connection.csv")
     public void testExecuteVariants(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        TestDBUtils.createAutoIncrementTestTable(connection, "test_exec", true); // H2 syntax
+        TestDBUtils.createAutoIncrementTestTable(connection, "test_exec", TestDBUtils.SqlSyntax.H2);
         boolean b = statement.execute("INSERT INTO test_exec (name) VALUES ('v1')", Statement.RETURN_GENERATED_KEYS);
         assertFalse(b);
 

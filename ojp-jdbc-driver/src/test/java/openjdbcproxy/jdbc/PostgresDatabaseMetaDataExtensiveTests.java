@@ -23,7 +23,7 @@ public class PostgresDatabaseMetaDataExtensiveTests {
         assumeFalse(isTestDisabled, "Postgres tests are disabled");
         
         connection = DriverManager.getConnection(url, user, password);
-        TestDBUtils.createBasicTestTable(connection, false); // Use PostgreSQL syntax
+        TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.POSTGRES);
     }
 
     @AfterAll

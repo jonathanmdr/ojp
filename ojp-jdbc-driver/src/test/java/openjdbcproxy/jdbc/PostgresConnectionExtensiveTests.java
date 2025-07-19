@@ -88,7 +88,7 @@ public class PostgresConnectionExtensiveTests {
         this.setUp(driverClass, url, user, password);
         connection.setAutoCommit(false);
 
-        TestDBUtils.createBasicTestTable(connection, false); // Use PostgreSQL syntax
+        TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.POSTGRES);
         connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
         connection.rollback();
 
@@ -107,7 +107,7 @@ public class PostgresConnectionExtensiveTests {
     public void testSavepoints(String driverClass, String url, String user, String password) throws SQLException {
         this.setUp(driverClass, url, user, password);
         connection.setAutoCommit(false);
-        TestDBUtils.createBasicTestTable(connection, false); // Use PostgreSQL syntax
+        TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.POSTGRES);
 
         Savepoint sp1 = connection.setSavepoint("Savepoint1");
         connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
