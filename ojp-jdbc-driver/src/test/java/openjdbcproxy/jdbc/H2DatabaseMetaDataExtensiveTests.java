@@ -7,11 +7,15 @@ import org.junit.jupiter.params.provider.CsvFileSource;
 
 import java.sql.*;
 
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
 public class H2DatabaseMetaDataExtensiveTests {
 
     private static Connection connection;
 
     public void setUp(String driverClass, String url, String user, String password) throws Exception {
+        assumeTrue(TestDBUtils.isInfrastructureAvailable(driverClass, url, user, password), 
+                   "OJP server or H2 database infrastructure not available - skipping integration test");
         connection = DriverManager.getConnection(url, user, password);
         TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.H2);
     }

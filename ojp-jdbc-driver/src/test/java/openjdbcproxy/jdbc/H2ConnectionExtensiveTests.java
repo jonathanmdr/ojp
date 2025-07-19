@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class H2ConnectionExtensiveTests {
 
@@ -40,6 +41,8 @@ public class H2ConnectionExtensiveTests {
 
     @SneakyThrows
     public void setUp(String driverClass, String url, String user, String password) throws SQLException {
+        assumeTrue(TestDBUtils.isInfrastructureAvailable(driverClass, url, user, password), 
+                   "OJP server or H2 database infrastructure not available - skipping integration test");
         connection = DriverManager.getConnection(url, user, password);
     }
 

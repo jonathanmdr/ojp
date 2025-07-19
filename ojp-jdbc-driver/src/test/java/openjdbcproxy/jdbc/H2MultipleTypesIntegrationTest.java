@@ -16,6 +16,8 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
 import static openjdbcproxy.helpers.SqlHelper.executeUpdate;
 
 public class H2MultipleTypesIntegrationTest {
@@ -23,6 +25,8 @@ public class H2MultipleTypesIntegrationTest {
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_connection.csv")
     public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, ParseException {
+        assumeTrue(TestDBUtils.isInfrastructureAvailable(driverClass, url, user, pwd), 
+                   "OJP server or H2 database infrastructure not available - skipping integration test");
         Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing for url -> " + url);
