@@ -22,14 +22,14 @@ public class OjpServerTelemetry {
 	 * Creates GrpcTelemetry with default configuration.
 	 */
 	public GrpcTelemetry createGrpcTelemetry() {
-		return createGrpcTelemetry(DEFAULT_PROMETHEUS_PORT, List.of("0.0.0.0/0"));
+		return createGrpcTelemetry(DEFAULT_PROMETHEUS_PORT, List.of(IpWhitelistValidator.ALLOW_ALL_IPS));
 	}
 
 	/**
 	 * Creates GrpcTelemetry with specified Prometheus port.
 	 */
 	public GrpcTelemetry createGrpcTelemetry(int prometheusPort) {
-		return createGrpcTelemetry(prometheusPort, List.of("0.0.0.0/0"));
+		return createGrpcTelemetry(prometheusPort, List.of(IpWhitelistValidator.ALLOW_ALL_IPS));
 	}
 
 	/**
@@ -42,7 +42,7 @@ public class OjpServerTelemetry {
 		// Validate IP whitelist
 		if (!IpWhitelistValidator.validateWhitelistRules(allowedIps)) {
 			logger.warn("Invalid IP whitelist rules detected, falling back to allow all");
-			allowedIps = List.of("0.0.0.0/0");
+			allowedIps = List.of(IpWhitelistValidator.ALLOW_ALL_IPS);
 		}
 
 		PrometheusHttpServer prometheusServer = PrometheusHttpServer.builder()

@@ -38,9 +38,9 @@ public class ServerConfiguration {
     public static final int DEFAULT_MAX_REQUEST_SIZE = 4 * 1024 * 1024; // 4MB
     public static final String DEFAULT_LOG_LEVEL = "INFO";
     public static final boolean DEFAULT_ACCESS_LOGGING = false;
-    public static final List<String> DEFAULT_ALLOWED_IPS = List.of("0.0.0.0/0"); // Allow all by default
+    public static final List<String> DEFAULT_ALLOWED_IPS = List.of(IpWhitelistValidator.ALLOW_ALL_IPS); // Allow all by default
     public static final long DEFAULT_CONNECTION_IDLE_TIMEOUT = 30000; // 30 seconds
-    public static final List<String> DEFAULT_PROMETHEUS_ALLOWED_IPS = List.of("0.0.0.0/0"); // Allow all by default
+    public static final List<String> DEFAULT_PROMETHEUS_ALLOWED_IPS = List.of(IpWhitelistValidator.ALLOW_ALL_IPS); // Allow all by default
     public static final long DEFAULT_CIRCUIT_BREAKER_TIMEOUT = 60000; // 60 seconds
 
     // Configuration values

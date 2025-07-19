@@ -13,7 +13,7 @@ public class IpWhitelistValidatorTest {
 
     @Test
     public void testWildcardAccess() {
-        List<String> wildcardRules = List.of("0.0.0.0/0");
+        List<String> wildcardRules = List.of(IpWhitelistValidator.ALLOW_ALL_IPS);
         assertTrue(IpWhitelistValidator.isIpAllowed("192.168.1.1", wildcardRules));
         assertTrue(IpWhitelistValidator.isIpAllowed("10.0.0.1", wildcardRules));
         assertTrue(IpWhitelistValidator.isIpAllowed("172.16.0.1", wildcardRules));
@@ -87,7 +87,7 @@ public class IpWhitelistValidatorTest {
         assertTrue(IpWhitelistValidator.validateWhitelistRules(List.of("192.168.1.1")));
         assertTrue(IpWhitelistValidator.validateWhitelistRules(List.of("192.168.1.0/24")));
         assertTrue(IpWhitelistValidator.validateWhitelistRules(List.of("*")));
-        assertTrue(IpWhitelistValidator.validateWhitelistRules(List.of("0.0.0.0/0")));
+        assertTrue(IpWhitelistValidator.validateWhitelistRules(List.of(IpWhitelistValidator.ALLOW_ALL_IPS)));
         assertTrue(IpWhitelistValidator.validateWhitelistRules(List.of("127.0.0.1", "192.168.1.0/24")));
         assertTrue(IpWhitelistValidator.validateWhitelistRules(null));
         assertTrue(IpWhitelistValidator.validateWhitelistRules(List.of()));
@@ -108,7 +108,7 @@ public class IpWhitelistValidatorTest {
         assertFalse(IpWhitelistValidator.isIpAllowed("192.168.1.2", singleHostCidr));
 
         // Test /0 CIDR (all hosts)
-        List<String> allHostsCidr = List.of("0.0.0.0/0");
+        List<String> allHostsCidr = List.of(IpWhitelistValidator.ALLOW_ALL_IPS);
         assertTrue(IpWhitelistValidator.isIpAllowed("192.168.1.1", allHostsCidr));
         assertTrue(IpWhitelistValidator.isIpAllowed("8.8.8.8", allHostsCidr));
 

@@ -12,6 +12,11 @@ import java.util.List;
  */
 public class IpWhitelistValidator {
     private static final Logger logger = LoggerFactory.getLogger(IpWhitelistValidator.class);
+    
+    /**
+     * Constant representing "allow all" CIDR range.
+     */
+    public static final String ALLOW_ALL_IPS = "0.0.0.0/0";
 
     /**
      * Validates if an IP address is allowed based on the whitelist.
@@ -28,7 +33,7 @@ public class IpWhitelistValidator {
         }
 
         // Check if wildcard is present (allow all)
-        if (allowedIps.contains("0.0.0.0/0") || allowedIps.contains("*")) {
+        if (allowedIps.contains(ALLOW_ALL_IPS) || allowedIps.contains("*")) {
             logger.debug("Wildcard found in whitelist, allowing IP: {}", clientIp);
             return true;
         }
@@ -113,7 +118,18 @@ public class IpWhitelistValidator {
     }
 
     /**
-     * Converts a 4-byte array to an integer.
+     * Converts a 4-byte array representing an IPv4 address to a 32-bit integer.
+     * This method is used for CIDR range calculations where IP addresses need to be
+     * compared numerically. Each byte is treated as an unsigned value (0-255) and
+     * positioned according to network byte order (big-endian).
+     * 
+     * @param bytes 4-byte array representing IPv4 address octets
+     * @return 32-bit integer representation of the IP address
+     * 
+     * @examples
+     * - IP 192.168.1.1 (bytes: [192, 168, 1, 1]) → 3232235777
+     * - IP 10.0.0.1 (bytes: [10, 0, 0, 1]) → 167772161  
+     * - IP 127.0.0.1 (bytes: [127, 0, 0, 1]) → 2130706433
      */
     private static int bytesToInt(byte[] bytes) {
         return ((bytes[0] & 0xFF) << 24) |
@@ -146,7 +162,7 @@ public class IpWhitelistValidator {
      * Validates a single IP rule (individual IP or CIDR range).
      */
     private static boolean isValidIpRule(String rule) {
-        if (rule.equals("*") || rule.equals("0.0.0.0/0")) {
+        if (rule.equals("*") || rule.equals(ALLOW_ALL_IPS)) {
             return true;
         }
 
