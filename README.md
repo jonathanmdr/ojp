@@ -14,6 +14,7 @@ A JDBC Driver and Layer 7 Proxy Server to decouple applications from relational 
 - [Architectural decision records (ADRs)](documents/ADRs)
 - [Get started: Spring Boot, Quarkus and Micronaut](documents/java-frameworks)
 - [Connection Pool Configuration](documents/configuration/CONNECTION_POOL_CONFIG.md)
+- [OJP Server Configuration](documents/configuration/ojp-server-configuration.md)
 - [Telemetry and Observability](documents/telemetry/README.md)
 
 ## High Level Design
