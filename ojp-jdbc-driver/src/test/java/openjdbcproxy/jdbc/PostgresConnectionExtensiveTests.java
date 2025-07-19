@@ -86,9 +86,13 @@ public class PostgresConnectionExtensiveTests {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void testCommitAndRollback(String driverClass, String url, String user, String password) throws SQLException {
         this.setUp(driverClass, url, user, password);
+        
+        // PostgreSQL DDL statements are transactional, so we need to create and commit the table first
+        TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.POSTGRES);
+        connection.commit(); // Ensure table creation is committed
+        
         connection.setAutoCommit(false);
 
-        TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.POSTGRES);
         connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
         connection.rollback();
 
@@ -106,8 +110,12 @@ public class PostgresConnectionExtensiveTests {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void testSavepoints(String driverClass, String url, String user, String password) throws SQLException {
         this.setUp(driverClass, url, user, password);
-        connection.setAutoCommit(false);
+        
+        // PostgreSQL DDL statements are transactional, so we need to create and commit the table first
         TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.POSTGRES);
+        connection.commit(); // Ensure table creation is committed
+        
+        connection.setAutoCommit(false);
 
         Savepoint sp1 = connection.setSavepoint("Savepoint1");
         connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
@@ -117,7 +125,9 @@ public class PostgresConnectionExtensiveTests {
         assertEquals(false, rs.next());
 
         connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
-        connection.releaseSavepoint(sp1);
+        // sp1 is no longer valid after rollback, so create a new savepoint to demonstrate release functionality  
+        Savepoint sp2 = connection.setSavepoint("Savepoint2");
+        connection.releaseSavepoint(sp2);
         connection.commit();
 
         rs = connection.createStatement().executeQuery("SELECT * FROM test_table WHERE id = 3");
@@ -242,7 +252,10 @@ public class PostgresConnectionExtensiveTests {
 
         // rollback(Savepoint), releaseSavepoint(Savepoint)
         connection.rollback(sp1);
-        connection.releaseSavepoint(sp2);
+        // In PostgreSQL, we can only release savepoints that haven't been rolled back
+        // Create a new savepoint to release, since sp2 is still valid
+        Savepoint sp3 = connection.setSavepoint("sp3");
+        connection.releaseSavepoint(sp3);
 
         // createStatement(int, int, int)
         Statement st3 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
