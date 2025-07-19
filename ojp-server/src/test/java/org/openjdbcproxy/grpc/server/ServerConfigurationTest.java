@@ -26,6 +26,7 @@ public class ServerConfigurationTest {
         System.clearProperty("ojp.server.allowedIps");
         System.clearProperty("ojp.server.connectionIdleTimeout");
         System.clearProperty("ojp.prometheus.allowedIps");
+        System.clearProperty("ojp.server.circuitBreakerTimeout");
     }
 
     @Test
@@ -43,6 +44,7 @@ public class ServerConfigurationTest {
         assertEquals(ServerConfiguration.DEFAULT_ALLOWED_IPS, config.getAllowedIps());
         assertEquals(ServerConfiguration.DEFAULT_CONNECTION_IDLE_TIMEOUT, config.getConnectionIdleTimeout());
         assertEquals(ServerConfiguration.DEFAULT_PROMETHEUS_ALLOWED_IPS, config.getPrometheusAllowedIps());
+        assertEquals(ServerConfiguration.DEFAULT_CIRCUIT_BREAKER_TIMEOUT, config.getCircuitBreakerTimeout());
     }
 
     @Test
@@ -59,6 +61,7 @@ public class ServerConfigurationTest {
         System.setProperty("ojp.server.allowedIps", "192.168.1.0/24,10.0.0.1");
         System.setProperty("ojp.server.connectionIdleTimeout", "60000");
         System.setProperty("ojp.prometheus.allowedIps", "127.0.0.1,192.168.1.0/24");
+        System.setProperty("ojp.server.circuitBreakerTimeout", "120000");
 
         ServerConfiguration config = new ServerConfiguration();
 
@@ -73,6 +76,7 @@ public class ServerConfigurationTest {
         assertEquals(List.of("192.168.1.0/24", "10.0.0.1"), config.getAllowedIps());
         assertEquals(60000, config.getConnectionIdleTimeout());
         assertEquals(List.of("127.0.0.1", "192.168.1.0/24"), config.getPrometheusAllowedIps());
+        assertEquals(120000, config.getCircuitBreakerTimeout());
     }
 
     @Test
@@ -92,11 +96,13 @@ public class ServerConfigurationTest {
     @Test
     public void testInvalidLongValues() {
         System.setProperty("ojp.server.connectionIdleTimeout", "invalid-long");
+        System.setProperty("ojp.server.circuitBreakerTimeout", "not-a-number");
 
         ServerConfiguration config = new ServerConfiguration();
 
         // Should fall back to default for invalid values
         assertEquals(ServerConfiguration.DEFAULT_CONNECTION_IDLE_TIMEOUT, config.getConnectionIdleTimeout());
+        assertEquals(ServerConfiguration.DEFAULT_CIRCUIT_BREAKER_TIMEOUT, config.getCircuitBreakerTimeout());
     }
 
     @Test

@@ -16,6 +16,7 @@ The OJP Server supports comprehensive configuration through both JVM system prop
 | `ojp.server.accessLogging` | `OJP_SERVER_ACCESSLOGGING` | boolean | false | Enable/disable access logging |
 | `ojp.server.allowedIps` | `OJP_SERVER_ALLOWEDIPS` | string | 0.0.0.0/0 | IP whitelist for gRPC server (comma-separated) |
 | `ojp.server.connectionIdleTimeout` | `OJP_SERVER_CONNECTIONIDLETIMEOUT` | long | 30000 | Connection idle timeout in milliseconds |
+| `ojp.server.circuitBreakerTimeout` | `OJP_SERVER_CIRCUITBREAKERTIMEOUT` | long | 60000 | Circuit breaker timeout in milliseconds |
 | `ojp.prometheus.allowedIps` | `OJP_PROMETHEUS_ALLOWEDIPS` | string | 0.0.0.0/0 | IP whitelist for Prometheus endpoint (comma-separated) |
 
 ## Configuration Methods
@@ -29,6 +30,7 @@ java -Dojp.server.port=8080 \
      -Dojp.prometheus.port=9091 \
      -Dojp.opentelemetry.enabled=false \
      -Dojp.server.threadPoolSize=100 \
+     -Dojp.server.circuitBreakerTimeout=120000 \
      -Dojp.server.allowedIps="192.168.1.0/24,10.0.0.1" \
      -jar ojp-server.jar
 ```
@@ -42,6 +44,7 @@ export OJP_SERVER_PORT=8080
 export OJP_PROMETHEUS_PORT=9091
 export OJP_OPENTELEMETRY_ENABLED=false
 export OJP_SERVER_THREADPOOLSIZE=100
+export OJP_SERVER_CIRCUITBREAKERTIMEOUT=120000
 export OJP_SERVER_ALLOWEDIPS="192.168.1.0/24,10.0.0.1"
 java -jar ojp-server.jar
 ```
@@ -52,6 +55,7 @@ java -jar ojp-server.jar
 docker run -e OJP_SERVER_PORT=8080 \
            -e OJP_PROMETHEUS_PORT=9091 \
            -e OJP_OPENTELEMETRY_ENABLED=false \
+           -e OJP_SERVER_CIRCUITBREAKERTIMEOUT=120000 \
            -e OJP_SERVER_ALLOWEDIPS="192.168.1.0/24,10.0.0.1" \
            -p 8080:8080 \
            -p 9091:9091 \
@@ -139,13 +143,29 @@ Supported log levels: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`
 
 ## Performance Tuning
 
+### Circuit Breaker Configuration
+
+The circuit breaker protects against cascading failures by tracking SQL statement failures and temporarily blocking requests when failure thresholds are exceeded:
+
+```bash
+# Default circuit breaker timeout (60 seconds)
+-Dojp.server.circuitBreakerTimeout=60000
+
+# Extended timeout for environments with occasional slow queries
+-Dojp.server.circuitBreakerTimeout=120000
+
+# Short timeout for fast-fail scenarios
+-Dojp.server.circuitBreakerTimeout=30000
+```
+
 ### Thread Pool Configuration
 
 ```bash
 # High-throughput configuration
 -Dojp.server.threadPoolSize=500 \
 -Dojp.server.maxRequestSize=16777216 \
--Dojp.server.connectionIdleTimeout=60000
+-Dojp.server.connectionIdleTimeout=60000 \
+-Dojp.server.circuitBreakerTimeout=90000
 ```
 
 ### Memory and Request Limits
@@ -156,6 +176,9 @@ Supported log levels: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`
 
 # Longer connection timeouts for slow queries
 -Dojp.server.connectionIdleTimeout=120000  # 2 minutes
+
+# Longer circuit breaker timeout for complex queries
+-Dojp.server.circuitBreakerTimeout=180000  # 3 minutes
 ```
 
 ## Configuration Examples
@@ -179,6 +202,7 @@ java -Dojp.server.port=1059 \
      -Dojp.server.logLevel=INFO \
      -Dojp.server.accessLogging=false \
      -Dojp.server.threadPoolSize=300 \
+     -Dojp.server.circuitBreakerTimeout=60000 \
      -Dojp.server.allowedIps="10.0.0.0/8,172.16.0.0/12" \
      -Dojp.prometheus.allowedIps="192.168.100.0/24" \
      -jar ojp-server.jar
@@ -195,6 +219,7 @@ data:
   OJP_SERVER_PORT: "1059"
   OJP_PROMETHEUS_PORT: "9090"
   OJP_SERVER_THREADPOOLSIZE: "200"
+  OJP_SERVER_CIRCUITBREAKERTIMEOUT: "60000"
   OJP_SERVER_ALLOWEDIPS: "10.244.0.0/16"
   OJP_PROMETHEUS_ALLOWEDIPS: "10.244.0.0/16"
   OJP_OPENTELEMETRY_ENABLED: "true"

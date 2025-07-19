@@ -27,6 +27,7 @@ public class ServerConfiguration {
     private static final String ALLOWED_IPS_KEY = "ojp.server.allowedIps";
     private static final String CONNECTION_IDLE_TIMEOUT_KEY = "ojp.server.connectionIdleTimeout";
     private static final String PROMETHEUS_ALLOWED_IPS_KEY = "ojp.prometheus.allowedIps";
+    private static final String CIRCUIT_BREAKER_TIMEOUT_KEY = "ojp.server.circuitBreakerTimeout";
 
     // Default values
     public static final int DEFAULT_SERVER_PORT = CommonConstants.DEFAULT_PORT_NUMBER;
@@ -40,6 +41,7 @@ public class ServerConfiguration {
     public static final List<String> DEFAULT_ALLOWED_IPS = List.of("0.0.0.0/0"); // Allow all by default
     public static final long DEFAULT_CONNECTION_IDLE_TIMEOUT = 30000; // 30 seconds
     public static final List<String> DEFAULT_PROMETHEUS_ALLOWED_IPS = List.of("0.0.0.0/0"); // Allow all by default
+    public static final long DEFAULT_CIRCUIT_BREAKER_TIMEOUT = 60000; // 60 seconds
 
     // Configuration values
     private final int serverPort;
@@ -53,6 +55,7 @@ public class ServerConfiguration {
     private final List<String> allowedIps;
     private final long connectionIdleTimeout;
     private final List<String> prometheusAllowedIps;
+    private final long circuitBreakerTimeout;
 
     public ServerConfiguration() {
         this.serverPort = getIntProperty(SERVER_PORT_KEY, DEFAULT_SERVER_PORT);
@@ -66,6 +69,7 @@ public class ServerConfiguration {
         this.allowedIps = getListProperty(ALLOWED_IPS_KEY, DEFAULT_ALLOWED_IPS);
         this.connectionIdleTimeout = getLongProperty(CONNECTION_IDLE_TIMEOUT_KEY, DEFAULT_CONNECTION_IDLE_TIMEOUT);
         this.prometheusAllowedIps = getListProperty(PROMETHEUS_ALLOWED_IPS_KEY, DEFAULT_PROMETHEUS_ALLOWED_IPS);
+        this.circuitBreakerTimeout = getLongProperty(CIRCUIT_BREAKER_TIMEOUT_KEY, DEFAULT_CIRCUIT_BREAKER_TIMEOUT);
 
         logConfigurationSummary();
     }
@@ -157,6 +161,7 @@ public class ServerConfiguration {
         logger.info("  Allowed IPs: {}", allowedIps);
         logger.info("  Connection Idle Timeout: {} ms", connectionIdleTimeout);
         logger.info("  Prometheus Allowed IPs: {}", prometheusAllowedIps);
+        logger.info("  Circuit Breaker Timeout: {} ms", circuitBreakerTimeout);
     }
 
     // Getters
@@ -202,5 +207,9 @@ public class ServerConfiguration {
 
     public List<String> getPrometheusAllowedIps() {
         return new ArrayList<>(prometheusAllowedIps);
+    }
+
+    public long getCircuitBreakerTimeout() {
+        return circuitBreakerTimeout;
     }
 }
