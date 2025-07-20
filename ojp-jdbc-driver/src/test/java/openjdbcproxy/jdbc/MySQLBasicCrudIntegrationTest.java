@@ -16,29 +16,19 @@ import java.sql.SQLException;
 import static openjdbcproxy.helpers.SqlHelper.executeUpdate;
 
 @Slf4j
-public class BasicCrudIntegrationTest {
+public class MySQLBasicCrudIntegrationTest {
 
-    private static boolean isPostgresTestDisabled;
-    private static boolean isMySQLTestDisabled;
+    private static boolean isTestDisabled;
 
     @BeforeAll
     public static void setup() {
-        isPostgresTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
-        isMySQLTestDisabled = Boolean.parseBoolean(System.getProperty("disableMySQLTests", "false"));
+        isTestDisabled = Boolean.parseBoolean(System.getProperty("disableMySQLTests", "false"));
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_mysql_connections.csv")
+    @CsvFileSource(resources = "/mysql_connection.csv")
     public void crudTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
-        // Skip PostgreSQL tests if disabled
-        if (url.contains("postgresql") && isPostgresTestDisabled) {
-            Assumptions.assumeFalse(true, "Skipping Postgres tests");
-        }
-        
-        // Skip MySQL tests if disabled
-        if (url.contains("mysql") && isMySQLTestDisabled) {
-            Assumptions.assumeFalse(true, "Skipping MySQL tests");
-        }
+        Assumptions.assumeFalse(isTestDisabled, "Skipping MySQL tests");
 
         Connection conn = DriverManager.getConnection(url, user, pwd);
 
