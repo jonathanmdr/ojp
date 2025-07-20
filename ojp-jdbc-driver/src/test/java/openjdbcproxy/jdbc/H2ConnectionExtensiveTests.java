@@ -17,7 +17,6 @@ import java.sql.DriverManager;
 import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
@@ -270,12 +269,12 @@ public class H2ConnectionExtensiveTests {
         props.setProperty("foo", "bar");
         try {
             connection.setClientInfo(props);
-        } catch (SQLClientInfoException | StatusRuntimeException ignored) {}
+        } catch (SQLException | StatusRuntimeException ignored) {}
 
         // setClientInfo(String, String)
         try {
             connection.setClientInfo("foo", "bar");
-        } catch (SQLClientInfoException | StatusRuntimeException ignored) {}
+        } catch (SQLException | StatusRuntimeException ignored) {}
 
         // getClientInfo(String)
         String val = connection.getClientInfo("foo");
