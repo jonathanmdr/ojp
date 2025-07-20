@@ -36,11 +36,15 @@ public class GrpcExceptionHandler {
     public static <T> void sendSQLExceptionMetadata(SQLException e, StreamObserver<T> streamObserver, SqlErrorType sqlErrorType) {
         Metadata metadata = new Metadata();
         try {
-            SqlErrorResponse sqlErrorResponse = SqlErrorResponse.newBuilder()
+            SqlErrorResponse.Builder responseBuilder = SqlErrorResponse.newBuilder()
                     .setReason(e.getMessage())
-                    .setSqlState(e.getSQLState())
                     .setSqlErrorType(sqlErrorType)
-                    .setVendorCode(e.getErrorCode()).build();
+                    .setVendorCode(e.getErrorCode());
+            if (e.getSQLState() != null) {
+                responseBuilder.setSqlState(e.getSQLState());
+            }
+
+            SqlErrorResponse sqlErrorResponse = responseBuilder.build();
             Metadata.Key<SqlErrorResponse> errorResponseKey = ProtoUtils.keyForProto(SqlErrorResponse.getDefaultInstance());
             metadata.put(errorResponseKey, sqlErrorResponse);
         } catch (RuntimeException re) {
