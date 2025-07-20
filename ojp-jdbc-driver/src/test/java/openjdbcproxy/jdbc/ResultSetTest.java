@@ -2,6 +2,8 @@ package openjdbcproxy.jdbc;
 
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
@@ -24,8 +26,19 @@ public class ResultSetTest {
     private Statement statement;
     private ResultSet resultSet;
 
+    private static boolean isPostgresTestDisabled;
+
+    @BeforeAll
+    public static void checkTestConfiguration() {
+        isPostgresTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
+    }
+
     @SneakyThrows
     public void setUp(String driverClass, String url, String user, String pwd) throws SQLException {
+        // Skip PostgreSQL tests if disabled
+        if (url.contains("postgresql") && isPostgresTestDisabled) {
+            Assumptions.assumeFalse(true, "Skipping Postgres tests");
+        }
 
         // Create an in-memory H2 database connection
         connection = DriverManager.getConnection(url, user, pwd);
