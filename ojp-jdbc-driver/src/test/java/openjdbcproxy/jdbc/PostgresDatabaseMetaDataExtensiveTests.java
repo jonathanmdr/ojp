@@ -294,6 +294,7 @@ public class PostgresDatabaseMetaDataExtensiveTests {
         Assertions.assertEquals(false, meta.insertsAreDetected(ResultSet.TYPE_FORWARD_ONLY));
         Assertions.assertEquals(true, meta.supportsBatchUpdates());
 
+        // These tests has to be at the end as per when using hikariCP the connection will be marked as broken after this operations.
         Assertions.assertEquals(true, meta.supportsResultSetHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT));
         Assertions.assertThrows(SQLException.class, () -> meta.getSuperTypes(null, null, null));
         Assertions.assertThrows(SQLException.class, () -> meta.getSuperTables(null, null, null));
