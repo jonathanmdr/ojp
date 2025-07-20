@@ -24,7 +24,6 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: testpassword
           MYSQL_DATABASE: defaultdb
           MYSQL_USER: testuser
           MYSQL_PASSWORD: testpassword
@@ -87,6 +86,10 @@ jobs:
 
       - name: Test (ojp-grpc-commons, ojp-jdbc-driver)
         run: mvn test -pl ojp-grpc-commons,ojp-jdbc-driver -Dgpg.skip=true
+
+      - name: Show ojp-server.log
+        if: always()  # ensures it runs even if previous steps fail
+        run: cat ojp-server.log || echo "ojp-server.log not found"
 
   notify-integration:
     runs-on: ubuntu-latest
