@@ -5,6 +5,7 @@ import com.openjdbcproxy.grpc.LobType;
 import com.openjdbcproxy.grpc.OpResult;
 import io.grpc.StatusRuntimeException;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.openjdbcproxy.constants.CommonConstants;
 import org.openjdbcproxy.grpc.client.StatementService;
@@ -129,6 +130,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getString(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        if (lastValueRead == null) {
+            return null;
+        }
         return (String) lastValueRead;
     }
 
@@ -139,6 +143,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getBoolean(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        if (lastValueRead == null) {
+            return false;
+        }
         return (boolean) lastValueRead;
     }
 
@@ -149,6 +156,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getByte(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        if (lastValueRead == null) {
+            return 0;
+        }
         return (byte) lastValueRead;
     }
 
@@ -159,6 +169,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getShort(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        if (lastValueRead == null) {
+            return 0;
+        }
         return (short) lastValueRead;
     }
 
@@ -169,6 +182,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getInt(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
+        if (lastValueRead == null) {
+            return 0;
+        }
         Object value = lastValueRead;
         if (value instanceof Long) {
             Long lValue = (Long) value;
@@ -185,6 +201,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getLong(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        if (lastValueRead == null) {
+            return 0;
+        }
         return (long) lastValueRead;
     }
 
@@ -195,6 +214,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getFloat(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        if (lastValueRead == null) {
+            return 0;
+        }
         Object value = lastValueRead;
         if (value instanceof BigDecimal) {
             BigDecimal bdValue = (BigDecimal) value;
@@ -210,6 +232,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getDouble(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        if (lastValueRead == null) {
+            return 0d;
+        }
         Object value = lastValueRead;
         if (value instanceof BigDecimal) {
             BigDecimal bdValue = (BigDecimal) value;
@@ -225,9 +250,13 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getBigDecimal(columnIndex, scale);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        if (lastValueRead == null) {
+            return null;
+        }
         return (BigDecimal) lastValueRead;
     }
 
+    @SneakyThrows
     @Override
     public byte[] getBytes(int columnIndex) throws SQLException {
         log.debug("getBytes: {}", columnIndex);
@@ -235,6 +264,10 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getBytes(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        if (lastValueRead instanceof String) {// Means the server is treating it as a binary stream
+            InputStream is = this.getBinaryStream(columnIndex);
+            return is.readAllBytes();
+        }
         return (byte[]) lastValueRead;
     }
 
@@ -245,6 +278,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getDate(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        if (lastValueRead == null) {
+            return null;
+        }
         Object result = lastValueRead;
         if (result instanceof Timestamp) {
             Timestamp timestamp = (Timestamp) result;
@@ -260,6 +296,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getTime(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        if (lastValueRead == null) {
+            return null;
+        }
         return (Time) lastValueRead;
     }
 
@@ -270,6 +309,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getTimestamp(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        if (lastValueRead == null) {
+            return null;
+        }
         return (Timestamp) lastValueRead;
     }
 
@@ -300,6 +342,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getBinaryStream(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        if (lastValueRead == null) {
+            return null;
+        }
         Object objUUID = lastValueRead;
         String lobRefUUID = String.valueOf(objUUID);
         BinaryStream binaryStream = new BinaryStream((Connection) this.statement.getConnection(),
@@ -321,6 +366,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getString(columnLabel);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
+        if (lastValueRead == null) {
+            return null;
+        }
         return (String) lastValueRead;
     }
 
@@ -331,9 +379,13 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getBoolean(columnLabel);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
+        if (lastValueRead == null) {
+            return false;
+        }
         return (boolean) lastValueRead;
     }
 
+    //TODO refactor all calls to getters with columnLabel to find the index and call the getter by index
     @Override
     public byte getByte(String columnLabel) throws SQLException {
         log.debug("getByte: {}", columnLabel);
@@ -341,6 +393,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getByte(columnLabel);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
+        if (lastValueRead == null) {
+            return 0;
+        }
         return (byte) lastValueRead;
     }
 
@@ -351,6 +406,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getShort(columnLabel);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
+        if (lastValueRead == null) {
+            return 0;
+        }
         return (short) lastValueRead;
     }
 
@@ -362,6 +420,9 @@ public class ResultSet extends RemoteProxyResultSet {
         }
         int colIdx = this.labelsMap.get(columnLabel.toUpperCase()) + 1;
         lastValueRead = currentDataBlock.get(blockIdx.get())[colIdx - 1];
+        if (lastValueRead == null) {
+            return 0;
+        }
         Object value = lastValueRead;
         if (value instanceof Long) {
             Long lValue = (Long) value;
@@ -379,6 +440,9 @@ public class ResultSet extends RemoteProxyResultSet {
         }
         int colIdx = this.labelsMap.get(columnLabel.toUpperCase()) + 1;
         lastValueRead = currentDataBlock.get(blockIdx.get())[colIdx - 1];
+        if (lastValueRead == null) {
+            return 0;
+        }
         return (long) lastValueRead;
     }
 
@@ -390,6 +454,9 @@ public class ResultSet extends RemoteProxyResultSet {
         }
         int colIdx = this.labelsMap.get(columnLabel.toUpperCase()) + 1;
         lastValueRead = currentDataBlock.get(blockIdx.get())[colIdx - 1];
+        if (lastValueRead == null) {
+            return 0;
+        }
         Object value = lastValueRead;
         if (value instanceof BigDecimal) {
             BigDecimal bdValue = (BigDecimal) value;
@@ -406,6 +473,9 @@ public class ResultSet extends RemoteProxyResultSet {
         }
         int colIdx = this.labelsMap.get(columnLabel.toUpperCase()) + 1;
         lastValueRead = currentDataBlock.get(blockIdx.get())[colIdx - 1];
+        if (lastValueRead == null) {
+            return 0d;
+        }
         Object value = lastValueRead;
         if (value instanceof BigDecimal) {
             BigDecimal bdValue = (BigDecimal) value;
@@ -421,9 +491,13 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getBigDecimal(columnLabel, scale);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
+        if (lastValueRead == null) {
+            return null;
+        }
         return (BigDecimal) lastValueRead;
     }
 
+    @SneakyThrows
     @Override
     public byte[] getBytes(String columnLabel) throws SQLException {
         log.debug("getBytes: {}", columnLabel);
@@ -431,6 +505,13 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getBytes(columnLabel);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
+        if (lastValueRead == null) {
+            return null;
+        }
+        if (lastValueRead instanceof String) {// Means the server is treating it as a binary stream
+            InputStream is = this.getBinaryStream(columnLabel);
+            return is.readAllBytes();
+        }
         return (byte[]) lastValueRead;
     }
 
@@ -442,6 +523,9 @@ public class ResultSet extends RemoteProxyResultSet {
         }
         int colIdx = this.labelsMap.get(columnLabel.toUpperCase()) + 1;
         lastValueRead = currentDataBlock.get(blockIdx.get())[colIdx - 1];
+        if (lastValueRead == null) {
+            return null;
+        }
         Object result = lastValueRead;
         if (result instanceof Timestamp) {
             Timestamp timestamp = (Timestamp) result;
@@ -457,6 +541,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getTime(columnLabel);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
+        if (lastValueRead == null) {
+            return null;
+        }
         return (Time) lastValueRead;
     }
 
@@ -467,6 +554,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getTimestamp(columnLabel);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
+        if (lastValueRead == null) {
+            return null;
+        }
         return (Timestamp) lastValueRead;
     }
 
@@ -498,6 +588,9 @@ public class ResultSet extends RemoteProxyResultSet {
         }
         int colIdx = this.labelsMap.get(columnLabel.toUpperCase()) + 1;
         lastValueRead = currentDataBlock.get(blockIdx.get())[colIdx - 1];
+        if (lastValueRead == null) {
+            return null;
+        }
         return this.getBinaryStream(colIdx);
     }
 
@@ -595,6 +688,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getBigDecimal(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        if (lastValueRead == null) {
+            return null;
+        }
         return (BigDecimal) lastValueRead;
     }
 
@@ -605,6 +701,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getBigDecimal(columnLabel);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
+        if (lastValueRead == null) {
+            return null;
+        }
         return (BigDecimal) lastValueRead;
     }
 
@@ -1423,6 +1522,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getURL(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        if (lastValueRead == null) {
+            return null;
+        }
         return (URL) lastValueRead;
     }
 
@@ -1433,6 +1535,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getURL(columnLabel);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
+        if (lastValueRead == null) {
+            return null;
+        }
         return (URL) lastValueRead;
     }
 
@@ -2002,6 +2107,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getObject(columnIndex, type);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        if (lastValueRead == null) {
+            return null;
+        }
         return (T) lastValueRead;
     }
 
@@ -2012,6 +2120,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getObject(columnLabel, type);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
+        if (lastValueRead == null) {
+            return null;
+        }
         return (T) lastValueRead;
     }
 

@@ -155,6 +155,7 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
                 Parameter.builder()
                         .type(NULL)
                         .index(parameterIndex)
+                        .values(Arrays.asList(sqlType))
                         .build());
     }
 

@@ -274,9 +274,6 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         log.info("Creating prepared statement for {}", sql);
 
         PreparedStatement ps = null;
-        if (request.getProperties().isEmpty()) {
-            ps = dto.getConnection().prepareStatement(sql);
-        }
         Map<String, Object> properties = EMPTY_MAP;
         if (!request.getProperties().isEmpty()) {
             properties = deserialize(request.getProperties().toByteArray(), Map.class);
@@ -1292,6 +1289,11 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 } else {
                     ps.setBinaryStream(idx, is);
                 }
+                break;
+            }
+            case NULL: {
+                int sqlType = (int) param.getValues().get(0);
+                ps.setNull(idx, sqlType);
                 break;
             }
             default:
