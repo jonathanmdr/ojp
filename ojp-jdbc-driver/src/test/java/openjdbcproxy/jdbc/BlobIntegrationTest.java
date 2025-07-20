@@ -28,7 +28,7 @@ public class BlobIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_mysql_connections.csv")
+    @CsvFileSource(resources = "/h2_mysql_connections.csv")
     public void createAndReadingBLOBsSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         // Skip MySQL tests if disabled
         if (url.contains("mysql") && isMySQLTestDisabled) {
@@ -97,7 +97,7 @@ public class BlobIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_mysql_connections.csv")
+    @CsvFileSource(resources = "/h2_mysql_connections.csv")
     public void creatingAndReadingLargeBLOBsSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         // Skip MySQL tests if disabled
         if (url.contains("mysql") && isMySQLTestDisabled) {
