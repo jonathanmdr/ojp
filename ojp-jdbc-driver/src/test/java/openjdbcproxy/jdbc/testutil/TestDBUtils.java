@@ -22,14 +22,15 @@ public class TestDBUtils {
      */
     public enum SqlSyntax {
         H2,
-        POSTGRES
+        POSTGRES,
+        MYSQL
     }
 
     /**
      * Creates a basic test table for integration tests.
      * @param connection The database connection
      * @param tableName The name of the table to create
-     * @param sqlSyntax The SQL syntax to use (H2 or POSTGRES)
+     * @param sqlSyntax The SQL syntax to use (H2, POSTGRES, or MYSQL)
      * @throws SQLException if table creation fails
      */
     public static void createBasicTestTable(Connection connection, String tableName, SqlSyntax sqlSyntax) throws SQLException {
@@ -52,7 +53,7 @@ public class TestDBUtils {
      * Creates a test table with auto-increment capabilities.
      * @param connection The database connection
      * @param tableName The name of the table to create
-     * @param sqlSyntax The SQL syntax to use (H2 or POSTGRES)
+     * @param sqlSyntax The SQL syntax to use (H2, POSTGRES, or MYSQL)
      * @throws SQLException if table creation fails
      */
     public static void createAutoIncrementTestTable(Connection connection, String tableName, SqlSyntax sqlSyntax) throws SQLException {
@@ -65,8 +66,10 @@ public class TestDBUtils {
             String createTableSql;
             if (sqlSyntax == SqlSyntax.H2) {
                 createTableSql = "CREATE TABLE " + tableName + " (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255))";
-            } else {
+            } else if (sqlSyntax == SqlSyntax.POSTGRES) {
                 createTableSql = "CREATE TABLE " + tableName + " (id SERIAL PRIMARY KEY, name VARCHAR(255))";
+            } else { // MYSQL
+                createTableSql = "CREATE TABLE " + tableName + " (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255))";
             }
             statement.execute(createTableSql);
         }
@@ -76,7 +79,7 @@ public class TestDBUtils {
      * Creates a comprehensive test table with multiple data types.
      * @param connection The database connection
      * @param tableName The name of the table to create
-     * @param sqlSyntax The SQL syntax to use (H2 or POSTGRES)
+     * @param sqlSyntax The SQL syntax to use (H2, POSTGRES, or MYSQL)
      * @throws SQLException if table creation fails
      */
     public static void createMultiTypeTestTable(Connection connection, String tableName, SqlSyntax sqlSyntax) throws SQLException {
@@ -103,7 +106,7 @@ public class TestDBUtils {
                         " val_date DATE," +
                         " val_time TIME," +
                         " val_timestamp TIMESTAMP)";
-            } else {
+            } else if (sqlSyntax == SqlSyntax.POSTGRES) {
                 // PostgreSQL syntax - adjust types for PostgreSQL compatibility
                 createTableSql = "CREATE TABLE " + tableName + "(" +
                         " val_int INT NOT NULL," +
@@ -117,6 +120,23 @@ public class TestDBUtils {
                         " val_float REAL," +  // PostgreSQL uses REAL instead of FLOAT(2)
                         " val_byte BYTEA," +  // PostgreSQL uses BYTEA instead of BINARY
                         " val_binary BYTEA," +
+                        " val_date DATE," +
+                        " val_time TIME," +
+                        " val_timestamp TIMESTAMP)";
+            } else { // MYSQL
+                // MySQL syntax - MySQL specific types and adjustments
+                createTableSql = "CREATE TABLE " + tableName + "(" +
+                        " val_int INT NOT NULL," +
+                        " val_varchar VARCHAR(50) NOT NULL," +
+                        " val_double_precision DOUBLE PRECISION," +
+                        " val_bigint BIGINT," +
+                        " val_tinyint TINYINT," +
+                        " val_smallint SMALLINT," +
+                        " val_boolean BOOLEAN," +
+                        " val_decimal DECIMAL," +
+                        " val_float FLOAT," +
+                        " val_byte BINARY," +
+                        " val_binary BINARY(4)," +
                         " val_date DATE," +
                         " val_time TIME," +
                         " val_timestamp TIMESTAMP)";
@@ -191,13 +211,47 @@ public class TestDBUtils {
     }
 
     /**
+     * Creates a MySQL-specific test table with MySQL unique data types.
+     * @param connection The database connection
+     * @param tableName The name of the table to create
+     * @throws SQLException if table creation fails
+     */
+    public static void createMySQLSpecificTestTable(Connection connection, String tableName) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            // Drop table if exists
+            String dropTableSql = "DROP TABLE IF EXISTS " + tableName;
+            statement.execute(dropTableSql);
+
+            // Create table with MySQL-specific data types
+            String createTableSql = "CREATE TABLE " + tableName + "(" +
+                    " id INT AUTO_INCREMENT PRIMARY KEY," +
+                    " enum_col ENUM('small', 'medium', 'large')," +
+                    " json_col JSON," +
+                    " text_col TEXT," +
+                    " mediumtext_col MEDIUMTEXT," +
+                    " longtext_col LONGTEXT," +
+                    " blob_col BLOB," +
+                    " mediumblob_col MEDIUMBLOB," +
+                    " longblob_col LONGBLOB," +
+                    " set_col SET('option1', 'option2', 'option3')," +
+                    " year_col YEAR," +
+                    " bit_col BIT(8)" +
+                    ")";
+            statement.execute(createTableSql);
+        }
+    }
+
+    /**
      * Checks if the current test should be skipped due to database-specific flags.
      * @param disablePostgresTests Whether Postgres tests are disabled
+     * @param disableMySQLTests Whether MySQL tests are disabled
      * @param isPostgresTest Whether this is a Postgres test
+     * @param isMySQLTest Whether this is a MySQL test
      * @return true if the test should be skipped
      */
-    public static boolean shouldSkipTest(boolean disablePostgresTests, boolean isPostgresTest) {
-        return disablePostgresTests && isPostgresTest;
+    public static boolean shouldSkipTest(boolean disablePostgresTests, boolean disableMySQLTests, 
+                                       boolean isPostgresTest, boolean isMySQLTest) {
+        return (disablePostgresTests && isPostgresTest) || (disableMySQLTests && isMySQLTest);
     }
 
 
