@@ -20,14 +20,6 @@ jobs:
         java-version: [ 11, 17, 21, 22 ]
 
     services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpassword
-          POSTGRES_DB: defaultdb
-        ports:
-          - 5432:5432
 
       mysql:
         image: mysql:8.0
@@ -36,8 +28,27 @@ jobs:
           MYSQL_DATABASE: defaultdb
           MYSQL_USER: testuser
           MYSQL_PASSWORD: testpassword
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
         ports:
           - 3306:3306
+
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: defaultdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - name: Git checkout
