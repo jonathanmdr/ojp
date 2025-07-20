@@ -111,7 +111,8 @@ public class PostgresPreparedStatementExtensiveTests {
         assertEquals(2, rs.getInt("id"));
         assertNull(rs.getString("name"));
         assertTrue(rs.wasNull());
-        rs.getInt("age");
+        int age = rs.getInt("age");
+        assertEquals(0, age);
         assertTrue(rs.wasNull());
         rs.close();
         selectPs.close();
