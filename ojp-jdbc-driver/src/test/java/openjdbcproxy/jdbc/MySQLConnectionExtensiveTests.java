@@ -29,11 +29,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 public class MySQLConnectionExtensiveTests {
@@ -63,7 +58,7 @@ public class MySQLConnectionExtensiveTests {
         setUp(driverClass, url, user, password);
         
         Statement statement = connection.createStatement();
-        assertNotNull(statement);
+        Assert.assertNotNull(statement);
         statement.close();
     }
 
@@ -73,7 +68,7 @@ public class MySQLConnectionExtensiveTests {
         setUp(driverClass, url, user, password);
         
         PreparedStatement preparedStatement = connection.prepareStatement("SELECT 1");
-        assertNotNull(preparedStatement);
+        Assert.assertNotNull(preparedStatement);
         preparedStatement.close();
     }
 
@@ -85,11 +80,11 @@ public class MySQLConnectionExtensiveTests {
         // MySQL supports callable statements, though syntax may differ
         try {
             CallableStatement callableStatement = connection.prepareCall("CALL test_procedure()");
-            assertNotNull(callableStatement);
+            Assert.assertNotNull(callableStatement);
             callableStatement.close();
         } catch (SQLException e) {
             // This is expected if the procedure doesn't exist - test that the method works
-            assertTrue(e.getMessage().contains("PROCEDURE") || e.getMessage().contains("procedure"));
+            Assert.assertTrue(e.getMessage().contains("PROCEDURE") || e.getMessage().contains("procedure"));
         }
     }
 
@@ -99,9 +94,9 @@ public class MySQLConnectionExtensiveTests {
         setUp(driverClass, url, user, password);
         
         String nativeSQL = connection.nativeSQL("SELECT {fn NOW()}");
-        assertNotNull(nativeSQL);
+        Assert.assertNotNull(nativeSQL);
         // MySQL should convert JDBC escape sequence
-        assertTrue(nativeSQL.contains("NOW()") || nativeSQL.contains("SELECT"));
+        Assert.assertTrue(nativeSQL.contains("NOW()") || nativeSQL.contains("SELECT"));
     }
 
     @ParameterizedTest
@@ -113,10 +108,10 @@ public class MySQLConnectionExtensiveTests {
         boolean originalAutoCommit = connection.getAutoCommit();
         
         connection.setAutoCommit(false);
-        assertEquals(false, connection.getAutoCommit());
+        Assert.assertEquals(false, connection.getAutoCommit());
         
         connection.setAutoCommit(true);
-        assertEquals(true, connection.getAutoCommit());
+        Assert.assertEquals(true, connection.getAutoCommit());
         
         // Restore original state
         connection.setAutoCommit(originalAutoCommit);
@@ -142,10 +137,10 @@ public class MySQLConnectionExtensiveTests {
     public void testIsClosed(String driverClass, String url, String user, String password) throws SQLException {
         setUp(driverClass, url, user, password);
         
-        assertEquals(false, connection.isClosed());
+        Assert.assertEquals(false, connection.isClosed());
         
         connection.close();
-        assertEquals(true, connection.isClosed());
+        Assert.assertEquals(true, connection.isClosed());
     }
 
     @ParameterizedTest
@@ -154,11 +149,11 @@ public class MySQLConnectionExtensiveTests {
         setUp(driverClass, url, user, password);
         
         DatabaseMetaData metaData = connection.getMetaData();
-        assertNotNull(metaData);
+        Assert.assertNotNull(metaData);
         
         String databaseProductName = metaData.getDatabaseProductName();
-        assertNotNull(databaseProductName);
-        assertTrue(databaseProductName.toLowerCase().contains("mysql"));
+        Assert.assertNotNull(databaseProductName);
+        Assert.assertTrue(databaseProductName.toLowerCase().contains("mysql"));
     }
 
     @ParameterizedTest
@@ -193,7 +188,7 @@ public class MySQLConnectionExtensiveTests {
         // Test setting catalog (should work in MySQL)
         if (catalog != null) {
             connection.setCatalog(catalog);
-            assertEquals(catalog, connection.getCatalog());
+            Assert.assertEquals(catalog, connection.getCatalog());
         }
     }
 
@@ -203,11 +198,11 @@ public class MySQLConnectionExtensiveTests {
         setUp(driverClass, url, user, password);
         
         int isolationLevel = connection.getTransactionIsolation();
-        assertTrue(isolationLevel >= Connection.TRANSACTION_NONE && isolationLevel <= Connection.TRANSACTION_SERIALIZABLE);
+        Assert.assertTrue(isolationLevel >= Connection.TRANSACTION_NONE && isolationLevel <= Connection.TRANSACTION_SERIALIZABLE);
         
         // Test setting transaction isolation level
         connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-        assertEquals(Connection.TRANSACTION_READ_COMMITTED, connection.getTransactionIsolation());
+        Assert.assertEquals(Connection.TRANSACTION_READ_COMMITTED, connection.getTransactionIsolation());
         
         // Restore original level
         connection.setTransactionIsolation(isolationLevel);
@@ -232,11 +227,11 @@ public class MySQLConnectionExtensiveTests {
         setUp(driverClass, url, user, password);
         
         Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        assertNotNull(statement);
+        Assert.assertNotNull(statement);
         statement.close();
         
         statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-        assertNotNull(statement);
+        Assert.assertNotNull(statement);
         statement.close();
     }
 
@@ -246,11 +241,11 @@ public class MySQLConnectionExtensiveTests {
         setUp(driverClass, url, user, password);
         
         PreparedStatement ps = connection.prepareStatement("SELECT 1", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        assertNotNull(ps);
+        Assert.assertNotNull(ps);
         ps.close();
         
         ps = connection.prepareStatement("SELECT 1", Statement.RETURN_GENERATED_KEYS);
-        assertNotNull(ps);
+        Assert.assertNotNull(ps);
         ps.close();
     }
 
@@ -260,11 +255,11 @@ public class MySQLConnectionExtensiveTests {
         setUp(driverClass, url, user, password);
         
         int holdability = connection.getHoldability();
-        assertTrue(holdability == ResultSet.HOLD_CURSORS_OVER_COMMIT || holdability == ResultSet.CLOSE_CURSORS_AT_COMMIT);
+        Assert.assertTrue(holdability == ResultSet.HOLD_CURSORS_OVER_COMMIT || holdability == ResultSet.CLOSE_CURSORS_AT_COMMIT);
         
         // Test setting holdability
         connection.setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);
-        assertEquals(ResultSet.HOLD_CURSORS_OVER_COMMIT, connection.getHoldability());
+        Assert.assertEquals(ResultSet.HOLD_CURSORS_OVER_COMMIT, connection.getHoldability());
     }
 
     @ParameterizedTest
@@ -276,12 +271,12 @@ public class MySQLConnectionExtensiveTests {
         
         // Test unnamed savepoint
         Savepoint savepoint1 = connection.setSavepoint();
-        assertNotNull(savepoint1);
+        Assert.assertNotNull(savepoint1);
         
         // Test named savepoint
         Savepoint savepoint2 = connection.setSavepoint("test_savepoint");
-        assertNotNull(savepoint2);
-        assertEquals("test_savepoint", savepoint2.getSavepointName());
+        Assert.assertNotNull(savepoint2);
+        Assert.assertEquals("test_savepoint", savepoint2.getSavepointName());
         
         // Test rollback to savepoint
         connection.rollback(savepoint2);
@@ -299,7 +294,7 @@ public class MySQLConnectionExtensiveTests {
         setUp(driverClass, url, user, password);
         
         Properties clientInfo = connection.getClientInfo();
-        assertNotNull(clientInfo);
+        Assert.assertNotNull(clientInfo);
         
         // Test setting client info
         try {
@@ -316,12 +311,12 @@ public class MySQLConnectionExtensiveTests {
         setUp(driverClass, url, user, password);
         
         boolean isValid = connection.isValid(5);
-        assertTrue(isValid);
+        Assert.assertTrue(isValid);
         
         // Test with closed connection
         connection.close();
         isValid = connection.isValid(5);
-        assertEquals(false, isValid);
+        Assert.assertEquals(false, isValid);
     }
 
     @ParameterizedTest
@@ -330,11 +325,11 @@ public class MySQLConnectionExtensiveTests {
         setUp(driverClass, url, user, password);
         
         // Test operations that might not be supported
-        assertThrows(SQLFeatureNotSupportedException.class, () -> {
+        Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> {
             connection.createArrayOf("VARCHAR", new String[]{"test"});
         });
         
-        assertThrows(SQLFeatureNotSupportedException.class, () -> {
+        Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> {
             connection.createStruct("test_type", new Object[]{});
         });
     }
