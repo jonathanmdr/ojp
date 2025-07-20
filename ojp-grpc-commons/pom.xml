@@ -40,6 +40,13 @@
             <version>${grpc.version}</version>
         </dependency>
 
+        <!-- Explicit protobuf dependency to ensure compatibility -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>3.25.5</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/kr.motd.maven/os-maven-plugin -->
         <dependency>
             <groupId>kr.motd.maven</groupId>

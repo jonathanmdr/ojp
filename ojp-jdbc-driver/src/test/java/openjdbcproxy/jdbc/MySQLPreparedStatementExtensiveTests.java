@@ -1,6 +1,7 @@
 package openjdbcproxy.jdbc;
 
 import openjdbcproxy.jdbc.testutil.TestDBUtils;
+import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;

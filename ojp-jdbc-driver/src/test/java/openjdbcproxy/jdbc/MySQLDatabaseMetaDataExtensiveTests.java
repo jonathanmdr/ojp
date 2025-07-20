@@ -1,6 +1,7 @@
 package openjdbcproxy.jdbc;
 
 import openjdbcproxy.jdbc.testutil.TestDBUtils;
+import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -181,7 +182,7 @@ public class MySQLDatabaseMetaDataExtensiveTests {
                 break;
             }
         }
-        Assert.assertTrue(foundTestTable, "Should find the test table we created");
+        Assert.assertTrue("Should find the test table we created", foundTestTable);
         tables.close();
     }
 
@@ -207,8 +208,8 @@ public class MySQLDatabaseMetaDataExtensiveTests {
                 Assert.assertEquals("VARCHAR", columns.getString("TYPE_NAME").toUpperCase());
             }
         }
-        Assert.assertTrue(foundIdColumn, "Should find id column");
-        Assert.assertTrue(foundNameColumn, "Should find name column");
+        Assert.assertTrue("Should find id column", foundIdColumn);
+        Assert.assertTrue("Should find name column", foundNameColumn);
         columns.close();
     }
 
@@ -232,7 +233,7 @@ public class MySQLDatabaseMetaDataExtensiveTests {
                 break;
             }
         }
-        Assert.assertTrue(foundPrimaryKey, "Should find primary key on id column");
+        Assert.assertTrue("Should find primary key on id column", foundPrimaryKey);
         primaryKeys.close();
     }
 
@@ -256,8 +257,8 @@ public class MySQLDatabaseMetaDataExtensiveTests {
                 foundVarcharType = true;
             }
         }
-        Assert.assertTrue(foundIntType, "Should find integer type");
-        Assert.assertTrue(foundVarcharType, "Should find varchar type");
+        Assert.assertTrue("Should find integer type", foundIntType);
+        Assert.assertTrue("Should find varchar type", foundVarcharType);
         typeInfo.close();
     }
 
