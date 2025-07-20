@@ -26,13 +26,13 @@ public class BlobIntegrationTest {
         System.out.println("Testing for url -> " + url);
 
         try {
-            executeUpdate(conn, "drop table test_table_blob");
+            executeUpdate(conn, "drop table blob_test_blob");
         } catch (Exception e) {
             //If fails disregard as per the table is most possibly not created yet
         }
 
         executeUpdate(conn,
-                "create table test_table_blob(" +
+                "create table blob_test_blob(" +
                         " val_blob  BLOB," +
                         " val_blob2 BLOB," +
                         " val_blob3 BLOB" +
@@ -40,7 +40,7 @@ public class BlobIntegrationTest {
         );
 
         PreparedStatement psInsert = conn.prepareStatement(
-                " insert into test_table_blob (val_blob, val_blob2, val_blob3) values (?, ?, ?)"
+                " insert into blob_test_blob (val_blob, val_blob2, val_blob3) values (?, ?, ?)"
         );
 
         String testString = "TEST STRING BLOB";
@@ -55,7 +55,7 @@ public class BlobIntegrationTest {
         psInsert.setBlob(3, inputStream2, 5);
         psInsert.executeUpdate();
 
-        java.sql.PreparedStatement psSelect = conn.prepareStatement("select val_blob, val_blob2, val_blob3 from test_table_blob ");
+        java.sql.PreparedStatement psSelect = conn.prepareStatement("select val_blob, val_blob2, val_blob3 from blob_test_blob ");
         ResultSet resultSet = psSelect.executeQuery();
         resultSet.next();
         Blob blobResult =  resultSet.getBlob(1);
@@ -75,7 +75,7 @@ public class BlobIntegrationTest {
         String fromBlobByIdx3 = new String(blobResult3.getBinaryStream().readAllBytes());
         Assert.assertEquals(testString2.substring(0, 5), fromBlobByIdx3);
 
-        executeUpdate(conn, "delete from test_table_blob");
+        executeUpdate(conn, "delete from blob_test_blob");
 
         resultSet.close();
         psSelect.close();
@@ -90,19 +90,19 @@ public class BlobIntegrationTest {
         System.out.println("Testing for url -> " + url);
 
         try {
-            executeUpdate(conn, "drop table test_table_blob");
+            executeUpdate(conn, "drop table blob_test_blob");
         } catch (Exception e) {
             //If fails disregard as per the table is most possibly not created yet
         }
 
         executeUpdate(conn,
-                "create table test_table_blob(" +
+                "create table blob_test_blob(" +
                         " val_blob  BLOB" +
                         ")"
         );
 
         PreparedStatement psInsert = conn.prepareStatement(
-                "insert into test_table_blob (val_blob) values (?)"
+                "insert into blob_test_blob (val_blob) values (?)"
         );
 
 
@@ -111,7 +111,7 @@ public class BlobIntegrationTest {
 
         psInsert.executeUpdate();
 
-        java.sql.PreparedStatement psSelect = conn.prepareStatement("select val_blob from test_table_blob ");
+        java.sql.PreparedStatement psSelect = conn.prepareStatement("select val_blob from blob_test_blob ");
         ResultSet resultSet = psSelect.executeQuery();
         resultSet.next();
         Blob blobResult =  resultSet.getBlob(1);
@@ -136,7 +136,7 @@ public class BlobIntegrationTest {
             byteFile = inputStreamTestFile.read();
         }
 
-        executeUpdate(conn, "delete from test_table_blob");
+        executeUpdate(conn, "delete from blob_test_blob");
 
         resultSet.close();
         psSelect.close();

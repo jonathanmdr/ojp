@@ -45,19 +45,19 @@ public class BasicCrudIntegrationTest {
         System.out.println("Testing for url -> " + url);
 
         try {
-            executeUpdate(conn, "drop table test_table");
+            executeUpdate(conn, "drop table basic_crud_test");
         } catch (Exception e) {
             //Does not matter
         }
 
-        executeUpdate(conn, "create table test_table(" +
+        executeUpdate(conn, "create table basic_crud_test(" +
                 "id INT NOT NULL," +
                 "title VARCHAR(50) NOT NULL" +
                 ")");
 
-        executeUpdate(conn, " insert into test_table (id, title) values (1, 'TITLE_1')");
+        executeUpdate(conn, " insert into basic_crud_test (id, title) values (1, 'TITLE_1')");
 
-        java.sql.PreparedStatement psSelect = conn.prepareStatement("select * from test_table where id = ?");
+        java.sql.PreparedStatement psSelect = conn.prepareStatement("select * from basic_crud_test where id = ?");
         psSelect.setInt(1, 1);
         ResultSet resultSet = psSelect.executeQuery();
         resultSet.next();
@@ -66,7 +66,7 @@ public class BasicCrudIntegrationTest {
         Assert.assertEquals(1, id);
         Assert.assertEquals("TITLE_1", title);
 
-        executeUpdate(conn, "update test_table set title='TITLE_1_UPDATED'");
+        executeUpdate(conn, "update basic_crud_test set title='TITLE_1_UPDATED'");
 
         ResultSet resultSetUpdated = psSelect.executeQuery();
         resultSetUpdated.next();
@@ -75,7 +75,7 @@ public class BasicCrudIntegrationTest {
         Assert.assertEquals(1, idUpdated);
         Assert.assertEquals("TITLE_1_UPDATED", titleUpdated);
 
-        executeUpdate(conn, " delete from test_table where id=1 and title='TITLE_1_UPDATED'");
+        executeUpdate(conn, " delete from basic_crud_test where id=1 and title='TITLE_1_UPDATED'");
 
         ResultSet resultSetAfterDeletion = psSelect.executeQuery();
         Assert.assertFalse(resultSetAfterDeletion.next());

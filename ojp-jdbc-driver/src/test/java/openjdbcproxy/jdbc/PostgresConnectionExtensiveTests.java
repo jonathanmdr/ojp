@@ -88,21 +88,21 @@ public class PostgresConnectionExtensiveTests {
         this.setUp(driverClass, url, user, password);
         
         // PostgreSQL DDL statements are transactional, so we need to create and commit the table first
-        TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.POSTGRES);
+        TestDBUtils.createBasicTestTable(connection, "postgres_connection_test", TestDBUtils.SqlSyntax.POSTGRES);
         connection.commit(); // Ensure table creation is committed
         
         connection.setAutoCommit(false);
 
-        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
+        connection.createStatement().execute("INSERT INTO postgres_connection_test (id, name) VALUES (3, 'Charlie')");
         connection.rollback();
 
-        ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM test_table WHERE id = 3");
+        ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM postgres_connection_test WHERE id = 3");
         assertEquals(false, rs.next());
 
-        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
+        connection.createStatement().execute("INSERT INTO postgres_connection_test (id, name) VALUES (3, 'Charlie')");
         connection.commit();
 
-        rs = connection.createStatement().executeQuery("SELECT * FROM test_table WHERE id = 3");
+        rs = connection.createStatement().executeQuery("SELECT * FROM postgres_connection_test WHERE id = 3");
         assertEquals(true, rs.next());
     }
 
@@ -112,25 +112,25 @@ public class PostgresConnectionExtensiveTests {
         this.setUp(driverClass, url, user, password);
         
         // PostgreSQL DDL statements are transactional, so we need to create and commit the table first
-        TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.POSTGRES);
+        TestDBUtils.createBasicTestTable(connection, "postgres_connection_test", TestDBUtils.SqlSyntax.POSTGRES);
         connection.commit(); // Ensure table creation is committed
         
         connection.setAutoCommit(false);
 
         Savepoint sp1 = connection.setSavepoint("Savepoint1");
-        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
+        connection.createStatement().execute("INSERT INTO postgres_connection_test (id, name) VALUES (3, 'Charlie')");
         connection.rollback(sp1);
 
-        ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM test_table WHERE id = 3");
+        ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM postgres_connection_test WHERE id = 3");
         assertEquals(false, rs.next());
 
-        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
+        connection.createStatement().execute("INSERT INTO postgres_connection_test (id, name) VALUES (3, 'Charlie')");
         // sp1 is no longer valid after rollback, so create a new savepoint to demonstrate release functionality  
         Savepoint sp2 = connection.setSavepoint("Savepoint2");
         connection.releaseSavepoint(sp2);
         connection.commit();
 
-        rs = connection.createStatement().executeQuery("SELECT * FROM test_table WHERE id = 3");
+        rs = connection.createStatement().executeQuery("SELECT * FROM postgres_connection_test WHERE id = 3");
         assertEquals(true, rs.next());
     }
 

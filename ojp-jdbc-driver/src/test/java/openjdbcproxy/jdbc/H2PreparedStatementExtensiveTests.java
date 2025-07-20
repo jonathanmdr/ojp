@@ -40,9 +40,9 @@ public class H2PreparedStatementExtensiveTests {
         connection = DriverManager.getConnection(url, user, password);
         Statement stmt = connection.createStatement();
         try {
-            stmt.execute("DROP TABLE test_table");
+            stmt.execute("DROP TABLE h2_prepared_stmt_test");
         } catch (SQLException ignore) {}
-        stmt.execute("CREATE TABLE test_table (" +
+        stmt.execute("CREATE TABLE h2_prepared_stmt_test (" +
                 "id INT PRIMARY KEY, " +
                 "name VARCHAR(255), " +
                 "age INT, " +
@@ -63,7 +63,7 @@ public class H2PreparedStatementExtensiveTests {
     public void testParameterSetters(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
 
-        ps = connection.prepareStatement("INSERT INTO test_table (id, name, age, data, info, dt) VALUES (?, ?, ?, ?, ?, ?)");
+        ps = connection.prepareStatement("INSERT INTO h2_prepared_stmt_test (id, name, age, data, info, dt) VALUES (?, ?, ?, ?, ?, ?)");
 
         // Numeric and boolean
         ps.setInt(1, 1);
@@ -137,7 +137,7 @@ public class H2PreparedStatementExtensiveTests {
     public void testExecutionAndBatchMethods(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
 
-        ps = connection.prepareStatement("INSERT INTO test_table (id, name, age, data, info, dt) VALUES (?, ?, ?, ?, ?, ?)");
+        ps = connection.prepareStatement("INSERT INTO h2_prepared_stmt_test (id, name, age, data, info, dt) VALUES (?, ?, ?, ?, ?, ?)");
         ps.setInt(1, 10); ps.setString(2, "Test"); ps.setInt(3, 30);
         ps.setBytes(4, new byte[]{1}); ps.setString(5, "info"); ps.setDate(6, new java.sql.Date(System.currentTimeMillis()));
         ps.addBatch();
@@ -150,17 +150,17 @@ public class H2PreparedStatementExtensiveTests {
         assertEquals(2, results.length);
 
         // execute, executeUpdate, executeQuery
-        ps = connection.prepareStatement("SELECT * FROM test_table WHERE id = ?");
+        ps = connection.prepareStatement("SELECT * FROM h2_prepared_stmt_test WHERE id = ?");
         ps.setInt(1, 10);
         ResultSet rs = ps.executeQuery();
         assertNotNull(rs);
 
-        ps = connection.prepareStatement("UPDATE test_table SET age = ? WHERE id = ?");
+        ps = connection.prepareStatement("UPDATE h2_prepared_stmt_test SET age = ? WHERE id = ?");
         ps.setInt(1, 42); ps.setInt(2, 11);
         int updateCount = ps.executeUpdate();
         assertTrue(updateCount >= 0);
 
-        ps = connection.prepareStatement("SELECT * FROM test_table WHERE id = ?");
+        ps = connection.prepareStatement("SELECT * FROM h2_prepared_stmt_test WHERE id = ?");
         ps.setInt(1, 10);
         try {
             boolean executed = ps.execute();
@@ -177,7 +177,7 @@ public class H2PreparedStatementExtensiveTests {
     public void testMetaDataAndWarnings(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
 
-        ps = connection.prepareStatement("SELECT * FROM test_table WHERE id = ?");
+        ps = connection.prepareStatement("SELECT * FROM h2_prepared_stmt_test WHERE id = ?");
         ps.setInt(1, 10);
 
         ResultSetMetaData resultSetMetaData = ps.getMetaData();
@@ -193,7 +193,7 @@ public class H2PreparedStatementExtensiveTests {
     public void testStatementCommonMethods(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
 
-        ps = connection.prepareStatement("SELECT * FROM test_table WHERE id = ?");
+        ps = connection.prepareStatement("SELECT * FROM h2_prepared_stmt_test WHERE id = ?");
         // Field size and max rows
         assertEquals(0, ps.getMaxFieldSize());
         ps.setMaxFieldSize(128);
@@ -243,9 +243,9 @@ public class H2PreparedStatementExtensiveTests {
     public void testStatementBatchAndConnection(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
 
-        ps = connection.prepareStatement("SELECT * FROM test_table WHERE id = ?");
+        ps = connection.prepareStatement("SELECT * FROM h2_prepared_stmt_test WHERE id = ?");
         ps.clearBatch();
-        assertThrows(Exception.class, () -> ps.addBatch("DELETE FROM test_table WHERE id < 0"));
+        assertThrows(Exception.class, () -> ps.addBatch("DELETE FROM h2_prepared_stmt_test WHERE id < 0"));
         ps.clearBatch();
 
         assertNotNull(ps.getConnection());
@@ -256,25 +256,25 @@ public class H2PreparedStatementExtensiveTests {
     public void testResultAndGeneratedKeysMethods(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
 
-        PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table (id, name, age) VALUES (?, ?, ?)");
+        PreparedStatement ps = connection.prepareStatement("INSERT INTO h2_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
         ps.setLong(1, 100);
         ps.setString(2, "A");
         ps.setInt(3, 1);
         int updatedRows = ps.executeUpdate();
         assertEquals(1, updatedRows);
         Statement stmtQuery = connection.createStatement();
-        ResultSet rs = stmtQuery.executeQuery("SELECT * FROM test_table");
+        ResultSet rs = stmtQuery.executeQuery("SELECT * FROM h2_prepared_stmt_test");
         assertNotNull(rs);
         assertTrue(rs.next());
 
-        PreparedStatement psUpdt = connection.prepareStatement("UPDATE test_table SET age = ? WHERE id = ?");
+        PreparedStatement psUpdt = connection.prepareStatement("UPDATE h2_prepared_stmt_test SET age = ? WHERE id = ?");
         psUpdt.setInt(1, 99);
         psUpdt.setInt(2, 100);
         int updateCount = psUpdt.executeUpdate();
         assertEquals(1, updateCount);
 
         // getResultSet, getUpdateCount, getMoreResults
-        stmtQuery.execute("SELECT * FROM test_table");
+        stmtQuery.execute("SELECT * FROM h2_prepared_stmt_test");
         ResultSet rs2 = stmtQuery.getResultSet();
         assertNotNull(rs2);
         int count = stmtQuery.getUpdateCount();
@@ -283,7 +283,7 @@ public class H2PreparedStatementExtensiveTests {
         assertFalse(stmtQuery.getMoreResults(Statement.CLOSE_CURRENT_RESULT));
 
         // Generated Keys
-        PreparedStatement psInsert = connection.prepareStatement("INSERT INTO test_table (id, name, age) VALUES (?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS);
+        PreparedStatement psInsert = connection.prepareStatement("INSERT INTO h2_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS);
         psInsert.setInt(1, 101);
         psInsert.setString(2, "B");
         psInsert.setInt(3, 2);
@@ -296,9 +296,9 @@ public class H2PreparedStatementExtensiveTests {
         assertNotNull(id);
 
         // Various execute overloads
-        stmtQuery.execute("SELECT * FROM test_table", Statement.NO_GENERATED_KEYS);
-        stmtQuery.execute("SELECT * FROM test_table", new int[]{1});
-        stmtQuery.execute("SELECT * FROM test_table", new String[]{"id"});
+        stmtQuery.execute("SELECT * FROM h2_prepared_stmt_test", Statement.NO_GENERATED_KEYS);
+        stmtQuery.execute("SELECT * FROM h2_prepared_stmt_test", new int[]{1});
+        stmtQuery.execute("SELECT * FROM h2_prepared_stmt_test", new String[]{"id"});
     }
 
     @ParameterizedTest
@@ -312,10 +312,10 @@ public class H2PreparedStatementExtensiveTests {
         try { stmt.setLargeMaxRows(100L); } catch (Exception ignore) {}
         try { stmt.getLargeMaxRows(); } catch (Exception ignore) {}
         try { stmt.executeLargeBatch(); } catch (Exception ignore) {}
-        try { stmt.executeLargeUpdate("UPDATE test_table SET age = 101 WHERE id = 100"); } catch (Exception ignore) {}
-        try { stmt.executeLargeUpdate("UPDATE test_table SET age = 101 WHERE id = 100", Statement.RETURN_GENERATED_KEYS); } catch (Exception ignore) {}
-        try { stmt.executeLargeUpdate("UPDATE test_table SET age = 101 WHERE id = 100", new int[]{1}); } catch (Exception ignore) {}
-        try { stmt.executeLargeUpdate("UPDATE test_table SET age = 101 WHERE id = 100", new String[]{"id"}); } catch (Exception ignore) {}
+        try { stmt.executeLargeUpdate("UPDATE h2_prepared_stmt_test SET age = 101 WHERE id = 100"); } catch (Exception ignore) {}
+        try { stmt.executeLargeUpdate("UPDATE h2_prepared_stmt_test SET age = 101 WHERE id = 100", Statement.RETURN_GENERATED_KEYS); } catch (Exception ignore) {}
+        try { stmt.executeLargeUpdate("UPDATE h2_prepared_stmt_test SET age = 101 WHERE id = 100", new int[]{1}); } catch (Exception ignore) {}
+        try { stmt.executeLargeUpdate("UPDATE h2_prepared_stmt_test SET age = 101 WHERE id = 100", new String[]{"id"}); } catch (Exception ignore) {}
 
         // Enquote and identifier methods
         assertEquals("'foo''bar'", stmt.enquoteLiteral("foo'bar"));

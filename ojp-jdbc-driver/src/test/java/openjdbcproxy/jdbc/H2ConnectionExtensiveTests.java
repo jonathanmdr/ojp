@@ -78,17 +78,17 @@ public class H2ConnectionExtensiveTests {
         this.setUp(driverClass, url, user, password);
         connection.setAutoCommit(false);
 
-        TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.H2);
-        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
+        TestDBUtils.createBasicTestTable(connection, "h2_connection_test", TestDBUtils.SqlSyntax.H2);
+        connection.createStatement().execute("INSERT INTO h2_connection_test (id, name) VALUES (3, 'Charlie')");
         connection.rollback();
 
-        ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM test_table WHERE id = 3");
+        ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM h2_connection_test WHERE id = 3");
         assertEquals(false, rs.next());
 
-        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
+        connection.createStatement().execute("INSERT INTO h2_connection_test (id, name) VALUES (3, 'Charlie')");
         connection.commit();
 
-        rs = connection.createStatement().executeQuery("SELECT * FROM test_table");
+        rs = connection.createStatement().executeQuery("SELECT * FROM h2_connection_test");
         assertEquals(true, rs.next());
     }
 
@@ -97,20 +97,20 @@ public class H2ConnectionExtensiveTests {
     public void testSavepoints(String driverClass, String url, String user, String password) throws SQLException {
         this.setUp(driverClass, url, user, password);
         connection.setAutoCommit(false);
-        TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.H2);
+        TestDBUtils.createBasicTestTable(connection, "h2_connection_test", TestDBUtils.SqlSyntax.H2);
 
         Savepoint sp1 = connection.setSavepoint("Savepoint1");
-        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
+        connection.createStatement().execute("INSERT INTO h2_connection_test (id, name) VALUES (3, 'Charlie')");
         connection.rollback(sp1);
 
-        ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM test_table WHERE id = 3");
+        ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM h2_connection_test WHERE id = 3");
         assertEquals(false, rs.next());
 
-        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
+        connection.createStatement().execute("INSERT INTO h2_connection_test (id, name) VALUES (3, 'Charlie')");
         connection.releaseSavepoint(sp1);
         connection.commit();
 
-        rs = connection.createStatement().executeQuery("SELECT * FROM test_table WHERE id = 3");
+        rs = connection.createStatement().executeQuery("SELECT * FROM h2_connection_test WHERE id = 3");
         assertEquals(true, rs.next());
     }
 

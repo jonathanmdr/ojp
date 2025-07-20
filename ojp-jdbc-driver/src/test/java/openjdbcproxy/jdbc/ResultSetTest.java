@@ -51,17 +51,17 @@ public class ResultSetTest {
 
         // Create a test table and insert data
         try {
-            statement.execute("DROP TABLE test_table");
+            statement.execute("DROP TABLE resultset_test_table");
         } catch (Exception e) {
             //Expected if table does not exist.
         }
-        statement.execute("CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(255), age INT, salary DECIMAL(10,2), active BOOLEAN, created_at TIMESTAMP)");
-        statement.execute("INSERT INTO test_table (id, name, age, salary, active, created_at) VALUES (1, 'Alice', 30, 50000.00, TRUE, CURRENT_TIMESTAMP)");
-        statement.execute("INSERT INTO test_table (id, name, age, salary, active, created_at) VALUES (2, 'Bob', 25, 45000.00, FALSE, CURRENT_TIMESTAMP)");
-        statement.execute("INSERT INTO test_table (id, name, age, salary, active, created_at) VALUES (3, 'Charlie', 35, 55000.00, TRUE, CURRENT_TIMESTAMP)");
+        statement.execute("CREATE TABLE resultset_test_table (id INT PRIMARY KEY, name VARCHAR(255), age INT, salary DECIMAL(10,2), active BOOLEAN, created_at TIMESTAMP)");
+        statement.execute("INSERT INTO resultset_test_table (id, name, age, salary, active, created_at) VALUES (1, 'Alice', 30, 50000.00, TRUE, CURRENT_TIMESTAMP)");
+        statement.execute("INSERT INTO resultset_test_table (id, name, age, salary, active, created_at) VALUES (2, 'Bob', 25, 45000.00, FALSE, CURRENT_TIMESTAMP)");
+        statement.execute("INSERT INTO resultset_test_table (id, name, age, salary, active, created_at) VALUES (3, 'Charlie', 35, 55000.00, TRUE, CURRENT_TIMESTAMP)");
 
         // Query the data with a scrollable ResultSet
-        resultSet = statement.executeQuery("SELECT * FROM test_table");
+        resultSet = statement.executeQuery("SELECT * FROM resultset_test_table");
     }
 
     @AfterEach
@@ -118,8 +118,8 @@ public class ResultSetTest {
     @CsvFileSource(resources = "/h2_postgres_connections.csv")
     public void testNullHandling(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
-        statement.execute("INSERT INTO test_table (id, name, age, salary, active, created_at) VALUES (5, NULL, NULL, NULL, NULL, NULL)");
-        resultSet = statement.executeQuery("SELECT * FROM test_table WHERE id = 5");
+        statement.execute("INSERT INTO resultset_test_table (id, name, age, salary, active, created_at) VALUES (5, NULL, NULL, NULL, NULL, NULL)");
+        resultSet = statement.executeQuery("SELECT * FROM resultset_test_table WHERE id = 5");
         assertTrue(resultSet.next());
         assertNull(resultSet.getString("name"));
         assertTrue(resultSet.wasNull());
@@ -137,7 +137,7 @@ public class ResultSetTest {
         resultSet.updateBoolean("active", false);
         resultSet.insertRow();
 
-        resultSet = statement.executeQuery("SELECT * FROM test_table WHERE id = 4");
+        resultSet = statement.executeQuery("SELECT * FROM resultset_test_table WHERE id = 4");
         assertTrue(resultSet.next());
         assertEquals("David", resultSet.getString("name"));
     }

@@ -28,7 +28,7 @@ public class H2StatementExtensiveTests {
     public void setUp(String driverClass, String url, String user, String password) throws Exception {
         connection = DriverManager.getConnection(url, user, password);
         statement = connection.createStatement();
-        TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.H2);
+        TestDBUtils.createBasicTestTable(connection, "h2_statement_test", TestDBUtils.SqlSyntax.H2);
     }
 
     @AfterEach
@@ -40,7 +40,7 @@ public class H2StatementExtensiveTests {
     @CsvFileSource(resources = "/h2_connection.csv")
     public void testExecuteQuery(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        ResultSet rs = statement.executeQuery("SELECT * FROM test_table");
+        ResultSet rs = statement.executeQuery("SELECT * FROM h2_statement_test");
         assertNotNull(rs);
         assertTrue(rs.next());
         rs.close();
@@ -50,10 +50,10 @@ public class H2StatementExtensiveTests {
     @CsvFileSource(resources = "/h2_connection.csv")
     public void testExecuteUpdate(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        int rows = statement.executeUpdate("UPDATE test_table SET name = 'Updated Alice' WHERE id = 1");
+        int rows = statement.executeUpdate("UPDATE h2_statement_test SET name = 'Updated Alice' WHERE id = 1");
         assertEquals(1, rows);
 
-        ResultSet rs = statement.executeQuery("SELECT name FROM test_table WHERE id = 1");
+        ResultSet rs = statement.executeQuery("SELECT name FROM h2_statement_test WHERE id = 1");
         assertTrue(rs.next());
         assertEquals("Updated Alice", rs.getString("name"));
         rs.close();
@@ -82,9 +82,9 @@ public class H2StatementExtensiveTests {
     public void testExecuteAfterCloseThrows(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         statement.close();
-        assertThrows(SQLException.class, () -> statement.executeQuery("SELECT * FROM test_table"));
-        assertThrows(SQLException.class, () -> statement.executeUpdate("UPDATE test_table SET name = 'fail' WHERE id = 1"));
-        assertThrows(SQLException.class, () -> statement.addBatch("INSERT INTO test_table (id, name) VALUES (99, 'ShouldFail')"));
+        assertThrows(SQLException.class, () -> statement.executeQuery("SELECT * FROM h2_statement_test"));
+        assertThrows(SQLException.class, () -> statement.executeUpdate("UPDATE h2_statement_test SET name = 'fail' WHERE id = 1"));
+        assertThrows(SQLException.class, () -> statement.addBatch("INSERT INTO h2_statement_test (id, name) VALUES (99, 'ShouldFail')"));
     }
 
     @ParameterizedTest
@@ -93,7 +93,7 @@ public class H2StatementExtensiveTests {
         this.setUp(driverClass, url, user, password);
         statement.setMaxRows(1);
         assertEquals(1, statement.getMaxRows());
-        ResultSet rs = statement.executeQuery("SELECT * FROM test_table");
+        ResultSet rs = statement.executeQuery("SELECT * FROM h2_statement_test");
         assertTrue(rs.next());
         assertFalse(rs.next());
         rs.close();
@@ -144,14 +144,14 @@ public class H2StatementExtensiveTests {
     @CsvFileSource(resources = "/h2_connection.csv")
     public void testExecute(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        boolean isResultSet = statement.execute("SELECT * FROM test_table");
+        boolean isResultSet = statement.execute("SELECT * FROM h2_statement_test");
         assertTrue(isResultSet);
         ResultSet rs = statement.getResultSet();
         assertNotNull(rs);
         rs.close();
         assertEquals(-1, statement.getUpdateCount());
 
-        isResultSet = statement.execute("UPDATE test_table SET name = 'Updated Bob' WHERE id = 2");
+        isResultSet = statement.execute("UPDATE h2_statement_test SET name = 'Updated Bob' WHERE id = 2");
         assertFalse(isResultSet);
         assertEquals(1, statement.getUpdateCount());
     }
@@ -160,7 +160,7 @@ public class H2StatementExtensiveTests {
     @CsvFileSource(resources = "/h2_connection.csv")
     public void testGetMoreResults(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        statement.execute("SELECT * FROM test_table");
+        statement.execute("SELECT * FROM h2_statement_test");
         assertFalse(statement.getMoreResults());
         assertEquals(-1, statement.getUpdateCount());
     }
@@ -199,12 +199,12 @@ public class H2StatementExtensiveTests {
     @CsvFileSource(resources = "/h2_connection.csv")
     public void testBatchExecution(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        statement.addBatch("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
-        statement.addBatch("INSERT INTO test_table (id, name) VALUES (4, 'David')");
+        statement.addBatch("INSERT INTO h2_statement_test (id, name) VALUES (3, 'Charlie')");
+        statement.addBatch("INSERT INTO h2_statement_test (id, name) VALUES (4, 'David')");
         int[] results = statement.executeBatch();
         assertEquals(2, results.length);
 
-        ResultSet rs = statement.executeQuery("SELECT COUNT(*) AS total FROM test_table");
+        ResultSet rs = statement.executeQuery("SELECT COUNT(*) AS total FROM h2_statement_test");
         assertTrue(rs.next());
         assertEquals(4, rs.getLong("total"));
         rs.close();
@@ -214,7 +214,7 @@ public class H2StatementExtensiveTests {
     @CsvFileSource(resources = "/h2_connection.csv")
     public void testClearBatch(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        statement.addBatch("INSERT INTO test_table (id, name) VALUES (5, 'Eve')");
+        statement.addBatch("INSERT INTO h2_statement_test (id, name) VALUES (5, 'Eve')");
         statement.clearBatch();
         int[] results = statement.executeBatch();
         assertEquals(0, results.length);
@@ -231,7 +231,7 @@ public class H2StatementExtensiveTests {
     @CsvFileSource(resources = "/h2_connection.csv")
     public void testGetMoreResultsWithCurrent(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        statement.execute("SELECT * FROM test_table");
+        statement.execute("SELECT * FROM h2_statement_test");
         assertFalse(statement.getMoreResults(Statement.CLOSE_CURRENT_RESULT));
     }
 
@@ -313,16 +313,16 @@ public class H2StatementExtensiveTests {
     public void testLargeMethodsDefault(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         this.statement.getFetchDirection();
-        statement.execute("INSERT INTO test_table (id, name) VALUES (3, 'Juca Bala')");
+        statement.execute("INSERT INTO h2_statement_test (id, name) VALUES (3, 'Juca Bala')");
         // Most drivers will throw or return default for these methods
         assertEquals(1, statement.getLargeUpdateCount());
         assertDoesNotThrow(() -> statement.setLargeMaxRows(10L));
         assertEquals(10L, statement.getLargeMaxRows());
         assertDoesNotThrow(() -> statement.executeLargeBatch());
-        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE test_table SET name = 'x' WHERE id = 1"));
-        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE test_table SET name = 'x' WHERE id = 1", Statement.RETURN_GENERATED_KEYS));
-        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE test_table SET name = 'x' WHERE id = 1", new int[]{1}));
-        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE test_table SET name = 'x' WHERE id = 1", new String[]{"id"}));
+        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE h2_statement_test SET name = 'x' WHERE id = 1"));
+        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE h2_statement_test SET name = 'x' WHERE id = 1", Statement.RETURN_GENERATED_KEYS));
+        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE h2_statement_test SET name = 'x' WHERE id = 1", new int[]{1}));
+        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE h2_statement_test SET name = 'x' WHERE id = 1", new String[]{"id"}));
     }
 
     @ParameterizedTest
