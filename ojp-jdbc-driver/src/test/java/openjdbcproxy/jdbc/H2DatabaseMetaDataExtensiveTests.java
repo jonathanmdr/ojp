@@ -14,7 +14,7 @@ public class H2DatabaseMetaDataExtensiveTests {
 
     public void setUp(String driverClass, String url, String user, String password) throws Exception {
         connection = DriverManager.getConnection(url, user, password);
-        TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.H2);
+        TestDBUtils.createBasicTestTable(connection, "h2_db_metadata_test", TestDBUtils.SqlSyntax.H2);
     }
 
     @AfterAll

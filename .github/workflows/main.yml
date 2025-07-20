@@ -20,6 +20,22 @@ jobs:
         java-version: [ 11, 17, 21, 22 ]
 
     services:
+
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: defaultdb
+          MYSQL_USER: testuser
+          MYSQL_PASSWORD: testpassword
+          MYSQL_ROOT_PASSWORD: rootpassword
+        options: >-
+          --health-cmd "mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+        ports:
+          - 3306:3306
+
       postgres:
         image: postgres:17
         env:
@@ -54,7 +70,7 @@ jobs:
         run: mvn test -pl ojp-server
 
       - name: Run (ojp-server)
-        run: mvn verify -pl ojp-server -Prun-ojp-server > ojp-server.log 2>&1 &
+        run: mvn verify -pl ojp-server -Prun-ojp-server > /tmp/ojp-server.log 2>&1 &
 
       - name: Wait for ojp-server to start
         run: sleep 10
@@ -71,6 +87,10 @@ jobs:
 
       - name: Test (ojp-grpc-commons, ojp-jdbc-driver)
         run: mvn test -pl ojp-grpc-commons,ojp-jdbc-driver -Dgpg.skip=true
+
+      - name: Show ojp-server.log
+        if: always()  # ensures it runs even if previous steps fail
+        run: cat /tmp/ojp-server.log || echo "/tmp/ojp-server.log not found"
 
   notify-integration:
     runs-on: ubuntu-latest

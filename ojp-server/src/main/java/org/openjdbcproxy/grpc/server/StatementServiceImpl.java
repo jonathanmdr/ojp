@@ -75,6 +75,7 @@ import static org.openjdbcproxy.grpc.server.Constants.EMPTY_MAP;
 import static org.openjdbcproxy.grpc.server.Constants.EMPTY_STRING;
 import static org.openjdbcproxy.grpc.server.Constants.H2_DRIVER_CLASS;
 import static org.openjdbcproxy.grpc.server.Constants.POSTGRES_DRIVER_CLASS;
+import static org.openjdbcproxy.grpc.server.Constants.MYSQL_DRIVER_CLASS;
 import static org.openjdbcproxy.grpc.server.Constants.SHA_256;
 import static org.openjdbcproxy.grpc.server.GrpcExceptionHandler.sendSQLExceptionMetadata;
 
@@ -93,6 +94,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         try {
             Class.forName(H2_DRIVER_CLASS);
             Class.forName(POSTGRES_DRIVER_CLASS);
+            Class.forName(MYSQL_DRIVER_CLASS);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }

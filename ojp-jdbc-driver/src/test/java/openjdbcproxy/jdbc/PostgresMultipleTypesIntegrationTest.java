@@ -37,10 +37,10 @@ public class PostgresMultipleTypesIntegrationTest {
 
         System.out.println("Testing for url -> " + url);
 
-        TestDBUtils.createMultiTypeTestTable(conn, TestDBUtils.SqlSyntax.POSTGRES);
+        TestDBUtils.createMultiTypeTestTable(conn, "postgres_multi_types_test", TestDBUtils.SqlSyntax.POSTGRES);
 
         java.sql.PreparedStatement psInsert = conn.prepareStatement(
-                "insert into test_table (val_int, val_varchar, val_double_precision, val_bigint, val_tinyint, " +
+                "insert into postgres_multi_types_test (val_int, val_varchar, val_double_precision, val_bigint, val_tinyint, " +
                         "val_smallint, val_boolean, val_decimal, val_float, val_byte, val_binary, val_date, val_time, " +
                         "val_timestamp) " +
                         "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -65,7 +65,7 @@ public class PostgresMultipleTypesIntegrationTest {
         psInsert.setTimestamp(14, new Timestamp(sdfTimestamp.parse("30/03/2025 21:22:23").getTime()));
         psInsert.executeUpdate();
 
-        java.sql.PreparedStatement psSelect = conn.prepareStatement("select * from test_table where val_int = ?");
+        java.sql.PreparedStatement psSelect = conn.prepareStatement("select * from postgres_multi_types_test where val_int = ?");
         psSelect.setInt(1, 1);
         ResultSet resultSet = psSelect.executeQuery();
         resultSet.next();
@@ -123,7 +123,7 @@ public class PostgresMultipleTypesIntegrationTest {
         Assert.assertEquals("11:12:13", sdfTime.format(resultSet.getTime("val_time")));
         Assert.assertEquals("30/03/2025 21:22:23", sdfTimestamp.format(resultSet.getTimestamp("val_timestamp")));
 
-        TestDBUtils.executeUpdate(conn, "delete from test_table where val_int=1");
+        TestDBUtils.executeUpdate(conn, "delete from postgres_multi_types_test where val_int=1");
 
         ResultSet resultSetAfterDeletion = psSelect.executeQuery();
         Assert.assertFalse(resultSetAfterDeletion.next());

@@ -23,7 +23,7 @@ public class PostgresDatabaseMetaDataExtensiveTests {
         assumeFalse(isTestDisabled, "Postgres tests are disabled");
         
         connection = DriverManager.getConnection(url, user, password);
-        TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.POSTGRES);
+        TestDBUtils.createBasicTestTable(connection, "postgres_db_metadata_test", TestDBUtils.SqlSyntax.POSTGRES);
     }
 
     @AfterAll
@@ -213,34 +213,34 @@ public class PostgresDatabaseMetaDataExtensiveTests {
         try (ResultSet rs = meta.getColumns(null, null, null, null)) {
             TestDBUtils.validateAllRows(rs);
         }
-        try (ResultSet rs = meta.getColumnPrivileges(null, null, "test_table", null)) {
+        try (ResultSet rs = meta.getColumnPrivileges(null, null, "postgres_db_metadata_test", null)) {
             TestDBUtils.validateAllRows(rs);
         }
         try (ResultSet rs = meta.getTablePrivileges(null, null, null)) {
             TestDBUtils.validateAllRows(rs);
         }
-        try (ResultSet rs = meta.getBestRowIdentifier(null, null, "test_table", DatabaseMetaData.bestRowSession, false)) {
+        try (ResultSet rs = meta.getBestRowIdentifier(null, null, "postgres_db_metadata_test", DatabaseMetaData.bestRowSession, false)) {
             TestDBUtils.validateAllRows(rs);
         }
-        try (ResultSet rs = meta.getVersionColumns(null, null, "test_table")) {
+        try (ResultSet rs = meta.getVersionColumns(null, null, "postgres_db_metadata_test")) {
             TestDBUtils.validateAllRows(rs);
         }
-        try (ResultSet rs = meta.getPrimaryKeys(null, null, "test_table")) {
+        try (ResultSet rs = meta.getPrimaryKeys(null, null, "postgres_db_metadata_test")) {
             TestDBUtils.validateAllRows(rs);
         }
-        try (ResultSet rs = meta.getImportedKeys(null, null, "test_table")) {
+        try (ResultSet rs = meta.getImportedKeys(null, null, "postgres_db_metadata_test")) {
             TestDBUtils.validateAllRows(rs);
         }
-        try (ResultSet rs = meta.getExportedKeys(null, null, "test_table")) {
+        try (ResultSet rs = meta.getExportedKeys(null, null, "postgres_db_metadata_test")) {
             TestDBUtils.validateAllRows(rs);
         }
-        try (ResultSet rs = meta.getCrossReference(null, null, "test_table", null, null, "test_table")) {
+        try (ResultSet rs = meta.getCrossReference(null, null, "postgres_db_metadata_test", null, null, "postgres_db_metadata_test")) {
             TestDBUtils.validateAllRows(rs);
         }
         try (ResultSet rs = meta.getTypeInfo()) {
             TestDBUtils.validateAllRows(rs);
         }
-        try (ResultSet rs = meta.getIndexInfo(null, null, "test_table", false, false)) {
+        try (ResultSet rs = meta.getIndexInfo(null, null, "postgres_db_metadata_test", false, false)) {
             TestDBUtils.validateAllRows(rs);
         }
         try (ResultSet rs = meta.getUDTs(null, null, null, null)) {

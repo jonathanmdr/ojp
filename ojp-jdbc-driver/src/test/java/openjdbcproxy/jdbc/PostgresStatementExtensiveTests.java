@@ -40,7 +40,7 @@ public class PostgresStatementExtensiveTests {
         connection = DriverManager.getConnection(url, user, password);
         statement = connection.createStatement();
 
-        TestDBUtils.createBasicTestTable(connection, TestDBUtils.SqlSyntax.POSTGRES);
+        TestDBUtils.createBasicTestTable(connection, "postgres_statement_test", TestDBUtils.SqlSyntax.POSTGRES);
     }
 
     @AfterEach
@@ -52,7 +52,7 @@ public class PostgresStatementExtensiveTests {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void testExecuteQuery(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        ResultSet rs = statement.executeQuery("SELECT * FROM test_table");
+        ResultSet rs = statement.executeQuery("SELECT * FROM postgres_statement_test");
         assertNotNull(rs);
         assertTrue(rs.next());
         rs.close();
@@ -62,10 +62,10 @@ public class PostgresStatementExtensiveTests {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void testExecuteUpdate(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        int rows = statement.executeUpdate("UPDATE test_table SET name = 'Updated Alice' WHERE id = 1");
+        int rows = statement.executeUpdate("UPDATE postgres_statement_test SET name = 'Updated Alice' WHERE id = 1");
         assertEquals(1, rows);
 
-        ResultSet rs = statement.executeQuery("SELECT name FROM test_table WHERE id = 1");
+        ResultSet rs = statement.executeQuery("SELECT name FROM postgres_statement_test WHERE id = 1");
         assertTrue(rs.next());
         assertEquals("Updated Alice", rs.getString("name"));
         rs.close();
@@ -96,9 +96,9 @@ public class PostgresStatementExtensiveTests {
     public void testExecuteAfterCloseThrows(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         statement.close();
-        assertThrows(SQLException.class, () -> statement.executeQuery("SELECT * FROM test_table"));
-        assertThrows(SQLException.class, () -> statement.executeUpdate("UPDATE test_table SET name = 'fail' WHERE id = 1"));
-        assertThrows(SQLException.class, () -> statement.addBatch("INSERT INTO test_table (id, name) VALUES (99, 'ShouldFail')"));
+        assertThrows(SQLException.class, () -> statement.executeQuery("SELECT * FROM postgres_statement_test"));
+        assertThrows(SQLException.class, () -> statement.executeUpdate("UPDATE postgres_statement_test SET name = 'fail' WHERE id = 1"));
+        assertThrows(SQLException.class, () -> statement.addBatch("INSERT INTO postgres_statement_test (id, name) VALUES (99, 'ShouldFail')"));
     }
 
     @ParameterizedTest
@@ -107,7 +107,7 @@ public class PostgresStatementExtensiveTests {
         this.setUp(driverClass, url, user, password);
         statement.setMaxRows(1);
         assertEquals(1, statement.getMaxRows());
-        ResultSet rs = statement.executeQuery("SELECT * FROM test_table");
+        ResultSet rs = statement.executeQuery("SELECT * FROM postgres_statement_test");
         assertTrue(rs.next());
         assertFalse(rs.next());
         rs.close();
@@ -158,14 +158,14 @@ public class PostgresStatementExtensiveTests {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void testExecute(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        boolean isResultSet = statement.execute("SELECT * FROM test_table");
+        boolean isResultSet = statement.execute("SELECT * FROM postgres_statement_test");
         assertTrue(isResultSet);
         ResultSet rs = statement.getResultSet();
         assertNotNull(rs);
         rs.close();
         assertEquals(-1, statement.getUpdateCount());
 
-        isResultSet = statement.execute("UPDATE test_table SET name = 'Updated Bob' WHERE id = 2");
+        isResultSet = statement.execute("UPDATE postgres_statement_test SET name = 'Updated Bob' WHERE id = 2");
         assertFalse(isResultSet);
         assertEquals(1, statement.getUpdateCount());
     }
@@ -174,7 +174,7 @@ public class PostgresStatementExtensiveTests {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void testGetMoreResults(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        statement.execute("SELECT * FROM test_table");
+        statement.execute("SELECT * FROM postgres_statement_test");
         assertFalse(statement.getMoreResults());
         assertEquals(-1, statement.getUpdateCount());
     }
@@ -213,12 +213,12 @@ public class PostgresStatementExtensiveTests {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void testBatchExecution(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        statement.addBatch("INSERT INTO test_table (id, name) VALUES (3, 'Charlie')");
-        statement.addBatch("INSERT INTO test_table (id, name) VALUES (4, 'David')");
+        statement.addBatch("INSERT INTO postgres_statement_test (id, name) VALUES (3, 'Charlie')");
+        statement.addBatch("INSERT INTO postgres_statement_test (id, name) VALUES (4, 'David')");
         int[] results = statement.executeBatch();
         assertEquals(2, results.length);
 
-        ResultSet rs = statement.executeQuery("SELECT COUNT(*) AS total FROM test_table");
+        ResultSet rs = statement.executeQuery("SELECT COUNT(*) AS total FROM postgres_statement_test");
         assertTrue(rs.next());
         assertEquals(4, rs.getLong("total"));
         rs.close();
@@ -228,7 +228,7 @@ public class PostgresStatementExtensiveTests {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void testClearBatch(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        statement.addBatch("INSERT INTO test_table (id, name) VALUES (5, 'Eve')");
+        statement.addBatch("INSERT INTO postgres_statement_test (id, name) VALUES (5, 'Eve')");
         statement.clearBatch();
         int[] results = statement.executeBatch();
         assertEquals(0, results.length);
@@ -245,7 +245,7 @@ public class PostgresStatementExtensiveTests {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void testGetMoreResultsWithCurrent(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        statement.execute("SELECT * FROM test_table");
+        statement.execute("SELECT * FROM postgres_statement_test");
         assertFalse(statement.getMoreResults(Statement.CLOSE_CURRENT_RESULT));
     }
 
@@ -345,16 +345,16 @@ public class PostgresStatementExtensiveTests {
     public void testLargeMethodsDefault(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         statement.getFetchDirection();
-        statement.execute("INSERT INTO test_table (id, name) VALUES (3, 'Juca Bala')");
+        statement.execute("INSERT INTO postgres_statement_test (id, name) VALUES (3, 'Juca Bala')");
         // Most drivers will throw or return default for these methods
         assertEquals(1, statement.getLargeUpdateCount());
 
         
         assertDoesNotThrow(() -> statement.executeLargeBatch());
-        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE test_table SET name = 'x' WHERE id = 1"));
-        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE test_table SET name = 'x' WHERE id = 1", Statement.RETURN_GENERATED_KEYS));
-        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE test_table SET name = 'x' WHERE id = 1", new String[]{"id"}));
-        assertThrows(SQLException.class, () -> statement.executeLargeUpdate("UPDATE test_table SET name = 'x' WHERE id = 1", new int[]{1}));
+        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE postgres_statement_test SET name = 'x' WHERE id = 1"));
+        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE postgres_statement_test SET name = 'x' WHERE id = 1", Statement.RETURN_GENERATED_KEYS));
+        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE postgres_statement_test SET name = 'x' WHERE id = 1", new String[]{"id"}));
+        assertThrows(SQLException.class, () -> statement.executeLargeUpdate("UPDATE postgres_statement_test SET name = 'x' WHERE id = 1", new int[]{1}));
 
         // PostgreSQL JDBC driver may not implement all large methods
         // Has to be at the end because after this failure HikariCP mark the connection as broken

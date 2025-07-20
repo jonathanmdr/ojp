@@ -26,10 +26,10 @@ public class SavepointTests {
         connection = DriverManager.getConnection(url, user, pwd);
         connection.setAutoCommit(false);
         connection.createStatement().execute(
-                "DROP TABLE IF EXISTS test_table"
+                "DROP TABLE IF EXISTS savepoint_test_table"
         );
         connection.createStatement().execute(
-            "CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(255))"
+            "CREATE TABLE savepoint_test_table (id INT PRIMARY KEY, name VARCHAR(255))"
         );
     }
 
@@ -42,13 +42,13 @@ public class SavepointTests {
     @CsvFileSource(resources = "/postgres_connection.csv")
     public void testSavepoint(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
-        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (1, 'Alice')");
+        connection.createStatement().execute("INSERT INTO savepoint_test_table (id, name) VALUES (1, 'Alice')");
         Savepoint savepoint = connection.setSavepoint();
 
-        connection.createStatement().execute("INSERT INTO test_table (id, name) VALUES (2, 'Bob')");
+        connection.createStatement().execute("INSERT INTO savepoint_test_table (id, name) VALUES (2, 'Bob')");
         connection.rollback(savepoint);
 
-        ResultSet resultSet = connection.createStatement().executeQuery("SELECT * FROM test_table");
+        ResultSet resultSet = connection.createStatement().executeQuery("SELECT * FROM savepoint_test_table");
         assertTrue(resultSet.next());
         assertEquals(1, resultSet.getInt("id"));
     }

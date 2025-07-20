@@ -28,32 +28,23 @@ public class TestDBUtils {
     /**
      * Creates a basic test table for integration tests.
      * @param connection The database connection
+     * @param tableName The name of the table to create
      * @param sqlSyntax The SQL syntax to use (H2 or POSTGRES)
      * @throws SQLException if table creation fails
      */
-    public static void createBasicTestTable(Connection connection, SqlSyntax sqlSyntax) throws SQLException {
+    public static void createBasicTestTable(Connection connection, String tableName, SqlSyntax sqlSyntax) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             // Drop table if exists
-            String dropTableSql;
-            if (sqlSyntax == SqlSyntax.H2) {
-                dropTableSql = "DROP TABLE IF EXISTS test_table";
-            } else { // PostgreSQL
-                dropTableSql = "DROP TABLE IF EXISTS test_table";
-            }
+            String dropTableSql = "DROP TABLE IF EXISTS " + tableName;
             statement.execute(dropTableSql);
 
             // Create table with appropriate syntax
-            String createTableSql;
-            if (sqlSyntax == SqlSyntax.H2) {
-                createTableSql = "CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(255))";
-            } else {
-                createTableSql = "CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(255))";
-            }
+            String createTableSql = "CREATE TABLE " + tableName + " (id INT PRIMARY KEY, name VARCHAR(255))";
             statement.execute(createTableSql);
 
             // Insert initial test data
-            statement.execute("INSERT INTO test_table (id, name) VALUES (1, 'Alice')");
-            statement.execute("INSERT INTO test_table (id, name) VALUES (2, 'Bob')");
+            statement.execute("INSERT INTO " + tableName + " (id, name) VALUES (1, 'Alice')");
+            statement.execute("INSERT INTO " + tableName + " (id, name) VALUES (2, 'Bob')");
         }
     }
 
@@ -84,19 +75,20 @@ public class TestDBUtils {
     /**
      * Creates a comprehensive test table with multiple data types.
      * @param connection The database connection
+     * @param tableName The name of the table to create
      * @param sqlSyntax The SQL syntax to use (H2 or POSTGRES)
      * @throws SQLException if table creation fails
      */
-    public static void createMultiTypeTestTable(Connection connection, SqlSyntax sqlSyntax) throws SQLException {
+    public static void createMultiTypeTestTable(Connection connection, String tableName, SqlSyntax sqlSyntax) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             // Drop table if exists
-            String dropTableSql = "DROP TABLE IF EXISTS test_table";
+            String dropTableSql = "DROP TABLE IF EXISTS " + tableName;
             statement.execute(dropTableSql);
 
             // Create table with appropriate data type syntax
             String createTableSql;
             if (sqlSyntax == SqlSyntax.H2) {
-                createTableSql = "CREATE TABLE test_table(" +
+                createTableSql = "CREATE TABLE " + tableName + "(" +
                         " val_int INT NOT NULL," +
                         " val_varchar VARCHAR(50) NOT NULL," +
                         " val_double_precision DOUBLE PRECISION," +
@@ -113,7 +105,7 @@ public class TestDBUtils {
                         " val_timestamp TIMESTAMP)";
             } else {
                 // PostgreSQL syntax - adjust types for PostgreSQL compatibility
-                createTableSql = "CREATE TABLE test_table(" +
+                createTableSql = "CREATE TABLE " + tableName + "(" +
                         " val_int INT NOT NULL," +
                         " val_varchar VARCHAR(50) NOT NULL," +
                         " val_double_precision DOUBLE PRECISION," +

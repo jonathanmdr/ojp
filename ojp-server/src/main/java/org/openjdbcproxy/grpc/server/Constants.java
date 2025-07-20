@@ -15,4 +15,5 @@ public class Constants {
     public static final Map EMPTY_MAP = new HashMap<>();
     public static final String H2_DRIVER_CLASS = "org.h2.Driver";
     public static final String POSTGRES_DRIVER_CLASS = "org.postgresql.Driver";
+    public static final String MYSQL_DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
 }
