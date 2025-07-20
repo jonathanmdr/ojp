@@ -128,55 +128,44 @@ public class Lob {
             return new InputStream() {
                 private InputStream currentBlockInputStream;
                 private long currentPos = pos - 1;//minus 1 because it will increment it in the loop
-                private boolean reachedEndOfData = false; // Track if we've reached the end of available data
 
                 @Override
                 public int read() throws IOException {
                     int currentByte = this.currentBlockInputStream != null ? this.currentBlockInputStream.read() : -1;
                     int TWO_BLOCKS_SIZE = 2 * MAX_LOB_DATA_BLOCK_SIZE;
+                    boolean lastBlockReached = (currentByte == -1 && currentPos > 1 && currentPos % TWO_BLOCKS_SIZE != 0);
                     currentPos++;
 
-                    if ((currentBlockInputStream == null || currentByte == -1) && !reachedEndOfData) {
-                        // If we have no current block or reached end of current block, try to read more
-                        if (currentPos <= length) {
-                            //Read next 2 blocks
-                            Iterator<LobDataBlock> dataBlocks = null;
+                    if ((currentBlockInputStream == null || currentByte == -1) && !lastBlockReached) {
+                        //Read next 2 blocks
+                        Iterator<LobDataBlock> dataBlocks = null;
+                        try {
+                            dataBlocks = statementService.readLob(lobReference.get(), currentPos, TWO_BLOCKS_SIZE);
+                            this.currentBlockInputStream = lobService.parseReceivedBlocks(dataBlocks);
+                            currentByte = this.currentBlockInputStream.read();
+                        } catch (SQLException e) {
+                            log.error("SQLException in getBinaryStream InputStream.read() - readLob/parseReceivedBlocks", e);
+                            throw new RuntimeException(e);
+                        } catch (StatusRuntimeException e) {
                             try {
-                                dataBlocks = statementService.readLob(lobReference.get(), currentPos, TWO_BLOCKS_SIZE);
-                                
-                                // Check if the iterator has any data before creating the InputStream
-                                if (dataBlocks != null && dataBlocks.hasNext()) {
-                                    this.currentBlockInputStream = lobService.parseReceivedBlocks(dataBlocks);
-                                    if (this.currentBlockInputStream != null) {
-                                        currentByte = this.currentBlockInputStream.read();
-                                    }
-                                } else {
-                                    // No more data available from server
-                                    reachedEndOfData = true;
-                                    currentByte = -1;
-                                }
-                            } catch (SQLException e) {
-                                log.error("SQLException in getBinaryStream InputStream.read() - readLob/parseReceivedBlocks", e);
-                                throw new RuntimeException(e);
-                            } catch (StatusRuntimeException e) {
-                                try {
-                                    throw handle(e);
-                                } catch (SQLException ex) {
-                                    log.error("SQLException in handle(StatusRuntimeException)", ex);
-                                    throw new RuntimeException(ex);
-                                }
-                            } catch (Exception e) {
-                                log.error("Exception in getBinaryStream InputStream.read()", e);
-                                throw new RuntimeException(e);
+                                throw handle(e);
+                            } catch (SQLException ex) {
+                                log.error("SQLException in handle(StatusRuntimeException)", ex);
+                                throw new RuntimeException(ex);
                             }
-                        } else {
-                            // Reached length limit
-                            reachedEndOfData = true;
+                        } catch (Exception e) {
+                            log.error("Exception in getBinaryStream InputStream.read()", e);
+                            throw new RuntimeException(e);
                         }
                     }
 
-                    if (currentPos > length || currentByte == -1 || reachedEndOfData) {
-                        return -1;//Finish stream if reached the length required or no more data
+                    if (currentPos >= length) {
+                        return -1;//Finish stream if reached the length required
+                    }
+
+                    //TODO remove
+                    if (currentPos == 2048) {
+                        int i = 0;
                     }
 
                     return currentByte;
