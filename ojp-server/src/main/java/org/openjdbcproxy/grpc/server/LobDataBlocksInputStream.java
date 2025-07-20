@@ -101,4 +101,13 @@ public class LobDataBlocksInputStream extends InputStream {
         log.info("Finished receiving blocks");
         atomicFinished.set(finished);
     }
+
+    /**
+     * Mark the stream as fully consumed. This is used for binary streams
+     * that are used as PreparedStatement parameters to avoid deadlock.
+     */
+    public void markAsFullyConsumed() {
+        log.info("Marking lob {} as fully consumed", this.uuid);
+        this.fullyConsumed.set(true);
+    }
 }

@@ -159,6 +159,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         Map<String, Object> metadata = (Map<String, Object>) sessionManager.getAttr(dto.getSession(), lobIS.getUuid());
                         Integer parameterIndex = (Integer) metadata.get(CommonConstants.PREPARED_STATEMENT_BINARY_STREAM_INDEX);
                         ps.setBinaryStream(parameterIndex, lobIS);
+                        // Mark binary stream as fully consumed after setting it as parameter
+                        // to avoid deadlock in waitLobStreamsConsumption
+                        lobIS.markAsFullyConsumed();
                     }
                     sessionManager.waitLobStreamsConsumption(dto.getSession());
                     if (ps != null) {
