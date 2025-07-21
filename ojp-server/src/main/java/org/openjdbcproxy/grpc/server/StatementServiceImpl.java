@@ -643,9 +643,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 Object lobObj = sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
                 if (lobObj instanceof Blob b) {
                     inputStream = this.inputStreamFromBlob(sessionManager, lobReference, request, readLobContextBuilder);
-                    inputStream.reset();//Might be a second read of the same stream, this guarantees that the position is at the start.
                 } else {
                     inputStream = sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
+                    inputStream.reset();//Might be a second read of the same stream, this guarantees that the position is at the start.
                 }
                 break;
             }

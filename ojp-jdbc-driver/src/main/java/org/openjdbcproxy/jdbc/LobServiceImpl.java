@@ -112,18 +112,18 @@ public class LobServiceImpl implements LobService {
         return new InputStream() {
             private int currentPos = -1;
 
-            private byte[] currentBlock = lobDataBlock.getData().toByteArray();;
+            private byte[] currentBlock = lobDataBlock.getData().toByteArray();
 
             @Override
             public int read() throws IOException {
                 if (currentPos == 2048) {
                     int i = 0;
                 }
-                if (currentBlock == null || currentPos >= (currentBlock.length - 1)) {
+                if (currentPos >= (currentBlock.length - 1)) {
                     if (!itBlocks.hasNext()) {
                         return -1;// -1 means end of the stream.
                     }
-                    currentBlock = lobDataBlock.getData().toByteArray();
+                    currentBlock = itBlocks.next().getData().toByteArray();
                     currentPos = -1;
                 }
                 return currentBlock[++currentPos];
