@@ -75,9 +75,8 @@ public class MySQLStatementExtensiveTests {
     public void testMaxFieldSize(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         int orig = statement.getMaxFieldSize();
-        statement.setMaxFieldSize(orig + 1);
-        // Just verify the call doesn't throw an exception
-        statement.getMaxFieldSize();
+        statement.setMaxFieldSize(orig - 1);
+        Assert.assertEquals(orig - 1, statement.getMaxFieldSize());
     }
 
     @ParameterizedTest

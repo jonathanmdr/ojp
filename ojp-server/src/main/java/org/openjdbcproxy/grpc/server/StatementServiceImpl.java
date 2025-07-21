@@ -41,6 +41,7 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
@@ -159,9 +160,6 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         Map<String, Object> metadata = (Map<String, Object>) sessionManager.getAttr(dto.getSession(), lobIS.getUuid());
                         Integer parameterIndex = (Integer) metadata.get(CommonConstants.PREPARED_STATEMENT_BINARY_STREAM_INDEX);
                         ps.setBinaryStream(parameterIndex, lobIS);
-                        // Mark binary stream as fully consumed after setting it as parameter
-                        // to avoid deadlock in waitLobStreamsConsumption
-                        lobIS.markAsFullyConsumed();
                     }
                     sessionManager.waitLobStreamsConsumption(dto.getSession());
                     if (ps != null) {
@@ -538,6 +536,15 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             LobReference lobRef = request.getLobReference();
             ReadLobContext readLobContext = this.findLobContext(request);
             InputStream inputStream = readLobContext.getInputStream();
+            if (inputStream == null) {
+                responseObserver.onNext(LobDataBlock.newBuilder()
+                        .setSession(lobRef.getSession())
+                        .setPosition(-1)
+                        .setData(ByteString.copyFrom(new byte[0]))
+                        .build());
+                responseObserver.onCompleted();
+                return;
+            }
             //If the lob length is known the exact size of the next block is also known.
             boolean exactSizeKnown = readLobContext.getLobLength().isPresent() && readLobContext.getAvailableLength().isPresent();
             int nextByte = inputStream.read();
@@ -627,26 +634,38 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         ReadLobContext.ReadLobContextBuilder readLobContextBuilder = ReadLobContext.builder();
         switch (request.getLobReference().getLobType()) {
             case LT_BLOB: {
-                Blob blob = this.sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
-                long lobLength = blob.length();
-                readLobContextBuilder.lobLength(Optional.of(lobLength));
-                int availableLength = (request.getPosition() + request.getLength()) < lobLength ? request.getLength() :
-                        (int) (lobLength - request.getPosition() + 1);
-                readLobContextBuilder.availableLength(Optional.of(availableLength));
-                inputStream = blob.getBinaryStream(request.getPosition(), availableLength);
+                inputStream = this.inputStreamFromBlob(sessionManager, lobReference, request, readLobContextBuilder);
                 break;
             }
             case LT_BINARY_STREAM: {
                 readLobContextBuilder.lobLength(Optional.empty());
                 readLobContextBuilder.availableLength(Optional.empty());
-                inputStream = sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
-                inputStream.reset();//Might be a second read of the same stream, this guarantees that the position is at the start.
+                Object lobObj = sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
+                if (lobObj instanceof Blob b) {
+                    inputStream = this.inputStreamFromBlob(sessionManager, lobReference, request, readLobContextBuilder);
+                    inputStream.reset();//Might be a second read of the same stream, this guarantees that the position is at the start.
+                } else {
+                    inputStream = sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
+                }
                 break;
             }
         }
         readLobContextBuilder.inputStream(inputStream);
 
         return readLobContextBuilder.build();
+    }
+
+    private InputStream inputStreamFromBlob(SessionManager sessionManager, LobReference lobReference,
+                                            ReadLobRequest request,
+                                            ReadLobContext.ReadLobContextBuilder readLobContextBuilder)
+            throws SQLException {
+        Blob blob = sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
+        long lobLength = blob.length();
+        readLobContextBuilder.lobLength(Optional.of(lobLength));
+        int availableLength = (request.getPosition() + request.getLength()) < lobLength ? request.getLength() :
+                (int) (lobLength - request.getPosition() + 1);
+        readLobContextBuilder.availableLength(Optional.of(availableLength));
+        return blob.getBinaryStream(request.getPosition(), availableLength);
     }
 
     private int nextBlockSize(ReadLobContext readLobContext, long position) {
@@ -860,15 +879,21 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 }
             } else {
                 resultFirstLevel = method.invoke(resource);
-                if (resultFirstLevel instanceof Savepoint) {
-                    Savepoint sp = (Savepoint) resultFirstLevel;
-                    String uuid = UUID.randomUUID().toString();
-                    resultFirstLevel = uuid;
-                    this.sessionManager.registerAttr(responseBuilder.getSession(), uuid, sp);
-                } else if (resultFirstLevel instanceof ResultSet) {
+                if (resultFirstLevel instanceof ResultSet) {
                     ResultSet rs = (ResultSet) resultFirstLevel;
                     resultFirstLevel = this.sessionManager.registerResultSet(responseBuilder.getSession(), rs);
+                } else if (resultFirstLevel instanceof Array) {
+                    Array array = (Array) resultFirstLevel;
+                    String arrayUUID = UUID.randomUUID().toString();
+                    this.sessionManager.registerAttr(responseBuilder.getSession(), arrayUUID, array);
+                    resultFirstLevel = arrayUUID;
                 }
+            }
+            if (resultFirstLevel instanceof Savepoint) {
+                Savepoint sp = (Savepoint) resultFirstLevel;
+                String uuid = UUID.randomUUID().toString();
+                resultFirstLevel = uuid;
+                this.sessionManager.registerAttr(responseBuilder.getSession(), uuid, sp);
             }
             if (request.getTarget().hasNextCall()) {
                 //Second level calls, for cases like getMetadata().isAutoIncrement(int column)
@@ -1167,10 +1192,11 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             Object[] rowValues = new Object[columnCount];
             for (int i = 0; i < columnCount; i++) {
                 int colType = rs.getMetaData().getColumnType(i + 1);
+                String colTypeName = rs.getMetaData().getColumnTypeName(i + 1);
                 Object currentValue = null;
                 //Postgres uses type BYTEA which translates to type VARBINARY
                 switch (colType) {
-                    case Types.BLOB: {
+                    case Types.BLOB, Types.LONGVARBINARY, Types.VARBINARY: {
                         Blob blob = rs.getBlob(i + 1);
                         currentValue = UUID.randomUUID().toString();
                         this.sessionManager.registerLob(session, blob, currentValue.toString());
@@ -1193,6 +1219,15 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                             InputStream inputStream = rs.getBinaryStream(i + 1);
                             currentValue = UUID.randomUUID().toString();
                             this.sessionManager.registerLob(session, inputStream, currentValue.toString());
+                        }
+                        break;
+                    }
+                    case Types.DATE: {
+                        Date date = rs.getDate(i + 1);
+                        if ("YEAR".equalsIgnoreCase(colTypeName)) {
+                            currentValue = date.toLocalDate().getYear();
+                        } else {
+                            currentValue = date;
                         }
                         break;
                     }

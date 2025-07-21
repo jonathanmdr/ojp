@@ -1,6 +1,5 @@
 package openjdbcproxy.jdbc;
 
-import openjdbcproxy.jdbc.testutil.TestDBUtils;
 import org.junit.Assert;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
@@ -74,7 +73,8 @@ public class BinaryStreamIntegrationTest {
         Assert.assertEquals(testString, fromBlobByIdx);
 
         InputStream blobResultByName = resultSet.getBinaryStream("val_blob1");
-        String fromBlobByName = new String(blobResultByName.readAllBytes());
+        byte[] allBytes = blobResultByName.readAllBytes();
+        String fromBlobByName = new String(allBytes);
         Assert.assertEquals(testString, fromBlobByName);
 
         InputStream blobResult2 = resultSet.getBinaryStream(2);

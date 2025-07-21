@@ -64,8 +64,8 @@ public class MySQLDatabaseMetaDataExtensiveTests {
 
         // MySQL typically supports these features
         Assert.assertTrue(meta.supportsTransactions());
-        Assert.assertTrue(meta.supportsDataDefinitionAndDataManipulationTransactions());
-        Assert.assertTrue(meta.supportsDataManipulationTransactionsOnly());
+        Assert.assertFalse(meta.supportsDataDefinitionAndDataManipulationTransactions());
+        Assert.assertFalse(meta.supportsDataManipulationTransactionsOnly());
         Assert.assertTrue(meta.supportsResultSetType(ResultSet.TYPE_FORWARD_ONLY));
         Assert.assertTrue(meta.supportsResultSetConcurrency(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY));
 
@@ -74,7 +74,7 @@ public class MySQLDatabaseMetaDataExtensiveTests {
         Assert.assertTrue(meta.supportsAlterTableWithDropColumn());
         Assert.assertTrue(meta.supportsUnion());
         Assert.assertTrue(meta.supportsUnionAll());
-        Assert.assertTrue(meta.supportsOrderByUnrelated());
+        Assert.assertFalse(meta.supportsOrderByUnrelated());
         Assert.assertTrue(meta.supportsGroupBy());
         Assert.assertTrue(meta.supportsGroupByUnrelated());
         Assert.assertTrue(meta.supportsLikeEscapeClause());

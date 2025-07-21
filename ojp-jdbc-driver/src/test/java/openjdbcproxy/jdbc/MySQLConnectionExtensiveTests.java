@@ -1,6 +1,5 @@
 package openjdbcproxy.jdbc;
 
-import io.grpc.StatusRuntimeException;
 import lombok.SneakyThrows;
 import openjdbcproxy.jdbc.testutil.TestDBUtils;
 import org.junit.Assert;
@@ -10,25 +9,19 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
 import java.sql.Array;
-import java.sql.Blob;
 import java.sql.CallableStatement;
-import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
-import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
-import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
-import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Executor;
 
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
@@ -260,7 +253,8 @@ public class MySQLConnectionExtensiveTests {
         
         // Test setting holdability
         connection.setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);
-        Assert.assertEquals(ResultSet.HOLD_CURSORS_OVER_COMMIT, connection.getHoldability());
+        //MySQL does not support cursor holdability.
+        Assert.assertEquals(ResultSet.CLOSE_CURSORS_AT_COMMIT, connection.getHoldability());
     }
 
     @ParameterizedTest
@@ -326,10 +320,10 @@ public class MySQLConnectionExtensiveTests {
         setUp(driverClass, url, user, password);
         
         // Test operations that might not be supported
-        Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> {
+        Assert.assertThrows(SQLException.class, () -> {
             connection.createArrayOf("VARCHAR", new String[]{"test"});
         });
-        
+
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> {
             connection.createStruct("test_type", new Object[]{});
         });

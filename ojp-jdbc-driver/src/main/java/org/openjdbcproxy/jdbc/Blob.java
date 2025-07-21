@@ -4,6 +4,7 @@ import com.openjdbcproxy.grpc.LobDataBlock;
 import com.openjdbcproxy.grpc.LobReference;
 import com.openjdbcproxy.grpc.LobType;
 import io.grpc.StatusRuntimeException;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.openjdbcproxy.grpc.client.StatementService;
 
@@ -60,6 +61,7 @@ public class Blob extends Lob implements java.sql.Blob {
         return 0;
     }
 
+    @SneakyThrows
     @Override
     public int setBytes(long pos, byte[] bytes) throws SQLException {
         log.debug("setBytes: {}, <byte[]>", pos);

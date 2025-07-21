@@ -104,10 +104,15 @@ public class LobServiceImpl implements LobService {
 
     @Override
     public InputStream parseReceivedBlocks(Iterator<LobDataBlock> itBlocks) {
+        LobDataBlock lobDataBlock = itBlocks.next();
+        if (lobDataBlock.getPosition() == -1 && lobDataBlock.getData().toByteArray().length < 1) {
+            return null;
+        }
+
         return new InputStream() {
             private int currentPos = -1;
 
-            private byte[] currentBlock;
+            private byte[] currentBlock = lobDataBlock.getData().toByteArray();;
 
             @Override
             public int read() throws IOException {
@@ -118,7 +123,7 @@ public class LobServiceImpl implements LobService {
                     if (!itBlocks.hasNext()) {
                         return -1;// -1 means end of the stream.
                     }
-                    currentBlock = itBlocks.next().getData().toByteArray();
+                    currentBlock = lobDataBlock.getData().toByteArray();
                     currentPos = -1;
                 }
                 return currentBlock[++currentPos];

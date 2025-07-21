@@ -53,9 +53,9 @@ public class Driver implements java.sql.Driver {
         if (url.toUpperCase().contains("H2:")) {
             DbInfo.setH2DB(true);
             log.debug("H2DB detected");
-        } else {
-            DbInfo.setH2DB(false);
-            log.debug("Non-H2DB detected");
+        } else if (url.toUpperCase().contains("MYSQL:")) {
+            DbInfo.setMySqlDB(true);
+            log.debug("MySql detected");
         }
         
         // Load ojp.properties file if it exists
