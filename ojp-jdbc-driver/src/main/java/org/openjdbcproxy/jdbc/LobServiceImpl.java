@@ -65,7 +65,7 @@ public class LobServiceImpl implements LobService {
                 byte[] bytesRead;
                 if (nextBytes.length > 0) {
                     //H2 does not support multiple writes to the same blob. All is written at once. H2 error = Feature not supported: "Allocate a new object to set its value." [50100-232]
-                    if (DbInfo.isH2DB()) {
+                    if (DbType.H2.equals(connection.getDbType())) {
                         bytesRead = Bytes.concat(nextBytes, bis.readAllBytes());
                     } else {
                         //Concatenate the one byte already read in the hasNext method
@@ -104,17 +104,22 @@ public class LobServiceImpl implements LobService {
 
     @Override
     public InputStream parseReceivedBlocks(Iterator<LobDataBlock> itBlocks) {
+        LobDataBlock lobDataBlock = itBlocks.next();
+        if (lobDataBlock.getPosition() == -1 && lobDataBlock.getData().toByteArray().length < 1) {
+            return null;
+        }
+
         return new InputStream() {
             private int currentPos = -1;
 
-            private byte[] currentBlock;
+            private byte[] currentBlock = lobDataBlock.getData().toByteArray();
 
             @Override
             public int read() throws IOException {
                 if (currentPos == 2048) {
                     int i = 0;
                 }
-                if (currentBlock == null || currentPos >= (currentBlock.length - 1)) {
+                if (currentPos >= (currentBlock.length - 1)) {
                     if (!itBlocks.hasNext()) {
                         return -1;// -1 means end of the stream.
                     }

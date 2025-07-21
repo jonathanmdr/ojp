@@ -14,6 +14,7 @@ import org.openjdbcproxy.grpc.dto.OpQueryResult;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
@@ -27,6 +28,7 @@ import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -158,6 +160,8 @@ public class ResultSet extends RemoteProxyResultSet {
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
         if (lastValueRead == null) {
             return 0;
+        } else if (lastValueRead instanceof byte[]) {
+            return ((byte[]) lastValueRead)[0];
         }
         return (byte) lastValueRead;
     }
@@ -189,7 +193,18 @@ public class ResultSet extends RemoteProxyResultSet {
         if (value instanceof Long) {
             Long lValue = (Long) value;
             return lValue.intValue();
-        } else {
+        } else if (value instanceof Date) {
+            Date dValue = (Date) value;
+            LocalDate ld = LocalDate.ofEpochDay(dValue.getTime());
+            if (ld.getDayOfMonth() > 0) {
+                return ld.getDayOfMonth();
+            } else if (ld.getMonth().getValue() > 0) {
+                return ld.getMonth().getValue();
+            } else if (ld.getYear() > 0) {
+                return ld.getYear();
+            }
+            return (int) dValue.getTime();
+        }  else {
             return (int) value;
         }
     }
@@ -203,6 +218,9 @@ public class ResultSet extends RemoteProxyResultSet {
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
         if (lastValueRead == null) {
             return 0;
+        }
+        if (lastValueRead instanceof BigInteger) {
+            return ((BigInteger)lastValueRead).longValue();
         }
         return (long) lastValueRead;
     }
@@ -443,6 +461,9 @@ public class ResultSet extends RemoteProxyResultSet {
         if (lastValueRead == null) {
             return 0;
         }
+        if (lastValueRead instanceof Integer) {
+            return ((Integer)lastValueRead).longValue();
+        }
         return (long) lastValueRead;
     }
 
@@ -510,7 +531,11 @@ public class ResultSet extends RemoteProxyResultSet {
         }
         if (lastValueRead instanceof String) {// Means the server is treating it as a binary stream
             InputStream is = this.getBinaryStream(columnLabel);
-            return is.readAllBytes();
+            byte[] allBytes = is.readAllBytes();
+            if (allBytes.length == 0) {
+                return null;
+            }
+            return allBytes;
         }
         return (byte[]) lastValueRead;
     }

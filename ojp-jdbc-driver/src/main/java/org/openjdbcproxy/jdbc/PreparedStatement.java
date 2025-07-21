@@ -413,7 +413,7 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
     public void setRef(int parameterIndex, Ref x) throws SQLException {
         log.debug("setRef: {}, {}", parameterIndex, x);
         this.checkClosed();
-        if (DbInfo.isH2DB()) {
+        if (DbType.H2.equals(this.getConnection().getDbType())) {
             throw new SQLException("Not supported.");
         }
         this.paramsMap.put(parameterIndex,
@@ -521,7 +521,7 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
     public void setURL(int parameterIndex, URL x) throws SQLException {
         log.debug("setURL: {}, {}", parameterIndex, x);
         this.checkClosed();
-        if (DbInfo.isH2DB()) {
+        if (DbType.H2.equals(this.getConnection().getDbType())) {
             throw new SQLException("Not supported.");
         }
         this.paramsMap.put(parameterIndex,
@@ -543,7 +543,7 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
     public void setRowId(int parameterIndex, RowId x) throws SQLException {
         log.debug("setRowId: {}, {}", parameterIndex, x);
         this.checkClosed();
-        if (DbInfo.isH2DB()) {
+        if (DbType.H2.equals(this.getConnection().getDbType())) {
             throw new SQLException("Not supported.");
         }
         this.paramsMap.put(parameterIndex,

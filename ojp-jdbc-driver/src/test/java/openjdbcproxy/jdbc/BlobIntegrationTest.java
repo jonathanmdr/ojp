@@ -1,6 +1,7 @@
 package openjdbcproxy.jdbc;
 
 import org.junit.Assert;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
@@ -15,12 +16,25 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import static openjdbcproxy.helpers.SqlHelper.executeUpdate;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 public class BlobIntegrationTest {
 
+    private static boolean isMySQLTestDisabled;
+
+    @BeforeAll
+    public static void checkTestConfiguration() {
+        isMySQLTestDisabled = Boolean.parseBoolean(System.getProperty("disableMySQLTests", "false"));
+    }
+
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_connection.csv")
+    @CsvFileSource(resources = "/h2_mysql_connections.csv")
     public void createAndReadingBLOBsSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
+        // Skip MySQL tests if disabled
+        if (url.contains("mysql") && isMySQLTestDisabled) {
+            return;
+        }
+        
         Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing for url -> " + url);
@@ -83,8 +97,13 @@ public class BlobIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_connection.csv")
+    @CsvFileSource(resources = "/h2_mysql_connections.csv")
     public void creatingAndReadingLargeBLOBsSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
+        // Skip MySQL tests if disabled
+        if (url.contains("mysql") && isMySQLTestDisabled) {
+            return;
+        }
+        
         Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing for url -> " + url);

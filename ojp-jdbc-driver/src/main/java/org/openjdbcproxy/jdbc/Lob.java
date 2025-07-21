@@ -142,6 +142,9 @@ public class Lob {
                         try {
                             dataBlocks = statementService.readLob(lobReference.get(), currentPos, TWO_BLOCKS_SIZE);
                             this.currentBlockInputStream = lobService.parseReceivedBlocks(dataBlocks);
+                            if (currentBlockInputStream == null) {
+                                return -1;
+                            }
                             currentByte = this.currentBlockInputStream.read();
                         } catch (SQLException e) {
                             log.error("SQLException in getBinaryStream InputStream.read() - readLob/parseReceivedBlocks", e);
@@ -161,11 +164,6 @@ public class Lob {
 
                     if (currentPos >= length) {
                         return -1;//Finish stream if reached the length required
-                    }
-
-                    //TODO remove
-                    if (currentPos == 2048) {
-                        int i = 0;
                     }
 
                     return currentByte;

@@ -39,14 +39,17 @@ public class Connection implements java.sql.Connection {
     @Setter
     private SessionInfo session;
     private final StatementService statementService;
+    @Getter
+    private final DbType dbType;
     private boolean autoCommit = true;
     private boolean readOnly = false;
     private boolean closed;
 
-    public Connection(SessionInfo session, StatementService statementService) {
+    public Connection(SessionInfo session, StatementService statementService, DbType dbType) {
         this.session = session;
         this.statementService = statementService;
         this.closed = false;
+        this.dbType = dbType;
     }
 
     @Override
@@ -142,7 +145,7 @@ public class Connection implements java.sql.Connection {
     @Override
     public void setReadOnly(boolean readOnly) throws SQLException {
         log.debug("setReadOnly: {}", readOnly);
-        if (!DbInfo.isH2DB()) {
+        if (!DbType.H2.equals(this.dbType)) {
             this.readOnly = readOnly;
         }
     }
@@ -261,7 +264,7 @@ public class Connection implements java.sql.Connection {
     @Override
     public Savepoint setSavepoint(String name) throws SQLException {
         log.debug("setSavepoint: {}", name);
-        String uuid = this.callProxy(CallType.CALL_SET, "Savepoint", String.class);
+        String uuid = this.callProxy(CallType.CALL_SET, "Savepoint", String.class, Arrays.asList(name));
         return new org.openjdbcproxy.jdbc.Savepoint(uuid, this.statementService, this);
     }
 
@@ -367,6 +370,9 @@ public class Connection implements java.sql.Connection {
     @Override
     public boolean isValid(int timeout) throws SQLException {
         log.debug("isValid: {}", timeout);
+        if (this.closed) {
+            return false;
+        }
         return this.callProxy(CallType.CALL_IS, "Valid", Boolean.class, Arrays.asList(timeout));
     }
 
@@ -399,6 +405,9 @@ public class Connection implements java.sql.Connection {
     @Override
     public Array createArrayOf(String typeName, Object[] elements) throws SQLException {
         log.debug("createArrayOf: {}, <Object[]>", typeName);
+        if (DbType.MYSQL.equals(this.dbType)) {
+            throw new SQLFeatureNotSupportedException("MySql does not support creating array of.");
+        }
         return new org.openjdbcproxy.jdbc.Array();
     }
 
@@ -473,12 +482,17 @@ public class Connection implements java.sql.Connection {
                         .setParams(ByteString.copyFrom(serialize(params)))
                         .build()
         );
-        CallResourceResponse response = this.statementService.callResource(reqBuilder.build());
-        this.session = response.getSession();
-        this.setSession(response.getSession());
-        if (Void.class.equals(returnType)) {
+        try {
+            CallResourceResponse response = this.statementService.callResource(reqBuilder.build());
+            this.session = response.getSession();
+            this.setSession(response.getSession());
+            if (Void.class.equals(returnType)) {
+                return null;
+            }
+            return (T) deserialize(response.getValues().toByteArray(), returnType);
+        } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
-        return (T) deserialize(response.getValues().toByteArray(), returnType);
     }
 }

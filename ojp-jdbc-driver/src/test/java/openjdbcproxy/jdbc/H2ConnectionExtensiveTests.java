@@ -100,6 +100,7 @@ public class H2ConnectionExtensiveTests {
         TestDBUtils.createBasicTestTable(connection, "h2_connection_test", TestDBUtils.SqlSyntax.H2);
 
         Savepoint sp1 = connection.setSavepoint("Savepoint1");
+        assertEquals("Savepoint1", sp1.getSavepointName());
         connection.createStatement().execute("INSERT INTO h2_connection_test (id, name) VALUES (3, 'Charlie')");
         connection.rollback(sp1);
 
