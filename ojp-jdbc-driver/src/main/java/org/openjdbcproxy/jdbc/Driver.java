@@ -50,11 +50,12 @@ public class Driver implements java.sql.Driver {
     @Override
     public java.sql.Connection connect(String url, Properties info) throws SQLException {
         log.debug("connect: url={}, info={}", url, info);
+        DbType dbType = DbType.UNKNOWN;
         if (url.toUpperCase().contains("H2:")) {
-            DbInfo.setH2DB(true);
+            dbType = DbType.H2;
             log.debug("H2DB detected");
         } else if (url.toUpperCase().contains("MYSQL:")) {
-            DbInfo.setMySqlDB(true);
+            dbType = DbType.MYSQL;
             log.debug("MySql detected");
         }
         
@@ -77,7 +78,7 @@ public class Driver implements java.sql.Driver {
                 );
         //TODO create centralized handling of exceptions returned that coverts automatically to SQLException.
         log.debug("Returning new Connection with sessionInfo: {}", sessionInfo);
-        return new Connection(sessionInfo, statementService);
+        return new Connection(sessionInfo, statementService, dbType);
     }
     
     private Properties loadOjpProperties() {
