@@ -222,6 +222,9 @@ public class ResultSet extends RemoteProxyResultSet {
         if (lastValueRead instanceof BigInteger) {
             return ((BigInteger)lastValueRead).longValue();
         }
+        if (lastValueRead instanceof Integer) {
+            return ((Integer)lastValueRead).longValue();
+        }
         return (long) lastValueRead;
     }
 
@@ -383,11 +386,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getString(columnLabel);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
-        if (lastValueRead == null) {
-            return null;
-        }
-        return (String) lastValueRead;
+        return this.getString(this.labelsMap.get(columnLabel.toUpperCase()) + 1);
     }
 
     @Override
@@ -396,25 +395,16 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getBoolean(columnLabel);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
-        if (lastValueRead == null) {
-            return false;
-        }
-        return (boolean) lastValueRead;
+        return this.getBoolean(this.labelsMap.get(columnLabel.toUpperCase()) + 1);
     }
 
-    //TODO refactor all calls to getters with columnLabel to find the index and call the getter by index
     @Override
     public byte getByte(String columnLabel) throws SQLException {
         log.debug("getByte: {}", columnLabel);
         if (this.inProxyMode) {
             return super.getByte(columnLabel);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
-        if (lastValueRead == null) {
-            return 0;
-        }
-        return (byte) lastValueRead;
+        return this.getByte(this.labelsMap.get(columnLabel.toUpperCase()) + 1);
     }
 
     @Override
@@ -423,11 +413,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getShort(columnLabel);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
-        if (lastValueRead == null) {
-            return 0;
-        }
-        return (short) lastValueRead;
+        return this.getShort(this.labelsMap.get(columnLabel.toUpperCase()) + 1);
     }
 
     @Override
@@ -436,18 +422,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getInt(columnLabel);
         }
-        int colIdx = this.labelsMap.get(columnLabel.toUpperCase()) + 1;
-        lastValueRead = currentDataBlock.get(blockIdx.get())[colIdx - 1];
-        if (lastValueRead == null) {
-            return 0;
-        }
-        Object value = lastValueRead;
-        if (value instanceof Long) {
-            Long lValue = (Long) value;
-            return lValue.intValue();
-        } else {
-            return (int) value;
-        }
+        return this.getInt(this.labelsMap.get(columnLabel.toUpperCase()) + 1);
     }
 
     @Override
@@ -456,15 +431,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getLong(columnLabel);
         }
-        int colIdx = this.labelsMap.get(columnLabel.toUpperCase()) + 1;
-        lastValueRead = currentDataBlock.get(blockIdx.get())[colIdx - 1];
-        if (lastValueRead == null) {
-            return 0;
-        }
-        if (lastValueRead instanceof Integer) {
-            return ((Integer)lastValueRead).longValue();
-        }
-        return (long) lastValueRead;
+        return this.getLong(this.labelsMap.get(columnLabel.toUpperCase()) + 1);
     }
 
     @Override
@@ -473,17 +440,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getFloat(columnLabel);
         }
-        int colIdx = this.labelsMap.get(columnLabel.toUpperCase()) + 1;
-        lastValueRead = currentDataBlock.get(blockIdx.get())[colIdx - 1];
-        if (lastValueRead == null) {
-            return 0;
-        }
-        Object value = lastValueRead;
-        if (value instanceof BigDecimal) {
-            BigDecimal bdValue = (BigDecimal) value;
-            return bdValue.floatValue();
-        }
-        return (float) value;
+        return this.getFloat(this.labelsMap.get(columnLabel.toUpperCase()) + 1);
     }
 
     @Override
@@ -492,17 +449,61 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getDouble(columnLabel);
         }
-        int colIdx = this.labelsMap.get(columnLabel.toUpperCase()) + 1;
-        lastValueRead = currentDataBlock.get(blockIdx.get())[colIdx - 1];
-        if (lastValueRead == null) {
-            return 0d;
+        return this.getDouble(this.labelsMap.get(columnLabel.toUpperCase()) + 1);
+    }
+
+    @Override
+    public BigDecimal getBigDecimal(String columnLabel) throws SQLException {
+        log.debug("getBigDecimal: {}", columnLabel);
+        if (this.inProxyMode) {
+            return super.getBigDecimal(columnLabel);
         }
-        Object value = lastValueRead;
-        if (value instanceof BigDecimal) {
-            BigDecimal bdValue = (BigDecimal) value;
-            return bdValue.doubleValue();
+        return this.getBigDecimal(this.labelsMap.get(columnLabel.toUpperCase()) + 1);
+    }
+
+    @Override
+    public byte[] getBytes(String columnLabel) throws SQLException {
+        log.debug("getBytes: {}", columnLabel);
+        if (this.inProxyMode) {
+            return super.getBytes(columnLabel);
         }
-        return (double) value;
+        return this.getBytes(this.labelsMap.get(columnLabel.toUpperCase()) + 1);
+    }
+
+    @Override
+    public Date getDate(String columnLabel) throws SQLException {
+        log.debug("getDate: {}", columnLabel);
+        if (this.inProxyMode) {
+            return super.getDate(columnLabel);
+        }
+        return this.getDate(this.labelsMap.get(columnLabel.toUpperCase()) + 1);
+    }
+
+    @Override
+    public Time getTime(String columnLabel) throws SQLException {
+        log.debug("getTime: {}", columnLabel);
+        if (this.inProxyMode) {
+            return super.getTime(columnLabel);
+        }
+        return this.getTime(this.labelsMap.get(columnLabel.toUpperCase()) + 1);
+    }
+
+    @Override
+    public Timestamp getTimestamp(String columnLabel) throws SQLException {
+        log.debug("getTimestamp: {}", columnLabel);
+        if (this.inProxyMode) {
+            return super.getTimestamp(columnLabel);
+        }
+        return this.getTimestamp(this.labelsMap.get(columnLabel.toUpperCase()) + 1);
+    }
+
+    @Override
+    public Object getObject(String columnLabel) throws SQLException {
+        log.debug("getObject: {}", columnLabel);
+        if (this.inProxyMode) {
+            return super.getObject(columnLabel);
+        }
+        return this.getObject(this.labelsMap.get(columnLabel.toUpperCase()) + 1);
     }
 
     @Override
@@ -516,73 +517,6 @@ public class ResultSet extends RemoteProxyResultSet {
             return null;
         }
         return (BigDecimal) lastValueRead;
-    }
-
-    @SneakyThrows
-    @Override
-    public byte[] getBytes(String columnLabel) throws SQLException {
-        log.debug("getBytes: {}", columnLabel);
-        if (this.inProxyMode) {
-            return super.getBytes(columnLabel);
-        }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
-        if (lastValueRead == null) {
-            return null;
-        }
-        if (lastValueRead instanceof String) {// Means the server is treating it as a binary stream
-            InputStream is = this.getBinaryStream(columnLabel);
-            byte[] allBytes = is.readAllBytes();
-            if (allBytes.length == 0) {
-                return null;
-            }
-            return allBytes;
-        }
-        return (byte[]) lastValueRead;
-    }
-
-    @Override
-    public Date getDate(String columnLabel) throws SQLException {
-        log.debug("getDate: {}", columnLabel);
-        if (this.inProxyMode) {
-            return super.getDate(columnLabel);
-        }
-        int colIdx = this.labelsMap.get(columnLabel.toUpperCase()) + 1;
-        lastValueRead = currentDataBlock.get(blockIdx.get())[colIdx - 1];
-        if (lastValueRead == null) {
-            return null;
-        }
-        Object result = lastValueRead;
-        if (result instanceof Timestamp) {
-            Timestamp timestamp = (Timestamp) result;
-            return new Date(timestamp.getTime());
-        }
-        return (Date) result;
-    }
-
-    @Override
-    public Time getTime(String columnLabel) throws SQLException {
-        log.debug("getTime: {}", columnLabel);
-        if (this.inProxyMode) {
-            return super.getTime(columnLabel);
-        }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
-        if (lastValueRead == null) {
-            return null;
-        }
-        return (Time) lastValueRead;
-    }
-
-    @Override
-    public Timestamp getTimestamp(String columnLabel) throws SQLException {
-        log.debug("getTimestamp: {}", columnLabel);
-        if (this.inProxyMode) {
-            return super.getTimestamp(columnLabel);
-        }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
-        if (lastValueRead == null) {
-            return null;
-        }
-        return (Timestamp) lastValueRead;
     }
 
     @Override
@@ -668,16 +602,6 @@ public class ResultSet extends RemoteProxyResultSet {
     }
 
     @Override
-    public Object getObject(String columnLabel) throws SQLException {
-        log.debug("getObject: {}", columnLabel);
-        if (this.inProxyMode) {
-            return super.getObject(columnLabel);
-        }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
-        return lastValueRead;
-    }
-
-    @Override
     public int findColumn(String columnLabel) throws SQLException {
         log.debug("findColumn: {}", columnLabel);
         if (this.inProxyMode) {
@@ -713,19 +637,6 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getBigDecimal(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
-        if (lastValueRead == null) {
-            return null;
-        }
-        return (BigDecimal) lastValueRead;
-    }
-
-    @Override
-    public BigDecimal getBigDecimal(String columnLabel) throws SQLException {
-        log.debug("getBigDecimal: {}", columnLabel);
-        if (this.inProxyMode) {
-            return super.getBigDecimal(columnLabel);
-        }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
         if (lastValueRead == null) {
             return null;
         }
