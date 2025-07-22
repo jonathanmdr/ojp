@@ -21,6 +21,21 @@ jobs:
 
     services:
 
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_DATABASE: defaultdb
+          MARIADB_USER: testuser
+          MARIADB_PASSWORD: testpassword
+          MARIADB_ROOT_PASSWORD: rootpassword
+        options: >-
+          --health-cmd "mysqladmin ping -h localhost -u root -prootpassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+        ports:
+          - 3307:3306
+
       mysql:
         image: mysql:8.0
         env:
