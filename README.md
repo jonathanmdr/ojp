@@ -37,6 +37,7 @@ docker run --rm -d -p 1059:1059 rrobetti/ojp:0.0.4-alpha
 
 ### 3. Update your JDBC URL
 Replace your existing connection URL by prefixing with `ojp[host:port]_`:
+
 ```java
 // Before
 "jdbc:postgresql://user@localhost/mydb"
@@ -44,43 +45,27 @@ Replace your existing connection URL by prefixing with `ojp[host:port]_`:
 // After  
 "jdbc:ojp[localhost:1059]_postgresql://user@localhost/mydb"
 ```
+Use the ojp driver: `org.openjdbcproxy.jdbc.Driver`
 
 That's it! Your application now uses intelligent connection pooling through OJP.
 
 ## Documentation
 
-- [Architectural decision records (ADRs)](documents/ADRs) - Technical decisions and rationale behind OJP's architecture
-- [Get started: Spring Boot, Quarkus and Micronaut](documents/java-frameworks) - Framework-specific integration guides and examples
-- [Connection Pool Configuration](documents/configuration/CONNECTION_POOL_CONFIG.md) - OJP connection pool settings and tuning parameters
-- [OJP Server Configuration](documents/configuration/ojp-server-configuration.md) - Server startup options and runtime configuration
-- [Telemetry and Observability](documents/telemetry/README.md) - OpenTelemetry integration and monitoring setup
+- [Architectural decision records (ADRs)](documents/ADRs) - Technical decisions and rationale behind OJP's architecture.
+- [Get started: Spring Boot, Quarkus and Micronaut](documents/java-frameworks) - Framework-specific integration guides and examples.
+- [Connection Pool Configuration](documents/configuration/CONNECTION_POOL_CONFIG.md) - OJP connection pool settings and tuning parameters.
+- [OJP Server Configuration](documents/configuration/ojp-server-configuration.md) - Server startup options and runtime configuration.
+- [Telemetry and Observability](documents/telemetry/README.md) - OpenTelemetry integration and monitoring setup.
 
 ## High Level Design
 
 <img src="documents/designs/ojp_high_level_design.gif" alt="OJP High Level Design" />
 
 
-* The OJP JDBC driver is used as a replacement for the native JDBC driver(s) previously used with minimal change, the only change required being prefixing the connection URL with `ojp_`. For example: 
-```
-ojp[localhost:1059]_postgresql://user@localhost
-```
-instead of:
-```
-postgresql://user@localhost
-```
+* The OJP JDBC driver is used as a replacement for the native JDBC driver(s) previously used with minimal change, the only change required being prefixing the connection URL with `ojp_`. For example:
 * **Open Source**: OJP is an open-source project that is free to use, modify, and distribute.
 * The OJP server is deployed as an independent service that serves as a smart proxy between the application(s) and their respective relational database(s), controlling the number of connections open against each database.
-* **Smart Connection Management**: The proxy ensures that database connections are allocated only when needed, improving scalability and resource utilization. In the example below, only when `executeQuery` is called is a real connection enlisted to execute the operation, reducing the time that connection is held and allowing it to be used by other clients:
-```
-        Connection conn = DriverManager.
-                getConnection("jdbc:ojp[host:port]_h2:~/test", "sa", "");
-
-        java.sql.PreparedStatement psSelect = conn.prepareStatement("select * from test_table where id = ?");
-        psSelect.setInt(1, 1);
-        ResultSet resultSet = psSelect.executeQuery(); <--- *Real connection allocation*
-        
-        ...
-```
+* **Smart Connection Management**: The proxy ensures that database connections are allocated only when needed, improving scalability and resource utilization.
 * **Elastic Scalability**: OJP allows client applications to scale elastically without increasing the pressure on the database.
 * **gRPC Protocol** is used to facilitate the connection between the OJP JDBC Driver and the OJP Server, allowing for efficient data transmission over a multiplexed channel.
 * OJP Server uses **HikariCP** connection pools to efficiently manage connections.
@@ -182,33 +167,3 @@ For questions or support, please open an issue on GitHub.
 <a href=https://github.com/switcherapi>
 <img width="180px" src="documents/images/switcherapi_grey.png" alt="Comunidade Brasil JUG" />
 </a>
-
-## Feature implementation status
-- ✅ Basic CRUD operations.
-- ✅ Streamed result set reading.
-- ✅ BLOB support.
-- ✅ Transactions support.
-- ✅ Binary Stream support.
-- ✅ ResultSet metadata enquiring.
-- ❌ CLOB support.
-- ✅ Statement and Prepared statement advanced features.
-- ✅ Connection advanced features.
-- ✅ OpenTelemetry implementation.
-- ✅ Circuit Breaker.
-- ❌ Slow queries segregation.
-- ✅ Docker image implementation.
-- ✅ Support for Spring Boot/Spring Data.
-- ✅ Support for Micronaut.
-- ✅ Support for Quarkus.
-- ❌ BLOB and CLOB advanced features.
-- ✅ Configurable data sources. 
-- ❌ RAFT consensus POC.
-- ❌ RAFT and connection smart balancing and resizing.
-
-
-#### Other feature candidates: 
-Query Routing, Sharding, Query Caching, Read/Write Splitting, Multi-Cloud/Distributed Clustering, Authentication Integration, Advanced Security Features, Failover and Automatic Replication Awareness, Helidon support.
-
-✅ - Done
-❌ - Not started
-🕓 - In progress

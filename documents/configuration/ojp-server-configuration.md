@@ -4,20 +4,21 @@ The OJP Server supports comprehensive configuration through both JVM system prop
 
 ## Configuration Options
 
-| Property | Environment Variable | Type | Default | Description |
-|----------|---------------------|------|---------|-------------|
-| `ojp.server.port` | `OJP_SERVER_PORT` | int | 1059 | gRPC server port |
-| `ojp.prometheus.port` | `OJP_PROMETHEUS_PORT` | int | 9090 | Prometheus metrics HTTP server port |
-| `ojp.opentelemetry.enabled` | `OJP_OPENTELEMETRY_ENABLED` | boolean | true | Enable/disable OpenTelemetry instrumentation |
-| `ojp.opentelemetry.endpoint` | `OJP_OPENTELEMETRY_ENDPOINT` | string | "" | OpenTelemetry exporter endpoint (empty = default) |
-| `ojp.server.threadPoolSize` | `OJP_SERVER_THREADPOOLSIZE` | int | 200 | gRPC server thread pool size |
-| `ojp.server.maxRequestSize` | `OJP_SERVER_MAXREQUESTSIZE` | int | 4194304 | Maximum request size in bytes (4MB) |
-| `ojp.server.logLevel` | `OJP_SERVER_LOGLEVEL` | string | INFO | Log verbosity level |
-| `ojp.server.accessLogging` | `OJP_SERVER_ACCESSLOGGING` | boolean | false | Enable/disable access logging |
-| `ojp.server.allowedIps` | `OJP_SERVER_ALLOWEDIPS` | string | 0.0.0.0/0 | IP whitelist for gRPC server (comma-separated) |
-| `ojp.server.connectionIdleTimeout` | `OJP_SERVER_CONNECTIONIDLETIMEOUT` | long | 30000 | Connection idle timeout in milliseconds |
-| `ojp.server.circuitBreakerTimeout` | `OJP_SERVER_CIRCUITBREAKERTIMEOUT` | long | 60000 | Circuit breaker timeout in milliseconds |
-| `ojp.prometheus.allowedIps` | `OJP_PROMETHEUS_ALLOWEDIPS` | string | 0.0.0.0/0 | IP whitelist for Prometheus endpoint (comma-separated) |
+| Property                             | Environment Variable                 | Type    | Default   | Description                                            |
+|--------------------------------------|--------------------------------------|---------|-----------|--------------------------------------------------------|
+| `ojp.server.port`                    | `OJP_SERVER_PORT`                    | int     | 1059      | gRPC server port                                       |
+| `ojp.prometheus.port`                | `OJP_PROMETHEUS_PORT`                | int     | 9090      | Prometheus metrics HTTP server port                    |
+| `ojp.opentelemetry.enabled`          | `OJP_OPENTELEMETRY_ENABLED`          | boolean | true      | Enable/disable OpenTelemetry instrumentation           |
+| `ojp.opentelemetry.endpoint`         | `OJP_OPENTELEMETRY_ENDPOINT`         | string  | ""        | OpenTelemetry exporter endpoint (empty = default)      |
+| `ojp.server.threadPoolSize`          | `OJP_SERVER_THREADPOOLSIZE`          | int     | 200       | gRPC server thread pool size                           |
+| `ojp.server.maxRequestSize`          | `OJP_SERVER_MAXREQUESTSIZE`          | int     | 4194304   | Maximum request size in bytes (4MB)                    |
+| `ojp.server.logLevel`                | `OJP_SERVER_LOGLEVEL`                | string  | INFO      | Log verbosity level                                    |
+| `ojp.server.accessLogging`           | `OJP_SERVER_ACCESSLOGGING`           | boolean | false     | Enable/disable access logging                          |
+| `ojp.server.allowedIps`              | `OJP_SERVER_ALLOWEDIPS`              | string  | 0.0.0.0/0 | IP whitelist for gRPC server (comma-separated)         |
+| `ojp.server.connectionIdleTimeout`   | `OJP_SERVER_CONNECTIONIDLETIMEOUT`   | long    | 30000     | Connection idle timeout in milliseconds                |
+| `ojp.server.circuitBreakerTimeout`   | `OJP_SERVER_CIRCUITBREAKERTIMEOUT`   | long    | 60000     | Circuit breaker timeout in milliseconds                |
+| `ojp.server.circuitBreakerThreshold` | `OJP_SERVER_CIRCUITBREAKERTHRESHOLD` | int     | 3         | Circuit breaker failure threshold      |
+| `ojp.prometheus.allowedIps`          | `OJP_PROMETHEUS_ALLOWEDIPS`          | string  | 0.0.0.0/0 | IP whitelist for Prometheus endpoint (comma-separated) |
 
 ## Configuration Methods
 
@@ -31,6 +32,7 @@ java -Dojp.server.port=8080 \
      -Dojp.opentelemetry.enabled=false \
      -Dojp.server.threadPoolSize=100 \
      -Dojp.server.circuitBreakerTimeout=120000 \
+     -Dojp.server.circuitBreakerThreshold=3 \
      -Dojp.server.allowedIps="192.168.1.0/24,10.0.0.1" \
      -jar ojp-server.jar
 ```
@@ -44,6 +46,7 @@ export OJP_SERVER_PORT=8080
 export OJP_PROMETHEUS_PORT=9091
 export OJP_OPENTELEMETRY_ENABLED=false
 export OJP_SERVER_THREADPOOLSIZE=100
+export OJP_SERVER_CIRCUITBREAKERTIMEOUT=120000
 export OJP_SERVER_CIRCUITBREAKERTIMEOUT=120000
 export OJP_SERVER_ALLOWEDIPS="192.168.1.0/24,10.0.0.1"
 java -jar ojp-server.jar

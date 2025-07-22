@@ -10,13 +10,13 @@ class CircuitBreakerTest {
 
     @Test
     void testAllowsWhenNoFailures() {
-        CircuitBreaker breaker = new CircuitBreaker(1000);
+        CircuitBreaker breaker = new CircuitBreaker(1000, 3);
         assertDoesNotThrow(() -> breaker.preCheck("SELECT 1"));
     }
 
     @Test
     void testBlocksAfterThreeFailures() {
-        CircuitBreaker breaker = new CircuitBreaker(5000);
+        CircuitBreaker breaker = new CircuitBreaker(5000, 3);
         String sql = "SELECT * FROM test";
         SQLException ex = new SQLException("fail");
         // Fail three times
@@ -30,7 +30,7 @@ class CircuitBreakerTest {
 
     @Test
     void testAllowsAgainAfterOpenTimeoutAndSuccessResets() throws InterruptedException, SQLException {
-        CircuitBreaker breaker = new CircuitBreaker(300);
+        CircuitBreaker breaker = new CircuitBreaker(300, 3);
         String sql = "UPDATE X SET Y=1";
         SQLException ex = new SQLException("fail");
 
@@ -51,7 +51,7 @@ class CircuitBreakerTest {
 
     @Test
     void testResetsOnSuccess() throws SQLException {
-        CircuitBreaker breaker = new CircuitBreaker(1000);
+        CircuitBreaker breaker = new CircuitBreaker(1000, 3);
         String sql = "INSERT X";
         SQLException ex = new SQLException("fail2");
         breaker.onFailure(sql, ex);
@@ -64,7 +64,7 @@ class CircuitBreakerTest {
 
     @Test
     void testOnFailureIsNoOpWhenAlreadyOpen() {
-        CircuitBreaker breaker = new CircuitBreaker(500);
+        CircuitBreaker breaker = new CircuitBreaker(500, 3);
         String sql = "SELECT fail";
         SQLException ex1 = new SQLException("fail1");
         SQLException ex2 = new SQLException("fail2");

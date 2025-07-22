@@ -45,6 +45,7 @@ public class ServerConfigurationTest {
         assertEquals(ServerConfiguration.DEFAULT_CONNECTION_IDLE_TIMEOUT, config.getConnectionIdleTimeout());
         assertEquals(ServerConfiguration.DEFAULT_PROMETHEUS_ALLOWED_IPS, config.getPrometheusAllowedIps());
         assertEquals(ServerConfiguration.DEFAULT_CIRCUIT_BREAKER_TIMEOUT, config.getCircuitBreakerTimeout());
+        assertEquals(ServerConfiguration.DEFAULT_CIRCUIT_BREAKER_THRESHOLD, config.getCircuitBreakerThreshold());
     }
 
     @Test
@@ -84,6 +85,7 @@ public class ServerConfigurationTest {
         System.setProperty("ojp.server.port", "invalid");
         System.setProperty("ojp.prometheus.port", "not-a-number");
         System.setProperty("ojp.server.threadPoolSize", "abc");
+        System.setProperty("ojp.server.circuitBreakerThreshold", "xyz");
 
         ServerConfiguration config = new ServerConfiguration();
 
@@ -91,6 +93,7 @@ public class ServerConfigurationTest {
         assertEquals(ServerConfiguration.DEFAULT_SERVER_PORT, config.getServerPort());
         assertEquals(ServerConfiguration.DEFAULT_PROMETHEUS_PORT, config.getPrometheusPort());
         assertEquals(ServerConfiguration.DEFAULT_THREAD_POOL_SIZE, config.getThreadPoolSize());
+        assertEquals(ServerConfiguration.DEFAULT_CIRCUIT_BREAKER_THRESHOLD, config.getCircuitBreakerThreshold());
     }
 
     @Test
@@ -102,7 +105,6 @@ public class ServerConfigurationTest {
 
         // Should fall back to default for invalid values
         assertEquals(ServerConfiguration.DEFAULT_CONNECTION_IDLE_TIMEOUT, config.getConnectionIdleTimeout());
-        assertEquals(ServerConfiguration.DEFAULT_CIRCUIT_BREAKER_TIMEOUT, config.getCircuitBreakerTimeout());
     }
 
     @Test

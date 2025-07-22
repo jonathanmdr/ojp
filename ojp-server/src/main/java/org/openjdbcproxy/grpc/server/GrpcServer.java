@@ -45,7 +45,7 @@ public class GrpcServer {
                 .keepAliveTime(config.getConnectionIdleTimeout(), TimeUnit.MILLISECONDS)
                 .addService(new StatementServiceImpl(
                         new SessionManagerImpl(),
-                        new CircuitBreaker(config.getCircuitBreakerTimeout())
+                        new CircuitBreaker(config.getCircuitBreakerTimeout(), config.getCircuitBreakerThreshold())
                 ))
                 .intercept(grpcTelemetry.newServerInterceptor());
 

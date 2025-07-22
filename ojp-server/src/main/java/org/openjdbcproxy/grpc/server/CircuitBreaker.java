@@ -13,20 +13,23 @@ public class CircuitBreaker {
         private volatile SQLException lastError;
         private final AtomicInteger failureCount = new AtomicInteger(0);
         private final AtomicLong openUntil = new AtomicLong(0);
+        private final int failureThreashold;
 
-        public FailureRecord() {}
+        public FailureRecord(int failureThreashold) {
+            this.failureThreashold = failureThreashold;
+        }
 
         public void recordFailure(SQLException error, long openMs) {
             lastError = error;
             int failures = failureCount.incrementAndGet();
-            if (failures >= CircuitBreaker.FAILURE_THRESHOLD) {
+            if (failures >= failureThreashold) {
                 openUntil.updateAndGet(prev -> Math.max(prev, System.currentTimeMillis() + openMs));
             }
         }
 
         public boolean isOpen() {
             long until = openUntil.get();
-            if (failureCount.get() < CircuitBreaker.FAILURE_THRESHOLD) return false;
+            if (failureCount.get() < failureThreashold) return false;
             if (System.currentTimeMillis() > until) {
                 return false;
             }
@@ -35,7 +38,7 @@ public class CircuitBreaker {
 
         public boolean tryReset() {
             long until = openUntil.get();
-            if (System.currentTimeMillis() > until && failureCount.get() >= CircuitBreaker.FAILURE_THRESHOLD) {
+            if (System.currentTimeMillis() > until && failureCount.get() >= failureThreashold) {
                 return true;
             }
             return false;
@@ -58,10 +61,11 @@ public class CircuitBreaker {
 
     private final ConcurrentHashMap<String, FailureRecord> state = new ConcurrentHashMap<>();
     private final long openMs;
-    public static final int FAILURE_THRESHOLD = 3;
+    private final int failureThreashold;
 
-    public CircuitBreaker(long openMs) {
+    public CircuitBreaker(long openMs, int failureThreashold) {
         this.openMs = openMs;
+        this.failureThreashold = failureThreashold;
     }
 
     /**
@@ -98,7 +102,7 @@ public class CircuitBreaker {
      * @param error The exception.
      */
     public void onFailure(String sql, SQLException error) {
-        FailureRecord rec = state.computeIfAbsent(sql, s -> new FailureRecord());
+        FailureRecord rec = state.computeIfAbsent(sql, s -> new FailureRecord(this.failureThreashold));
         if (!rec.isOpen()) {
             rec.recordFailure(error, openMs);
         }

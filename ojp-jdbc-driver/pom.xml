@@ -104,7 +104,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!--TODO Without order the multiple drivers used in tests will conflict, once moved to use only OJP no longer needed-->
+                    <!--Without order the multiple drivers used in tests will conflict (mostly for tests), if moved to use only OJP no longer needed-->
                     <runOrder>alphabetical</runOrder>
                 </configuration>
                 <version>3.2.5</version>

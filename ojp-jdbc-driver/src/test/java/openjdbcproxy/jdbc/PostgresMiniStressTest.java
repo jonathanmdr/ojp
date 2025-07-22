@@ -2,7 +2,6 @@ package openjdbcproxy.jdbc;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import openjdbcproxy.jdbc.testutil.TestDBUtils;
 import org.codehaus.plexus.util.ExceptionUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -51,7 +50,7 @@ public class PostgresMiniStressTest {
     @SneakyThrows
     @ParameterizedTest
     @CsvFileSource(resources = "/postgres_connection.csv")
-    public void testConnectionProperties(String driverClass, String url, String user, String password) throws SQLException {
+    public void runTests(String driverClass, String url, String user, String password) throws SQLException {
         assumeFalse(isTestDisabled, "Postgres tests are disabled");
         
         this.setUp();
