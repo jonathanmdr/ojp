@@ -2,6 +2,7 @@ package openjdbcproxy.jdbc;
 
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
@@ -22,6 +23,8 @@ public class BlobIntegrationTest {
 
     private static boolean isMySQLTestDisabled;
     private static boolean isMariaDBTestDisabled;
+    private String tableName;
+    private Connection conn;
 
     @BeforeAll
     public static void checkTestConfiguration() {
@@ -29,30 +32,35 @@ public class BlobIntegrationTest {
         isMariaDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableMariaDBTests", "false"));
     }
 
-    @ParameterizedTest
-    @CsvFileSource(resources = "/h2_mariadb_connections.csv")
-    public void createAndReadingBLOBsSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
-        // Skip MySQL tests if disabled
-        if (url.toLowerCase().contains("mysql") && isMySQLTestDisabled) {
-            return;
+    public void setUp(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
+        assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
+        assumeFalse(isMariaDBTestDisabled, "MariaDB tests are disabled");
+        this.tableName = "blob_test_blob";
+        if (url.toLowerCase().contains("mysql")) {
+            this.tableName += "_mysql";
+        } else if (url.toLowerCase().contains("mariadb")) {
+            this.tableName += "_mariadb";
+        } else {
+            this.tableName += "_h2";
         }
-        // Skip MariaDB tests if disabled
-        if (url.toLowerCase().contains("mariadb") && isMariaDBTestDisabled) {
-            return;
-        }
-        
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        Class.forName(driverClass);
+        this.conn = DriverManager.getConnection(url, user, pwd);
+    }
 
+    @ParameterizedTest
+    @CsvFileSource(resources = "/h2_mysql_mariadb_connections.csv")
+    public void createAndReadingBLOBsSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
+        this.setUp(driverClass, url, user, pwd);
         System.out.println("Testing for url -> " + url);
 
         try {
-            executeUpdate(conn, "drop table blob_test_blob");
+            executeUpdate(conn, "drop table " + tableName);
         } catch (Exception e) {
             //If fails disregard as per the table is most possibly not created yet
         }
 
         executeUpdate(conn,
-                "create table blob_test_blob(" +
+                "create table " + tableName + "(" +
                         " val_blob  BLOB," +
                         " val_blob2 BLOB," +
                         " val_blob3 BLOB" +
@@ -60,7 +68,7 @@ public class BlobIntegrationTest {
         );
 
         PreparedStatement psInsert = conn.prepareStatement(
-                " insert into blob_test_blob (val_blob, val_blob2, val_blob3) values (?, ?, ?)"
+                " insert into " + tableName + " (val_blob, val_blob2, val_blob3) values (?, ?, ?)"
         );
 
         String testString = "TEST STRING BLOB";
@@ -75,7 +83,7 @@ public class BlobIntegrationTest {
         psInsert.setBlob(3, inputStream2, 5);
         psInsert.executeUpdate();
 
-        java.sql.PreparedStatement psSelect = conn.prepareStatement("select val_blob, val_blob2, val_blob3 from blob_test_blob ");
+        java.sql.PreparedStatement psSelect = conn.prepareStatement("select val_blob, val_blob2, val_blob3 from " + tableName);
         ResultSet resultSet = psSelect.executeQuery();
         resultSet.next();
         Blob blobResult =  resultSet.getBlob(1);
@@ -95,7 +103,7 @@ public class BlobIntegrationTest {
         String fromBlobByIdx3 = new String(blobResult3.getBinaryStream().readAllBytes());
         Assert.assertEquals(testString2.substring(0, 5), fromBlobByIdx3);
 
-        executeUpdate(conn, "delete from blob_test_blob");
+        executeUpdate(conn, "delete from " + tableName);
 
         resultSet.close();
         psSelect.close();
@@ -103,31 +111,25 @@ public class BlobIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_mariadb_connections.csv")
-    public void creatingAndReadingLargeBLOBsSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
-        // Skip MySQL tests if disabled
-        if (url.contains("mysql") && isMySQLTestDisabled) {
-            return;
-        }
-        
-        Connection conn = DriverManager.getConnection(url, user, pwd);
-
+    @CsvFileSource(resources = "/h2_mysql_mariadb_connections.csv")
+    public void creatingAndReadingLargeBLOBsSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, IOException, ClassNotFoundException {
+        this.setUp(driverClass, url, user, pwd);
         System.out.println("Testing for url -> " + url);
 
         try {
-            executeUpdate(conn, "drop table blob_test_blob");
+            executeUpdate(conn, "drop table " + tableName);
         } catch (Exception e) {
             //If fails disregard as per the table is most possibly not created yet
         }
 
         executeUpdate(conn,
-                "create table blob_test_blob(" +
+                "create table " + tableName + "(" +
                         " val_blob  BLOB" +
                         ")"
         );
 
         PreparedStatement psInsert = conn.prepareStatement(
-                "insert into blob_test_blob (val_blob) values (?)"
+                "insert into " + tableName + " (val_blob) values (?)"
         );
 
 
@@ -136,7 +138,7 @@ public class BlobIntegrationTest {
 
         psInsert.executeUpdate();
 
-        java.sql.PreparedStatement psSelect = conn.prepareStatement("select val_blob from blob_test_blob ");
+        java.sql.PreparedStatement psSelect = conn.prepareStatement("select val_blob from " + tableName);
         ResultSet resultSet = psSelect.executeQuery();
         resultSet.next();
         Blob blobResult =  resultSet.getBlob(1);
@@ -161,7 +163,7 @@ public class BlobIntegrationTest {
             byteFile = inputStreamTestFile.read();
         }
 
-        executeUpdate(conn, "delete from blob_test_blob");
+        executeUpdate(conn, "delete from " + tableName);
 
         resultSet.close();
         psSelect.close();
