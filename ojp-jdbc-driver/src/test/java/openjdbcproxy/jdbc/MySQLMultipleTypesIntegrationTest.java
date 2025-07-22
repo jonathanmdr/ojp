@@ -21,18 +21,21 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 public class MySQLMultipleTypesIntegrationTest {
 
-    private static boolean isTestDisabled;
+    private static boolean isMySQLTestDisabled;
+    private static boolean isMariaDBTestDisabled;
 
     @BeforeAll
     public static void checkTestConfiguration() {
-        isTestDisabled = Boolean.parseBoolean(System.getProperty("disableMySQLTests", "false"));
+        isMySQLTestDisabled = Boolean.parseBoolean(System.getProperty("disableMySQLTests", "false"));
+        isMariaDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableMariaDBTests", "false"));
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/mysql_connection.csv")
+    @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
     public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, ParseException {
-        assumeFalse(isTestDisabled, "MySQL tests are disabled");
-        
+        assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
+        assumeFalse(isMariaDBTestDisabled, "MariaDB tests are disabled");
+
         Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing for url -> " + url);
@@ -116,9 +119,9 @@ public class MySQLMultipleTypesIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/mysql_connection.csv")
+    @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
     public void mysqlSpecificTypesTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
-        assumeFalse(isTestDisabled, "MySQL tests are disabled");
+        assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
         
         Connection conn = DriverManager.getConnection(url, user, pwd);
 

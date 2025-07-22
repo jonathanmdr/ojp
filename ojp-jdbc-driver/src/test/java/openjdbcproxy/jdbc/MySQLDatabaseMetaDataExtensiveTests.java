@@ -11,22 +11,24 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 public class MySQLDatabaseMetaDataExtensiveTests {
 
-    private static boolean isTestDisabled;
+    private static boolean isMySQLTestDisabled;
+    private static boolean isMariaDBTestDisabled;
     private static Connection connection;
 
     @BeforeAll
     public static void checkTestConfiguration() {
-        isTestDisabled = Boolean.parseBoolean(System.getProperty("disableMySQLTests", "false"));
+        isMySQLTestDisabled = Boolean.parseBoolean(System.getProperty("disableMySQLTests", "false"));
+        isMariaDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableMariaDBTests", "false"));
     }
 
     public void setUp(String driverClass, String url, String user, String password) throws Exception {
-        assumeFalse(isTestDisabled, "MySQL tests are disabled");
+        assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
+        assumeFalse(isMariaDBTestDisabled, "MariaDB tests are disabled");
         connection = DriverManager.getConnection(url, user, password);
         TestDBUtils.createBasicTestTable(connection, "mysql_db_metadata_test", TestDBUtils.SqlSyntax.MYSQL);
     }
@@ -37,14 +39,18 @@ public class MySQLDatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/mysql_connection.csv")
+    @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
     public void testBasicDatabaseMetaDataProperties(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
 
         // Basic database properties
         Assert.assertNotNull(meta.getDatabaseProductName());
-        Assert.assertTrue(meta.getDatabaseProductName().toLowerCase().contains("mysql"));
+        if (url.toLowerCase().contains("mysql"))
+            Assert.assertTrue(meta.getDatabaseProductName().toLowerCase().contains("mysql"));
+        else
+            Assert.assertTrue(meta.getDatabaseProductName().toLowerCase().contains("mariadb"));
+
         Assert.assertNotNull(meta.getDatabaseProductVersion());
         Assert.assertNotNull(meta.getDriverName());
         Assert.assertNotNull(meta.getDriverVersion());
@@ -52,19 +58,26 @@ public class MySQLDatabaseMetaDataExtensiveTests {
 
         // URL and user info
         Assert.assertNotNull(meta.getURL());
-        Assert.assertTrue(meta.getURL().contains("mysql"));
+        if (url.toLowerCase().contains("mysql"))
+            Assert.assertTrue(meta.getURL().contains("mysql"));
+        else
+            Assert.assertTrue(meta.getURL().contains("mariadb"));
+
         Assert.assertNotNull(meta.getUserName());
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/mysql_connection.csv")
+    @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
     public void testSupportFeatures(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
 
         // MySQL typically supports these features
         Assert.assertTrue(meta.supportsTransactions());
-        Assert.assertFalse(meta.supportsDataDefinitionAndDataManipulationTransactions());
+        if (url.toLowerCase().contains("mysql"))
+            Assert.assertFalse(meta.supportsDataDefinitionAndDataManipulationTransactions());
+        else
+            Assert.assertTrue(meta.supportsDataDefinitionAndDataManipulationTransactions());
         Assert.assertFalse(meta.supportsDataManipulationTransactionsOnly());
         Assert.assertTrue(meta.supportsResultSetType(ResultSet.TYPE_FORWARD_ONLY));
         Assert.assertTrue(meta.supportsResultSetConcurrency(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY));
@@ -74,14 +87,17 @@ public class MySQLDatabaseMetaDataExtensiveTests {
         Assert.assertTrue(meta.supportsAlterTableWithDropColumn());
         Assert.assertTrue(meta.supportsUnion());
         Assert.assertTrue(meta.supportsUnionAll());
-        Assert.assertFalse(meta.supportsOrderByUnrelated());
+        if (url.toLowerCase().contains("mysql"))
+            Assert.assertFalse(meta.supportsOrderByUnrelated());
+        else
+            Assert.assertTrue(meta.supportsOrderByUnrelated());
         Assert.assertTrue(meta.supportsGroupBy());
         Assert.assertTrue(meta.supportsGroupByUnrelated());
         Assert.assertTrue(meta.supportsLikeEscapeClause());
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/mysql_connection.csv")
+    @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
     public void testIdentifierProperties(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
@@ -102,7 +118,7 @@ public class MySQLDatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/mysql_connection.csv")
+    @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
     public void testTransactionSupport(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
@@ -120,7 +136,7 @@ public class MySQLDatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/mysql_connection.csv")
+    @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
     public void testFunctionSupport(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
@@ -143,7 +159,7 @@ public class MySQLDatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/mysql_connection.csv")
+    @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
     public void testResultSetSupport(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
@@ -164,7 +180,7 @@ public class MySQLDatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/mysql_connection.csv")
+    @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
     public void testGetTables(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
@@ -187,7 +203,7 @@ public class MySQLDatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/mysql_connection.csv")
+    @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
     public void testGetColumns(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
@@ -214,7 +230,7 @@ public class MySQLDatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/mysql_connection.csv")
+    @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
     public void testGetPrimaryKeys(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
@@ -238,7 +254,7 @@ public class MySQLDatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/mysql_connection.csv")
+    @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
     public void testGetTypeInfo(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
@@ -263,7 +279,7 @@ public class MySQLDatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/mysql_connection.csv")
+    @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
     public void testMySQLSpecificMetaData(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
@@ -291,7 +307,7 @@ public class MySQLDatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/mysql_connection.csv")
+    @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
     public void testLimitsAndSizes(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();

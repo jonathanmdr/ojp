@@ -21,17 +21,23 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 public class BlobIntegrationTest {
 
     private static boolean isMySQLTestDisabled;
+    private static boolean isMariaDBTestDisabled;
 
     @BeforeAll
     public static void checkTestConfiguration() {
         isMySQLTestDisabled = Boolean.parseBoolean(System.getProperty("disableMySQLTests", "false"));
+        isMariaDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableMariaDBTests", "false"));
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_mysql_connections.csv")
+    @CsvFileSource(resources = "/h2_mariadb_connections.csv")
     public void createAndReadingBLOBsSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         // Skip MySQL tests if disabled
-        if (url.contains("mysql") && isMySQLTestDisabled) {
+        if (url.toLowerCase().contains("mysql") && isMySQLTestDisabled) {
+            return;
+        }
+        // Skip MariaDB tests if disabled
+        if (url.toLowerCase().contains("mariadb") && isMariaDBTestDisabled) {
             return;
         }
         
@@ -97,7 +103,7 @@ public class BlobIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_mysql_connections.csv")
+    @CsvFileSource(resources = "/h2_mariadb_connections.csv")
     public void creatingAndReadingLargeBLOBsSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         // Skip MySQL tests if disabled
         if (url.contains("mysql") && isMySQLTestDisabled) {

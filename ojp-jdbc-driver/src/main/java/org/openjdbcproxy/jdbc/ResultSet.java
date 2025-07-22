@@ -190,9 +190,14 @@ public class ResultSet extends RemoteProxyResultSet {
             return 0;
         }
         Object value = lastValueRead;
-        if (value instanceof Long) {
+        if (value instanceof Integer){
+            return (int) value;
+        } else if (value instanceof Long) {
             Long lValue = (Long) value;
             return lValue.intValue();
+        } else if (value instanceof Short) {
+            Short sValue = (Short) value;
+            return sValue.intValue();
         } else if (value instanceof Date) {
             Date dValue = (Date) value;
             LocalDate ld = LocalDate.ofEpochDay(dValue.getTime());
@@ -205,7 +210,7 @@ public class ResultSet extends RemoteProxyResultSet {
             }
             return (int) dValue.getTime();
         }  else {
-            return (int) value;
+            return Integer.parseInt(""+value);
         }
     }
 

@@ -75,6 +75,7 @@ import static org.openjdbcproxy.grpc.server.Constants.EMPTY_LIST;
 import static org.openjdbcproxy.grpc.server.Constants.EMPTY_MAP;
 import static org.openjdbcproxy.grpc.server.Constants.EMPTY_STRING;
 import static org.openjdbcproxy.grpc.server.Constants.H2_DRIVER_CLASS;
+import static org.openjdbcproxy.grpc.server.Constants.MARIADB_DRIVER_CLASS;
 import static org.openjdbcproxy.grpc.server.Constants.POSTGRES_DRIVER_CLASS;
 import static org.openjdbcproxy.grpc.server.Constants.MYSQL_DRIVER_CLASS;
 import static org.openjdbcproxy.grpc.server.Constants.SHA_256;
@@ -91,11 +92,12 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
     private final CircuitBreaker circuitBreaker;
 
     static {
-        //TODO register all JDBC drivers supported here.
+        //Register all JDBC drivers supported here.
         try {
             Class.forName(H2_DRIVER_CLASS);
             Class.forName(POSTGRES_DRIVER_CLASS);
             Class.forName(MYSQL_DRIVER_CLASS);
+            Class.forName(MARIADB_DRIVER_CLASS);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -1197,10 +1199,16 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 Object currentValue = null;
                 //Postgres uses type BYTEA which translates to type VARBINARY
                 switch (colType) {
-                    case Types.BLOB, Types.LONGVARBINARY, Types.VARBINARY: {
-                        Blob blob = rs.getBlob(i + 1);
-                        currentValue = UUID.randomUUID().toString();
-                        this.sessionManager.registerLob(session, blob, currentValue.toString());
+                    case Types.VARBINARY: {
+                        if ("BLOB".equalsIgnoreCase(colTypeName)) {
+                            currentValue = this.treatAsBlob(session, rs, i);
+                        } else {
+                            currentValue = this.treatAsBinary(session, rs, i);
+                        }
+                        break;
+                    }
+                    case Types.BLOB, Types.LONGVARBINARY: {
+                        currentValue = this.treatAsBlob(session, rs, i);
                         break;
                     }
                     case Types.CLOB: {
@@ -1210,17 +1218,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         break;
                     }
                     case Types.BINARY: {
-                        int precision = rs.getMetaData().getPrecision(i + 1);
-                        String catalogName = rs.getMetaData().getCatalogName(i + 1);
-                        if (precision == 1) { //it is a single byte
-                            currentValue = rs.getByte(i + 1);
-                        } else if (StringUtils.isNotEmpty(catalogName)) {
-                            currentValue = rs.getBytes(i + 1);
-                        } else {
-                            InputStream inputStream = rs.getBinaryStream(i + 1);
-                            currentValue = UUID.randomUUID().toString();
-                            this.sessionManager.registerLob(session, inputStream, currentValue.toString());
-                        }
+                        currentValue = treatAsBinary(session, rs, i);
                         break;
                     }
                     case Types.DATE: {
@@ -1257,6 +1255,29 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
 
         responseObserver.onCompleted();
 
+    }
+
+    private Object treatAsBlob(SessionInfo session, ResultSet rs, int i) throws SQLException {
+        Blob blob = rs.getBlob(i + 1);
+        Object logUUID = UUID.randomUUID().toString();
+        this.sessionManager.registerLob(session, blob, logUUID.toString());
+        return logUUID;
+    }
+
+    private Object treatAsBinary(SessionInfo session, ResultSet rs, int i) throws SQLException {
+        int precision = rs.getMetaData().getPrecision(i + 1);
+        String catalogName = rs.getMetaData().getCatalogName(i + 1);
+        Object binaryValue = null;
+        if (precision == 1) { //it is a single byte
+            binaryValue =  rs.getByte(i + 1);
+        } else if (StringUtils.isNotEmpty(catalogName)) {
+            binaryValue =  rs.getBytes(i + 1);
+        } else {
+            InputStream inputStream = rs.getBinaryStream(i + 1);
+            binaryValue = UUID.randomUUID().toString();
+            this.sessionManager.registerLob(session, inputStream, binaryValue.toString());
+        }
+        return binaryValue;
     }
 
     private OpResult wrapResults(SessionInfo sessionInfo,

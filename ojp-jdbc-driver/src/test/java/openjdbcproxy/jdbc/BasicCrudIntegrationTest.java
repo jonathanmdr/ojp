@@ -1,7 +1,6 @@
 package openjdbcproxy.jdbc;
 
 import lombok.extern.slf4j.Slf4j;
-import openjdbcproxy.jdbc.testutil.TestDBUtils;
 import org.junit.Assert;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
@@ -20,24 +19,31 @@ public class BasicCrudIntegrationTest {
 
     private static boolean isPostgresTestDisabled;
     private static boolean isMySQLTestDisabled;
+    private static boolean isMariaDBTestDisabled;
 
     @BeforeAll
     public static void setup() {
         isPostgresTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
         isMySQLTestDisabled = Boolean.parseBoolean(System.getProperty("disableMySQLTests", "false"));
+        isMariaDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableMariaDBTests", "false"));
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_mysql_connections.csv")
+    @CsvFileSource(resources = "/h2_postgres_mysql_mariadb_connections.csv")
     public void crudTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         // Skip PostgreSQL tests if disabled
-        if (url.contains("postgresql") && isPostgresTestDisabled) {
+        if (url.toLowerCase().contains("postgresql") && isPostgresTestDisabled) {
             Assumptions.assumeFalse(true, "Skipping Postgres tests");
         }
         
         // Skip MySQL tests if disabled
-        if (url.contains("mysql") && isMySQLTestDisabled) {
+        if (url.toLowerCase().contains("mysql") && isMySQLTestDisabled) {
             Assumptions.assumeFalse(true, "Skipping MySQL tests");
+        }
+
+        // Skip MariaDB tests if disabled
+        if (url.toLowerCase().contains("mariadb") && isMariaDBTestDisabled) {
+            Assumptions.assumeFalse(true, "Skipping MariaDB tests");
         }
 
         Connection conn = DriverManager.getConnection(url, user, pwd);

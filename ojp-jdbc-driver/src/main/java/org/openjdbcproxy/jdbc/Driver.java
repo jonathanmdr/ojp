@@ -57,6 +57,9 @@ public class Driver implements java.sql.Driver {
         } else if (url.toUpperCase().contains("MYSQL:")) {
             dbType = DbType.MYSQL;
             log.debug("MySql detected");
+        } else if (url.toUpperCase().contains("MARIADB:")) {
+            dbType = DbType.MARIADB;
+            log.debug("MariaDB detected");
         }
         
         // Load ojp.properties file if it exists

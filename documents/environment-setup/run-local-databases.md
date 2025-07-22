@@ -40,7 +40,7 @@ Have docker installed in your machine.
 
 ### Run command
 
-> docker run --name ojp-mysql -e MYSQL_ROOT_PASSWORD=testpassword -e MYSQL_DATABASE=defaultdb -e MYSQL_USER=testuser -e MYSQL_PASSWORD=testpassword -d -p 3306:3306 mysql:8.0
+> docker run --name ojp-mysql -e MYSQL_ROOT_PASSWORD=testpassword -e MYSQL_DATABASE=defaultdb -e MYSQL_USER=testuser -e MYSQL_PASSWORD=testpassword -d -p 3307:3306 mysql:8.0
 
 #### docker run
 Tells Docker to run a new container.
@@ -63,8 +63,45 @@ Sets the password for 'testuser'.
 #### -d
 Runs the container in detached mode (in the background).
 
-#### -p 3306:3306
-Maps port 3306 of your host to port 3306 of the container (MySQL’s default port), allowing local access.
+#### -p 3307:3306
+Maps port 3307 of your host to port 3306 of the container (**3307** to not conflict with MySQL’s default port), allowing local access.
 
 #### mysql:8.0
 Specifies the Docker image to use (in this case, the official MySQL image version 8.0 from Docker Hub).
+
+
+## Run MariaDB on Docker
+
+### Preconditions
+Have Docker installed on your machine.
+
+### Run Command
+
+> docker run --name ojp-mariadb -e MARIADB_ROOT_PASSWORD=testpassword -e MARIADB_DATABASE=defaultdb -e MARIADB_USER=testuser -e MARIADB_PASSWORD=testpassword -d -p 3307:3306 mariadb:10.11
+
+#### docker run
+Tells Docker to run a new container.
+
+#### --name ojp-mariadb
+Assigns the name `ojp-mariadb` to the container, making it easier to manage and reference.
+
+#### -e MARIADB_ROOT_PASSWORD=testpassword
+Sets the root password for MariaDB (required by the image).
+
+#### -e MARIADB_DATABASE=defaultdb
+Creates a default database named `defaultdb` on startup.
+
+#### -e MARIADB_USER=testuser
+Creates a new user named `testuser`.
+
+#### -e MARIADB_PASSWORD=testpassword
+Sets the password for the `testuser`.
+
+#### -d
+Runs the container in detached mode (in the background).
+
+#### -p 3307:3306
+Maps port 3307 of your host to port 3306 of the container (MariaDB’s default port), allowing local access.
+
+#### mariadb:10.11
+Specifies the Docker image to use (in this case, the 10.11 official MariaDB image from Docker Hub).

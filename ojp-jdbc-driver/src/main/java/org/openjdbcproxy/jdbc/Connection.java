@@ -409,6 +409,9 @@ public class Connection implements java.sql.Connection {
         if (DbType.MYSQL.equals(this.dbType)) {
             throw new SQLFeatureNotSupportedException("MySql does not support creating array of.");
         }
+        if (DbType.MARIADB.equals(this.dbType)) {
+            throw new SQLFeatureNotSupportedException("MariaDB does not support creating array of.");
+        }
         return new org.openjdbcproxy.jdbc.Array();
     }
 

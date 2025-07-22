@@ -139,8 +139,9 @@ Welcome to OJP! We appreciate your interest in contributing. This guide will hel
    Navigate to the ojp-jdbc-driver folder first:
    ```bash
    cd ojp-jdbc-driver
-   mvn test -DdisablePostgresTests
+   mvn test -DdisablePostgresTests -DdisableMySQLTests -DdisableMariaDBTests
    ```
+**Note:** With the disable flags only H2 integration tests will run, to run the full set of integration tests you have to run all the databases locally, follow the instructions at [Run Local Databases](documents/environment-setup/run-local-databases.md)
 
 ### Testing Configuration
 - Test connection configurations are stored in CSV files under `test/resources`
