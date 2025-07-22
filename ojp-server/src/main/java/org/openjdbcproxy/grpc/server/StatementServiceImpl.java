@@ -859,14 +859,15 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             List<Object> paramsReceived = (request.getTarget().getParams().size() > 0) ?
                     deserialize(request.getTarget().getParams().toByteArray(), List.class) : EMPTY_LIST;
             Class<?> clazz = resource.getClass();
-            if (CallType.CALL_RELEASE.equals(request.getTarget().getCallType()) &&
-                "Savepoint".equalsIgnoreCase(request.getTarget().getResourceName())) {
+            if ((paramsReceived != null && paramsReceived.size() > 0) &&
+                    ((CallType.CALL_RELEASE.equals(request.getTarget().getCallType()) &&
+                    "Savepoint".equalsIgnoreCase(request.getTarget().getResourceName())) ||
+                        (CallType.CALL_ROLLBACK.equals(request.getTarget().getCallType()))
+                    )
+                ) {
                 Savepoint savepoint = (Savepoint) this.sessionManager.getAttr(request.getSession(),
                         (String) paramsReceived.get(0));
-                ((Connection) resource).releaseSavepoint(savepoint);
-                responseObserver.onNext(responseBuilder.build());
-                responseObserver.onCompleted();
-                return;
+                paramsReceived.set(0, savepoint);
             }
             Method method = this.findMethodByName(clazz, methodName(request.getTarget()), paramsReceived);
             java.lang.reflect.Parameter[] params = method.getParameters();

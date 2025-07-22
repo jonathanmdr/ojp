@@ -48,7 +48,7 @@ public class SavepointTests {
         connection.createStatement().execute("INSERT INTO savepoint_test_table (id, name) VALUES (2, 'Bob')");
         connection.rollback(savepoint);
 
-        ResultSet resultSet = connection.createStatement().executeQuery("SELECT * FROM savepoint_test_table");
+        ResultSet resultSet = connection.createStatement().executeQuery("SELECT * FROM savepoint_test_table order by id desc");
         assertTrue(resultSet.next());
         assertEquals(1, resultSet.getInt("id"));
     }

@@ -271,7 +271,8 @@ public class Connection implements java.sql.Connection {
     @Override
     public void rollback(java.sql.Savepoint savepoint) throws SQLException {
         log.debug("rollback: <Savepoint>");
-        this.callProxy(CallType.CALL_ROLLBACK, "", Void.class);
+        this.callProxy(CallType.CALL_ROLLBACK, "", Void.class,
+                Arrays.asList(((Savepoint)savepoint).getSavepointUUID()));
     }
 
     @Override
