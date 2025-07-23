@@ -23,7 +23,7 @@ public class OracleSavepointTests {
 
     @BeforeAll
     public static void checkTestConfiguration() {
-        isTestDisabled = Boolean.parseBoolean(System.getProperty("enableOracleTests", "false"));
+        isTestDisabled = !Boolean.parseBoolean(System.getProperty("enableOracleTests", "false"));
     }
 
     @SneakyThrows
