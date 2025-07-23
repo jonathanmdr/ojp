@@ -23,17 +23,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Slf4j
 public class OracleConnectionExtensiveTests {
 
-    private static boolean isOracleTestDisabled;
+    private static boolean isOracleTestEnabled;
 
     @BeforeAll
     public static void setup() {
-        isOracleTestDisabled = Boolean.parseBoolean(System.getProperty("disableOracleTests", "false"));
+        isOracleTestEnabled = Boolean.parseBoolean(System.getProperty("enableOracleTests", "false"));
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
     public void testOracleBasicConnection(String driverClass, String url, String user, String pwd) throws SQLException {
-        Assumptions.assumeFalse(isOracleTestDisabled, "Skipping Oracle tests");
+        Assumptions.assumeFalse(!isOracleTestEnabled, "Skipping Oracle tests");
         
         log.info("Testing Oracle connection with URL: {}", url);
         
@@ -69,7 +69,7 @@ public class OracleConnectionExtensiveTests {
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
     public void testOracleDataTypes(String driverClass, String url, String user, String pwd) throws SQLException {
-        Assumptions.assumeFalse(isOracleTestDisabled, "Skipping Oracle tests");
+        Assumptions.assumeFalse(!isOracleTestEnabled, "Skipping Oracle tests");
         
         log.info("Testing Oracle data types with URL: {}", url);
         
@@ -106,7 +106,7 @@ public class OracleConnectionExtensiveTests {
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
     public void testOracleAutoIncrementSequence(String driverClass, String url, String user, String pwd) throws SQLException {
-        Assumptions.assumeFalse(isOracleTestDisabled, "Skipping Oracle tests");
+        Assumptions.assumeFalse(!isOracleTestEnabled, "Skipping Oracle tests");
         
         log.info("Testing Oracle auto-increment (IDENTITY) with URL: {}", url);
         

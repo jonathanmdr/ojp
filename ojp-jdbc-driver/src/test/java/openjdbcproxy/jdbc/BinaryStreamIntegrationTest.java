@@ -20,12 +20,12 @@ import static openjdbcproxy.helpers.SqlHelper.executeUpdate;
 public class BinaryStreamIntegrationTest {
 
     private static boolean isPostgresTestDisabled;
-    private static boolean isOracleTestDisabled;
+    private static boolean isOracleTestEnabled;
 
     @BeforeAll
     public static void setup() {
         isPostgresTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
-        isOracleTestDisabled = Boolean.parseBoolean(System.getProperty("disableOracleTests", "true"));
+        isOracleTestEnabled = Boolean.parseBoolean(System.getProperty("enableOracleTests", "false"));
     }
 
     @ParameterizedTest
@@ -34,7 +34,7 @@ public class BinaryStreamIntegrationTest {
         if (isPostgresTestDisabled && url.contains("postgresql")) {
             return;
         }
-        if (isOracleTestDisabled && url.contains("oracle")) {
+        if (!isOracleTestEnabled && url.contains("oracle")) {
             return;
         }
 
@@ -111,7 +111,7 @@ public class BinaryStreamIntegrationTest {
         if (isPostgresTestDisabled && url.contains("postgresql")) {
             return;
         }
-        if (isOracleTestDisabled && url.contains("oracle")) {
+        if (!isOracleTestEnabled && url.contains("oracle")) {
             return;
         }
 

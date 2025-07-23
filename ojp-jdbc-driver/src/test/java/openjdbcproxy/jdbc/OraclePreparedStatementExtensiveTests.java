@@ -38,7 +38,7 @@ public class OraclePreparedStatementExtensiveTests {
 
     @BeforeAll
     public static void checkTestConfiguration() {
-        isTestDisabled = Boolean.parseBoolean(System.getProperty("disableOracleTests", "true"));
+        isTestDisabled = Boolean.parseBoolean(System.getProperty("enableOracleTests", "false"));
     }
 
     public void setUp(String driverClass, String url, String user, String password) throws Exception {

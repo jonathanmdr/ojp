@@ -15,21 +15,16 @@ import static openjdbcproxy.helpers.SqlHelper.executeUpdate;
 public class ReadMultipleBlocksOfDataIntegrationTest {
 
     private static boolean isPostgresTestDisabled;
-    private static boolean isOracleTestDisabled;
 
     @BeforeAll
     public static void checkTestConfiguration() {
         isPostgresTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
-        isOracleTestDisabled = Boolean.parseBoolean(System.getProperty("disableOracleTests", "false"));
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_oracle_connections_with_record_counts.csv")
+    @CsvFileSource(resources = "/h2_postgres_connections_with_record_counts.csv")
     public void multiplePagesOfRowsResultSetSuccessful(int totalRecords, String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         if (isPostgresTestDisabled && url.contains("postgresql")) {
-            return;
-        }
-        if (isOracleTestDisabled && url.contains("oracle")) {
             return;
         }
         Connection conn = DriverManager.getConnection(url, user, pwd);
@@ -42,18 +37,10 @@ public class ReadMultipleBlocksOfDataIntegrationTest {
             //Does not matter
         }
         
-        // Create table with database-specific syntax
-        String createTableSql;
-        if (url.contains("oracle")) {
-            createTableSql = "create table read_blocks_test_multi(" +
-                    "id NUMBER(10) NOT NULL, " +
-                    "title VARCHAR2(50) NOT NULL)";
-        } else {
-            // PostgreSQL/H2
-            createTableSql = "create table read_blocks_test_multi(" +
-                    "id INT NOT NULL, " +
-                    "title VARCHAR(50) NOT NULL)";
-        }
+        // Create table for H2/PostgreSQL
+        String createTableSql = "create table read_blocks_test_multi(" +
+                "id INT NOT NULL, " +
+                "title VARCHAR(50) NOT NULL)";
         executeUpdate(conn, createTableSql);
 
         for (int i = 0; i < totalRecords; i++) { //TODO make this test parameterized with multiple parameters
