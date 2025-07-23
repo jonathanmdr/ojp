@@ -19,17 +19,24 @@ import static openjdbcproxy.helpers.SqlHelper.executeUpdate;
 
 public class BinaryStreamIntegrationTest {
 
-    private static boolean isTestDisabled;
+    private static boolean isPostgresTestDisabled;
+    private static boolean isOracleTestDisabled;
 
     @BeforeAll
     public static void setup() {
-        isTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
+        isPostgresTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
+        isOracleTestDisabled = Boolean.parseBoolean(System.getProperty("disableOracleTests", "true"));
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/postgres_connection.csv")
+    @CsvFileSource(resources = "/h2_postgres_oracle_connections.csv")
     public void createAndReadingBinaryStreamSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
-        Assumptions.assumeFalse(isTestDisabled, "Skipping Postgres tests");
+        if (isPostgresTestDisabled && url.contains("postgresql")) {
+            return;
+        }
+        if (isOracleTestDisabled && url.contains("oracle")) {
+            return;
+        }
 
         Connection conn = DriverManager.getConnection(url, user, pwd);
 
@@ -41,12 +48,21 @@ public class BinaryStreamIntegrationTest {
             //If fails disregard as per the table is most possibly not created yet
         }
 
-        executeUpdate(conn,
-                "create table binary_stream_test_blob(" +
-                        " val_blob1 BYTEA," +
-                        " val_blob2 BYTEA" +
-                        ")"
-        );
+        // Create table with database-specific binary types
+        String createTableSql;
+        if (url.contains("oracle")) {
+            createTableSql = "create table binary_stream_test_blob(" +
+                    " val_blob1 RAW(4000)," +  // Oracle RAW for binary data
+                    " val_blob2 RAW(4000)" +
+                    ")";
+        } else {
+            // PostgreSQL/H2
+            createTableSql = "create table binary_stream_test_blob(" +
+                    " val_blob1 BYTEA," +
+                    " val_blob2 BYTEA" +
+                    ")";
+        }
+        executeUpdate(conn, createTableSql);
 
         conn.setAutoCommit(false);
 
@@ -90,9 +106,14 @@ public class BinaryStreamIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/postgres_connection.csv")
+    @CsvFileSource(resources = "/h2_postgres_oracle_connections.csv")
     public void createAndReadingLargeBinaryStreamSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
-        Assumptions.assumeFalse(isTestDisabled, "Skipping Postgres tests");
+        if (isPostgresTestDisabled && url.contains("postgresql")) {
+            return;
+        }
+        if (isOracleTestDisabled && url.contains("oracle")) {
+            return;
+        }
 
         Connection conn = DriverManager.getConnection(url, user, pwd);
 
@@ -104,11 +125,19 @@ public class BinaryStreamIntegrationTest {
             //If fails disregard as per the table is most possibly not created yet
         }
 
-        executeUpdate(conn,
-                "create table binary_stream_test_blob(" +
-                        " val_blob  BYTEA" +
-                        ")"
-        );
+        // Create table with database-specific binary types for large data
+        String createTableSql;
+        if (url.contains("oracle")) {
+            createTableSql = "create table binary_stream_test_blob(" +
+                    " val_blob BLOB" +  // Oracle BLOB for large binary data
+                    ")";
+        } else {
+            // PostgreSQL/H2
+            createTableSql = "create table binary_stream_test_blob(" +
+                    " val_blob  BYTEA" +
+                    ")";
+        }
+        executeUpdate(conn, createTableSql);
 
         PreparedStatement psInsert = conn.prepareStatement(
                 "insert into binary_stream_test_blob (val_blob) values (?)"

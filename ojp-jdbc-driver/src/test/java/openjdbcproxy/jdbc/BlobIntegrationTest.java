@@ -23,6 +23,7 @@ public class BlobIntegrationTest {
 
     private static boolean isMySQLTestDisabled;
     private static boolean isMariaDBTestDisabled;
+    private static boolean isOracleTestDisabled;
     private String tableName;
     private Connection conn;
 
@@ -30,16 +31,20 @@ public class BlobIntegrationTest {
     public static void checkTestConfiguration() {
         isMySQLTestDisabled = Boolean.parseBoolean(System.getProperty("disableMySQLTests", "false"));
         isMariaDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableMariaDBTests", "false"));
+        isOracleTestDisabled = Boolean.parseBoolean(System.getProperty("disableOracleTests", "true"));
     }
 
     public void setUp(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
         assumeFalse(isMariaDBTestDisabled, "MariaDB tests are disabled");
+        assumeFalse(isOracleTestDisabled, "Oracle tests are disabled");
         this.tableName = "blob_test_blob";
         if (url.toLowerCase().contains("mysql")) {
             this.tableName += "_mysql";
         } else if (url.toLowerCase().contains("mariadb")) {
             this.tableName += "_mariadb";
+        } else if (url.toLowerCase().contains("oracle")) {
+            this.tableName += "_oracle";
         } else {
             this.tableName += "_h2";
         }
@@ -48,7 +53,7 @@ public class BlobIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_mysql_mariadb_connections.csv")
+    @CsvFileSource(resources = "/h2_mysql_mariadb_oracle_connections.csv")
     public void createAndReadingBLOBsSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         this.setUp(driverClass, url, user, pwd);
         System.out.println("Testing for url -> " + url);

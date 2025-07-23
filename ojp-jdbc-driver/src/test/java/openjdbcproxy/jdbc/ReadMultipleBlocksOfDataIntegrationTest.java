@@ -24,7 +24,7 @@ public class ReadMultipleBlocksOfDataIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_connections_with_record_counts.csv")
+    @CsvFileSource(resources = "/h2_postgres_oracle_connections_with_record_counts.csv")
     public void multiplePagesOfRowsResultSetSuccessful(int totalRecords, String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         if (isPostgresTestDisabled && url.contains("postgresql")) {
             return;
@@ -41,11 +41,20 @@ public class ReadMultipleBlocksOfDataIntegrationTest {
         } catch (Exception e) {
             //Does not matter
         }
-        executeUpdate(conn,
-                "create table read_blocks_test_multi(" +
-                        "id INT NOT NULL, " +
-                        "title VARCHAR(50) NOT NULL)"
-        );
+        
+        // Create table with database-specific syntax
+        String createTableSql;
+        if (url.contains("oracle")) {
+            createTableSql = "create table read_blocks_test_multi(" +
+                    "id NUMBER(10) NOT NULL, " +
+                    "title VARCHAR2(50) NOT NULL)";
+        } else {
+            // PostgreSQL/H2
+            createTableSql = "create table read_blocks_test_multi(" +
+                    "id INT NOT NULL, " +
+                    "title VARCHAR(50) NOT NULL)";
+        }
+        executeUpdate(conn, createTableSql);
 
         for (int i = 0; i < totalRecords; i++) { //TODO make this test parameterized with multiple parameters
             executeUpdate(conn,

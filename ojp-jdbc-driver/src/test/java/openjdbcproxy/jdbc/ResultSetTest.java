@@ -62,10 +62,20 @@ public class ResultSetTest {
         } catch (Exception e) {
             //Expected if table does not exist.
         }
-        statement.execute("CREATE TABLE resultset_test_table (id INT PRIMARY KEY, name VARCHAR(255), age INT, salary DECIMAL(10,2), active BOOLEAN, created_at TIMESTAMP)");
-        statement.execute("INSERT INTO resultset_test_table (id, name, age, salary, active, created_at) VALUES (1, 'Alice', 30, 50000.00, TRUE, CURRENT_TIMESTAMP)");
-        statement.execute("INSERT INTO resultset_test_table (id, name, age, salary, active, created_at) VALUES (2, 'Bob', 25, 45000.00, FALSE, CURRENT_TIMESTAMP)");
-        statement.execute("INSERT INTO resultset_test_table (id, name, age, salary, active, created_at) VALUES (3, 'Charlie', 35, 55000.00, TRUE, CURRENT_TIMESTAMP)");
+        
+        // Create table with database-specific syntax
+        if (url.contains("oracle")) {
+            statement.execute("CREATE TABLE resultset_test_table (id NUMBER(10) PRIMARY KEY, name VARCHAR2(255), age NUMBER(10), salary NUMBER(10,2), active NUMBER(1), created_at TIMESTAMP)");
+            statement.execute("INSERT INTO resultset_test_table (id, name, age, salary, active, created_at) VALUES (1, 'Alice', 30, 50000.00, 1, CURRENT_TIMESTAMP)");
+            statement.execute("INSERT INTO resultset_test_table (id, name, age, salary, active, created_at) VALUES (2, 'Bob', 25, 45000.00, 0, CURRENT_TIMESTAMP)");
+            statement.execute("INSERT INTO resultset_test_table (id, name, age, salary, active, created_at) VALUES (3, 'Charlie', 35, 55000.00, 1, CURRENT_TIMESTAMP)");
+        } else {
+            // PostgreSQL/H2
+            statement.execute("CREATE TABLE resultset_test_table (id INT PRIMARY KEY, name VARCHAR(255), age INT, salary DECIMAL(10,2), active BOOLEAN, created_at TIMESTAMP)");
+            statement.execute("INSERT INTO resultset_test_table (id, name, age, salary, active, created_at) VALUES (1, 'Alice', 30, 50000.00, TRUE, CURRENT_TIMESTAMP)");
+            statement.execute("INSERT INTO resultset_test_table (id, name, age, salary, active, created_at) VALUES (2, 'Bob', 25, 45000.00, FALSE, CURRENT_TIMESTAMP)");
+            statement.execute("INSERT INTO resultset_test_table (id, name, age, salary, active, created_at) VALUES (3, 'Charlie', 35, 55000.00, TRUE, CURRENT_TIMESTAMP)");
+        }
 
         // Query the data with a scrollable ResultSet
         resultSet = statement.executeQuery("SELECT * FROM resultset_test_table");
@@ -80,7 +90,7 @@ public class ResultSetTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_connections.csv")
+    @CsvFileSource(resources = "/h2_postgres_oracle_connections.csv")
     public void testNavigationMethods(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
         assertTrue(resultSet.next()); // Row 1
@@ -95,7 +105,7 @@ public class ResultSetTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_connections.csv")
+    @CsvFileSource(resources = "/h2_postgres_oracle_connections.csv")
     public void testDataRetrievalMethods(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
         resultSet.next();
@@ -109,7 +119,7 @@ public class ResultSetTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_connections.csv")
+    @CsvFileSource(resources = "/h2_postgres_oracle_connections.csv")
     public void testGetMethodsByColumnIndex(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
         resultSet.next();
@@ -122,7 +132,7 @@ public class ResultSetTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_connections.csv")
+    @CsvFileSource(resources = "/h2_postgres_oracle_connections.csv")
     public void testNullHandling(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
         statement.execute("INSERT INTO resultset_test_table (id, name, age, salary, active, created_at) VALUES (5, NULL, NULL, NULL, NULL, NULL)");
@@ -133,7 +143,7 @@ public class ResultSetTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_connections.csv")
+    @CsvFileSource(resources = "/h2_postgres_oracle_connections.csv")
     public void testUpdateMethods(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
         resultSet.moveToInsertRow();
@@ -150,7 +160,7 @@ public class ResultSetTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_connections.csv")
+    @CsvFileSource(resources = "/h2_postgres_oracle_connections.csv")
     public void testCursorPositionMethods(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
         assertTrue(resultSet.first());
@@ -164,7 +174,7 @@ public class ResultSetTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_connections.csv")
+    @CsvFileSource(resources = "/h2_postgres_oracle_connections.csv")
     public void testWarnings(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
         SQLWarning warning = resultSet.getWarnings();
@@ -172,7 +182,7 @@ public class ResultSetTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_connections.csv")
+    @CsvFileSource(resources = "/h2_postgres_oracle_connections.csv")
     public void testAdvancedNavigation(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
         resultSet.absolute(2); // Move to the second row
