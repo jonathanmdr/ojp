@@ -72,7 +72,7 @@ public class ConnectionPoolConfigurationTest {
         // Test that we can serialize and deserialize properties
         Properties originalProperties = new Properties();
         originalProperties.setProperty("maximumPoolSize", "25");
-        originalProperties.setProperty("minimumIdle", "3");
+        originalProperties.setProperty("minimumIdle", "2");
         originalProperties.setProperty("poolName", "SerializationTestPool");
         
         // Serialize
@@ -84,7 +84,7 @@ public class ConnectionPoolConfigurationTest {
         Properties deserializedProperties = SerializationHandler.deserialize(serialized, Properties.class);
         assertNotNull(deserializedProperties);
         assertEquals("25", deserializedProperties.getProperty("maximumPoolSize"));
-        assertEquals("3", deserializedProperties.getProperty("minimumIdle"));
+        assertEquals("2", deserializedProperties.getProperty("minimumIdle"));
         assertEquals("SerializationTestPool", deserializedProperties.getProperty("poolName"));
     }
 }
