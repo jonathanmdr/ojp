@@ -27,10 +27,12 @@ public class ResultSetTest {
     private ResultSet resultSet;
 
     private static boolean isPostgresTestDisabled;
+    private static boolean isOracleTestDisabled;
 
     @BeforeAll
     public static void checkTestConfiguration() {
         isPostgresTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
+        isOracleTestDisabled = Boolean.parseBoolean(System.getProperty("disableOracleTests", "false"));
     }
 
     @SneakyThrows
@@ -38,6 +40,11 @@ public class ResultSetTest {
         // Skip PostgreSQL tests if disabled
         if (url.contains("postgresql") && isPostgresTestDisabled) {
             Assumptions.assumeFalse(true, "Skipping Postgres tests");
+        }
+
+        // Skip Oracle tests if disabled
+        if (url.contains("oracle") && isOracleTestDisabled) {
+            Assumptions.assumeFalse(true, "Skipping Oracle tests");
         }
 
         // Create an in-memory H2 database connection

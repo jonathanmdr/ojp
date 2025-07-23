@@ -105,3 +105,38 @@ Maps port 3307 of your host to port 3306 of the container (MariaDB’s default p
 
 #### mariadb:10.11
 Specifies the Docker image to use (in this case, the 10.11 official MariaDB image from Docker Hub).
+
+---
+
+## Run Oracle on Docker
+
+### Preconditions
+Have Docker installed on your machine.
+
+### Run Command
+
+> docker run --name ojp-oracle -e ORACLE_PASSWORD=testpassword -e APP_USER=testuser -e APP_USER_PASSWORD=testpassword -d -p 1521:1521 gvenzl/oracle-xe:21-slim
+
+#### docker run
+Tells Docker to run a new container.
+
+#### --name ojp-oracle
+Assigns the name `ojp-oracle` to the container, making it easier to manage and reference.
+
+#### -e ORACLE_PASSWORD=testpassword
+Sets the password for the SYS and SYSTEM users (required by the image).
+
+#### -e APP_USER=testuser
+Creates a new application user named `testuser`.
+
+#### -e APP_USER_PASSWORD=testpassword
+Sets the password for the `testuser`.
+
+#### -d
+Runs the container in detached mode (in the background).
+
+#### -p 1521:1521
+Maps port 1521 of your host to port 1521 of the container (Oracle's default port), allowing local access.
+
+#### gvenzl/oracle-xe:21-slim
+Specifies the Docker image to use (in this case, the community Oracle XE 21c image from Docker Hub). This is a lightweight, license-free Oracle Express Edition suitable for development and testing.

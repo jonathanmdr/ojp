@@ -15,17 +15,21 @@ import static openjdbcproxy.helpers.SqlHelper.executeUpdate;
 public class ReadMultipleBlocksOfDataIntegrationTest {
 
     private static boolean isPostgresTestDisabled;
-
+    private static boolean isOracleTestDisabled;
 
     @BeforeAll
     public static void checkTestConfiguration() {
         isPostgresTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
+        isOracleTestDisabled = Boolean.parseBoolean(System.getProperty("disableOracleTests", "false"));
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_postgres_connections_with_record_counts.csv")
     public void multiplePagesOfRowsResultSetSuccessful(int totalRecords, String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         if (isPostgresTestDisabled && url.contains("postgresql")) {
+            return;
+        }
+        if (isOracleTestDisabled && url.contains("oracle")) {
             return;
         }
         Connection conn = DriverManager.getConnection(url, user, pwd);

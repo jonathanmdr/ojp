@@ -139,9 +139,24 @@ Welcome to OJP! We appreciate your interest in contributing. This guide will hel
    Navigate to the ojp-jdbc-driver folder first:
    ```bash
    cd ojp-jdbc-driver
-   mvn test -DdisablePostgresTests -DdisableMySQLTests -DdisableMariaDBTests
+   mvn test -DdisablePostgresTests -DdisableMySQLTests -DdisableMariaDBTests -DdisableOracleTests
    ```
 **Note:** With the disable flags only H2 integration tests will run, to run the full set of integration tests you have to run all the databases locally, follow the instructions at [Run Local Databases](documents/environment-setup/run-local-databases.md)
+
+### Oracle Database Setup (Optional)
+Oracle integration tests require the Oracle JDBC driver which is not available on Maven Central due to licensing restrictions. To run Oracle tests:
+
+1. **Download Oracle JDBC Driver**: Download `ojdbc8.jar` or newer from [Oracle's official website](https://www.oracle.com/database/technologies/appdev/jdbc-downloads.html)
+
+2. **Install to Local Maven Repository**:
+   ```bash
+   mvn install:install-file -Dfile=ojdbc8.jar -DgroupId=com.oracle.database.jdbc -DartifactId=ojdbc8 -Dversion=21.1.0.0 -Dpackaging=jar
+   ```
+
+3. **Run Oracle Tests**:
+   ```bash
+   mvn test -DdisablePostgresTests -DdisableMySQLTests -DdisableMariaDBTests
+   ```
 
 ### Testing Configuration
 - Test connection configurations are stored in CSV files under `test/resources`
@@ -151,6 +166,7 @@ Welcome to OJP! We appreciate your interest in contributing. This guide will hel
 
 ### Test Options
 - `-DdisablePostgresTests` - Skip PostgreSQL integration tests
+- `-DdisableOracleTests` - Skip Oracle integration tests (requires manual Oracle JDBC driver setup)
 
 ### Contributing
 1. Fork the repository

@@ -20,12 +20,14 @@ public class BasicCrudIntegrationTest {
     private static boolean isPostgresTestDisabled;
     private static boolean isMySQLTestDisabled;
     private static boolean isMariaDBTestDisabled;
+    private static boolean isOracleTestDisabled;
 
     @BeforeAll
     public static void setup() {
         isPostgresTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
         isMySQLTestDisabled = Boolean.parseBoolean(System.getProperty("disableMySQLTests", "false"));
         isMariaDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableMariaDBTests", "false"));
+        isOracleTestDisabled = Boolean.parseBoolean(System.getProperty("disableOracleTests", "false"));
     }
 
     @ParameterizedTest
@@ -44,6 +46,11 @@ public class BasicCrudIntegrationTest {
         // Skip MariaDB tests if disabled
         if (url.toLowerCase().contains("mariadb") && isMariaDBTestDisabled) {
             Assumptions.assumeFalse(true, "Skipping MariaDB tests");
+        }
+
+        // Skip Oracle tests if disabled
+        if (url.toLowerCase().contains("oracle") && isOracleTestDisabled) {
+            Assumptions.assumeFalse(true, "Skipping Oracle tests");
         }
 
         Connection conn = DriverManager.getConnection(url, user, pwd);
