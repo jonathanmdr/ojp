@@ -31,17 +31,31 @@ public class TestDBUtils {
      * Creates a basic test table for integration tests.
      * @param connection The database connection
      * @param tableName The name of the table to create
-     * @param sqlSyntax The SQL syntax to use (H2, POSTGRES, or MYSQL)
+     * @param sqlSyntax The SQL syntax to use (H2, POSTGRES, MYSQL, or ORACLE)
      * @throws SQLException if table creation fails
      */
     public static void createBasicTestTable(Connection connection, String tableName, SqlSyntax sqlSyntax) throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            // Drop table if exists
-            String dropTableSql = "DROP TABLE IF EXISTS " + tableName;
-            statement.execute(dropTableSql);
+            // Drop table if exists with database-specific syntax
+            if (sqlSyntax == SqlSyntax.ORACLE) {
+                // Oracle needs special handling for DROP TABLE IF EXISTS
+                try {
+                    statement.execute("DROP TABLE " + tableName);
+                } catch (SQLException e) {
+                    // Ignore if table doesn't exist
+                }
+            } else {
+                String dropTableSql = "DROP TABLE IF EXISTS " + tableName;
+                statement.execute(dropTableSql);
+            }
 
             // Create table with appropriate syntax
-            String createTableSql = "CREATE TABLE " + tableName + " (id INT PRIMARY KEY, name VARCHAR(255))";
+            String createTableSql;
+            if (sqlSyntax == SqlSyntax.ORACLE) {
+                createTableSql = "CREATE TABLE " + tableName + " (id NUMBER(10) PRIMARY KEY, name VARCHAR2(255))";
+            } else {
+                createTableSql = "CREATE TABLE " + tableName + " (id INT PRIMARY KEY, name VARCHAR(255))";
+            }
             statement.execute(createTableSql);
 
             // Insert initial test data
@@ -59,9 +73,18 @@ public class TestDBUtils {
      */
     public static void createAutoIncrementTestTable(Connection connection, String tableName, SqlSyntax sqlSyntax) throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            // Drop table if exists
-            String dropTableSql = "DROP TABLE IF EXISTS " + tableName;
-            statement.execute(dropTableSql);
+            // Drop table if exists with database-specific syntax
+            if (sqlSyntax == SqlSyntax.ORACLE) {
+                // Oracle needs special handling for DROP TABLE IF EXISTS
+                try {
+                    statement.execute("DROP TABLE " + tableName);
+                } catch (SQLException e) {
+                    // Ignore if table doesn't exist
+                }
+            } else {
+                String dropTableSql = "DROP TABLE IF EXISTS " + tableName;
+                statement.execute(dropTableSql);
+            }
 
             // Create table with appropriate auto-increment syntax
             String createTableSql;
@@ -88,9 +111,18 @@ public class TestDBUtils {
      */
     public static void createMultiTypeTestTable(Connection connection, String tableName, SqlSyntax sqlSyntax) throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            // Drop table if exists
-            String dropTableSql = "DROP TABLE IF EXISTS " + tableName;
-            statement.execute(dropTableSql);
+            // Drop table if exists with database-specific syntax
+            if (sqlSyntax == SqlSyntax.ORACLE) {
+                // Oracle needs special handling for DROP TABLE IF EXISTS
+                try {
+                    statement.execute("DROP TABLE " + tableName);
+                } catch (SQLException e) {
+                    // Ignore if table doesn't exist
+                }
+            } else {
+                String dropTableSql = "DROP TABLE IF EXISTS " + tableName;
+                statement.execute(dropTableSql);
+            }
 
             // Create table with appropriate data type syntax
             String createTableSql;

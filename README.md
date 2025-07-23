@@ -39,11 +39,14 @@ docker run --rm -d -p 1059:1059 rrobetti/ojp:0.0.4-alpha
 Replace your existing connection URL by prefixing with `ojp[host:port]_`:
 
 ```java
-// Before
+// Before (PostgreSQL example)
 "jdbc:postgresql://user@localhost/mydb"
 
 // After  
 "jdbc:ojp[localhost:1059]_postgresql://user@localhost/mydb"
+
+// Oracle example
+"jdbc:ojp[localhost:1059]_oracle:thin:@localhost:1521/XEPDB1"
 ```
 Use the ojp driver: `org.openjdbcproxy.jdbc.Driver`
 
@@ -157,6 +160,8 @@ Oracle integration tests require the Oracle JDBC driver which is not available o
    ```bash
    mvn test -DdisablePostgresTests -DdisableMySQLTests -DdisableMariaDBTests
    ```
+
+For detailed Oracle setup instructions, see [Oracle Testing Guide](documents/environment-setup/oracle-testing-guide.md).
 
 ### Testing Configuration
 - Test connection configurations are stored in CSV files under `test/resources`
