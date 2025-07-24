@@ -31,7 +31,7 @@ public class Savepoint implements java.sql.Savepoint {
     @Override
     public int getSavepointId() throws SQLException {
         log.debug("getSavepointId called");
-        return this.retrieveAttribute(CallType.CALL_GET, "SavepointId", String.class);
+        return this.retrieveAttribute(CallType.CALL_GET, "SavepointId", Integer.class);
     }
 
     @Override
