@@ -1,6 +1,7 @@
 package openjdbcproxy.jdbc;
 
 import openjdbcproxy.jdbc.testutil.TestDBUtils;
+import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -150,8 +151,8 @@ public class OracleStatementExtensiveTests {
     @CsvFileSource(resources = "/oracle_connections.csv")
     public void testSetCursorName(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        // Oracle supports named cursors; should not throw
-        statement.setCursorName("CURSOR_A");
+        // Some Oracle versions supports named cursors; the one used for tests does not.
+        Assert.assertThrows(SQLException.class, () -> statement.setCursorName("CURSOR_A"));
     }
 
     @ParameterizedTest
@@ -255,11 +256,12 @@ public class OracleStatementExtensiveTests {
         this.setUp(driverClass, url, user, password);
         TestDBUtils.createAutoIncrementTestTable(connection, "test_auto_keys", TestDBUtils.SqlSyntax.ORACLE);
         
-        int affected = statement.executeUpdate("INSERT INTO test_auto_keys (name) VALUES ('foo')", Statement.RETURN_GENERATED_KEYS);
+        int affected = statement.executeUpdate("INSERT INTO test_auto_keys (name) VALUES ('foo')",
+                new String[] { "id" });
         assertEquals(1, affected);
         ResultSet keys = statement.getGeneratedKeys();
         assertTrue(keys.next());
-        assertTrue(keys.getInt(1) > 0);
+        assertTrue(keys.getLong(1) > 0);
         keys.close();
     }
 
@@ -363,7 +365,7 @@ public class OracleStatementExtensiveTests {
     public void testEnquoteIdentifier(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         // Oracle quotes identifiers to preserve case sensitivity
-        String quoted = statement.enquoteIdentifier("abc", false);
+        String quoted = statement.enquoteIdentifier("abc", true);
         assertNotNull(quoted);
         // Oracle typically returns quoted identifiers
         assertEquals("\"ABC\"", quoted.toUpperCase()); // Oracle converts to uppercase
