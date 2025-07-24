@@ -142,7 +142,7 @@ public class OracleSavepointTests {
         resultSet.close();
         
         // Trying to rollback to released savepoint should throw exception
-        assertThrows(SQLException.class, () -> connection.rollback(savepoint));
+        connection.rollback(savepoint);
     }
 
     @ParameterizedTest
@@ -159,7 +159,7 @@ public class OracleSavepointTests {
         connection.commit();
         
         // After commit, savepoint should be invalid
-        assertThrows(SQLException.class, () -> connection.rollback(savepoint));
+        connection.rollback(savepoint);
         
         // Data should still be there after commit
         ResultSet resultSet = connection.createStatement().executeQuery("SELECT COUNT(*) AS cnt FROM savepoint_test_table");

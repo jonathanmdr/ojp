@@ -62,7 +62,8 @@ public class RemoteProxyResultSet implements java.sql.ResultSet {
 
     public Connection getConnection() throws SQLException {
         log.debug("getConnection called");
-        if (this.getStatement() != null && this.getStatement().getConnection() != null) {
+        if (this.getStatement() != null && !this.getStatement().isClosed() &&
+                this.getStatement().getConnection() != null) {
             return (Connection) this.getStatement().getConnection();
         } else {
             return this.connection;

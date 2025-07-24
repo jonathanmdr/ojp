@@ -400,7 +400,7 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
     public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
         log.debug("setCharacterStream: {}, <Reader>, {}", parameterIndex, length);
         this.checkClosed();
-        //TODO this will require an implementation of Reader that communicates across GRPC
+        //TODO this will require an implementation of Reader that communicates across GRPC or maybe a conversion to InputStream
         this.paramsMap.put(parameterIndex,
                 Parameter.builder()
                         .type(CHARACTER_READER)
@@ -730,7 +730,7 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
     public void setBinaryStream(int parameterIndex, InputStream x) throws SQLException {
         log.debug("setBinaryStream: {}, <InputStream>", parameterIndex);
         this.checkClosed();
-        this.setBinaryStream(parameterIndex, x, -1); //-1 means not provided in OJP BynaryStrem server side
+        this.setBinaryStream(parameterIndex, x, -1); //-1 means not provided.
     }
 
     @Override

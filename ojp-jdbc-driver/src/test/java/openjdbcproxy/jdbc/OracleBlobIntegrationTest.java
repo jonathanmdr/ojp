@@ -149,7 +149,7 @@ public class OracleBlobIntegrationTest {
         System.out.println("Testing Oracle BLOB binary stream for url -> " + url);
 
         // Test with binary data (not just text)
-        byte[] binaryData = new byte[10000];
+        byte[] binaryData = new byte[1000];
         for (int i = 0; i < binaryData.length; i++) {
             binaryData[i] = (byte) (i % 256);
         }

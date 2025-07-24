@@ -126,7 +126,8 @@ public class LobServiceImpl implements LobService {
                     currentBlock = itBlocks.next().getData().toByteArray();
                     currentPos = -1;
                 }
-                return currentBlock[++currentPos];
+                int currentByte = currentBlock[++currentPos];
+                return currentByte & 0xFF;// Need to return unsigned byte (& 0xFF) to not cause EOF if int representation of byte is -1
             }
         };
     }

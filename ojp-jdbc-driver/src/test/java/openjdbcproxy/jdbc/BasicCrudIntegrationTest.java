@@ -31,7 +31,7 @@ public class BasicCrudIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_mysql_mariadb_connections.csv")
+    @CsvFileSource(resources = "/h2_postgres_mysql_mariadb_oracle_connections.csv")
     public void crudTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         // Skip PostgreSQL tests if disabled
         if (url.toLowerCase().contains("postgresql") && isPostgresTestDisabled) {

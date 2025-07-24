@@ -342,7 +342,6 @@ public class StatementServiceGrpcClient implements StatementService {
                 }
             }
 
-
             return lobGrpcIterator;
         } catch (StatusRuntimeException e) {
             throw handle(e);

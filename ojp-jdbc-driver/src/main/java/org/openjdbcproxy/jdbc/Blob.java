@@ -46,7 +46,7 @@ public class Blob extends Lob implements java.sql.Blob {
     @Override
     public InputStream getBinaryStream() throws SQLException {
         log.debug("getBinaryStream called");
-        return super.getBinaryStream(1, Long.MAX_VALUE);
+        return super.getBinaryStream(1, Integer.MAX_VALUE);
     }
 
     @Override
