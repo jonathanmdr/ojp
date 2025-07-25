@@ -36,14 +36,6 @@
             <version>${grpc.version}</version>
         </dependency>
 
-
-        <!-- TODO remove https://mvnrepository.com/artifact/com.oracle.database.jdbc/ojdbc11 -->
-        <dependency>
-            <groupId>com.oracle.database.jdbc</groupId>
-            <artifactId>ojdbc11</artifactId>
-            <version>23.8.0.25.04</version>
-        </dependency>
-
         <!-- https://mvnrepository.com/artifact/com.h2database/h2 -->
         <dependency>
             <groupId>com.h2database</groupId>

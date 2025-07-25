@@ -146,21 +146,18 @@ Welcome to OJP! We appreciate your interest in contributing. This guide will hel
    ```
 **Note:** With the disable flags only H2 integration tests will run, to run the full set of integration tests you have to run all the databases locally, follow the instructions at [Run Local Databases](documents/environment-setup/run-local-databases.md)
 
+### Databases with integration tests
+We have comprehensive JDBC integration tests with OJP for the following databases:
+- Postgres
+- MariaDB
+- MySQL
+- Oracle
+- H2
+
+The free and open source databases (H2, Postgres, MySQL and MariaDB) jdbc drivers are packed with OJP and have integration tests always running in our CI pipelines, for proprietary databases as Oracle vide specific sections.
+
 ### Oracle Database Setup (Optional)
-Oracle integration tests require the Oracle JDBC driver which is not available on Maven Central due to licensing restrictions. To run Oracle tests:
-
-1. **Download Oracle JDBC Driver**: Download `ojdbc8.jar` or newer from [Oracle's official website](https://www.oracle.com/database/technologies/appdev/jdbc-downloads.html)
-
-2. **Install to Local Maven Repository**:
-   ```bash
-   mvn install:install-file -Dfile=ojdbc8.jar -DgroupId=com.oracle.database.jdbc -DartifactId=ojdbc8 -Dversion=21.1.0.0 -Dpackaging=jar
-   ```
-
-3. **Run Oracle Tests**:
-   ```bash
-   mvn test -DdisablePostgresTests -DdisableMySQLTests -DdisableMariaDBTests
-   ```
-
+Oracle integration tests require the Oracle JDBC driver and due to licensing restrictions we do not pack it with OJP.
 For detailed Oracle setup instructions, see [Oracle Testing Guide](documents/environment-setup/oracle-testing-guide.md).
 
 ### Testing Configuration
@@ -171,7 +168,7 @@ For detailed Oracle setup instructions, see [Oracle Testing Guide](documents/env
 
 ### Test Options
 - `-DdisablePostgresTests` - Skip PostgreSQL integration tests
-- `-DdisableOracleTests` - Skip Oracle integration tests (requires manual Oracle JDBC driver setup)
+- `-DenableOracleTests` - Skip Oracle integration tests by default (requires manual Oracle JDBC driver setup)
 
 ### Contributing
 1. Fork the repository

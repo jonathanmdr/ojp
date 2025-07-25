@@ -19,16 +19,15 @@ docker run --name ojp-oracle -e ORACLE_PASSWORD=testpassword -e APP_USER=testuse
 
 Wait for the database to fully start (may take a few minutes).
 
-### 2. Download and Install Oracle JDBC Driver
+### 2. Add Oracle JDBC Driver dependency 
 
-Oracle JDBC drivers are not available on Maven Central due to licensing restrictions.
+Add the oracle jdbc driver or the desired version to the ojp-server pom.xml dependencies. For example:
 
-1. Download `ojdbc8.jar` or newer from: https://www.oracle.com/database/technologies/appdev/jdbc-downloads.html
-
-2. Install to your local Maven repository:
-```bash
-mvn install:install-file -Dfile=ojdbc8.jar -DgroupId=com.oracle.database.jdbc -DartifactId=ojdbc8 -Dversion=21.1.0.0 -Dpackaging=jar
-```
+        <dependency>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc11</artifactId>
+            <version>23.8.0.25.04</version>
+        </dependency>
 
 ### 3. Start OJP Server
 
@@ -39,36 +38,19 @@ mvn verify -pl ojp-server -Prun-ojp-server
 ```
 
 ### 4. Run Oracle Tests
+To run only Oracle tests:
 
 ```bash
 cd ojp-jdbc-driver
-mvn test -DdisablePostgresTests -DdisableMySQLTests -DdisableMariaDBTests
-```
-
-To run only Oracle tests:
-```bash
-mvn test -Dtest="OracleConnectionExtensiveTests"
+mvn test -DenableOracleTests -DdisablePostgresTests -DdisableMySQLTests -DdisableMariaDBTests
 ```
 
 ## Test Configuration Files
 
 - `oracle_connections.csv` - Oracle-only connection configuration
 - `h2_oracle_connections.csv` - Combined H2 and Oracle configuration for mixed testing
-
-## Oracle-Specific Features Tested
-
-- **Data Types**: NUMBER, VARCHAR2, BINARY_DOUBLE, BINARY_FLOAT, RAW, DATE, TIMESTAMP
-- **Auto-increment**: IDENTITY columns (Oracle 12c+)
-- **SQL Syntax**: Oracle-specific CREATE TABLE and data manipulation
-- **Connection Handling**: Oracle thin driver compatibility
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"Table or view does not exist"** - Oracle doesn't support `DROP TABLE IF EXISTS`, so the test utils handle this gracefully
-2. **"TNS: listener does not currently know of service"** - Database may still be starting up, wait a few minutes
-3. **"No suitable driver found"** - Oracle JDBC driver not installed in Maven repository
+- `h2_mysql_mariadb_oracle_connections.csv` - Combined H2, MySQL, MariaDB and Oracle configurations for tests that are shared among these databases.
+- `h2_postgres_mysql_mariadb_oracle_connections` - Combined H2, Postgres, MySQL, MariaDB and Oracle configurations for tests that are shared among these databases.
 
 ### Database Connection Details
 
@@ -79,9 +61,15 @@ mvn test -Dtest="OracleConnectionExtensiveTests"
 
 ## Skipping Oracle Tests
 
-To skip Oracle tests, use:
+Oracle tests are skipped by default, use:
 ```bash
-mvn test -DdisableOracleTests=true
+mvn test
 ```
 
-This is useful when Oracle is not available or the JDBC driver is not installed.
+Also can explicitly disable oracle tests as in:
+
+```bash
+mvn test -DenableOracleTests=false
+```
+
+To build a Docker image of ojp-server follow the above steps and then follow the [Build ojp-server docker image](/ojp-server/README.md) - OpenTelemetry integration and monitoring setup.
