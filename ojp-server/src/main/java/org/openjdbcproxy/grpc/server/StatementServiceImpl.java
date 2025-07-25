@@ -102,8 +102,6 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             Class.forName(POSTGRES_DRIVER_CLASS);
             Class.forName(MYSQL_DRIVER_CLASS);
             Class.forName(MARIADB_DRIVER_CLASS);
-            //TODO remove before merging the PR
-            Class.forName("oracle.jdbc.driver.OracleDriver");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
