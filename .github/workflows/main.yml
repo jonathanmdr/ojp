@@ -93,6 +93,12 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Build and Install (ojp-grpc-commons)
+        run: mvn clean install -pl ojp-grpc-commons -DskipTests -Dgpg.skip=true
+
+      - name: Test (ojp-grpc-commons)
+        run: mvn test -pl ojp-grpc-commons -Dgpg.skip=true
+
       - name: Build (ojp-server)
         run: mvn clean install -DskipTests  -Dgpg.skip=true
 
@@ -112,11 +118,11 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Build (ojp-grpc-commons, ojp-jdbc-driver)
-        run: mvn clean install -pl ojp-grpc-commons,ojp-jdbc-driver -DskipTests -Dgpg.skip=true
+      - name: Build (ojp-jdbc-driver)
+        run: mvn clean install -pl ojp-jdbc-driver -DskipTests -Dgpg.skip=true
 
       - name: Test (ojp-grpc-commons, ojp-jdbc-driver)
-        run: mvn test -pl ojp-grpc-commons,ojp-jdbc-driver -Dgpg.skip=true
+        run: mvn test -pl ojp-jdbc-driver -Dgpg.skip=true
 
       - name: Show ojp-server.log
         if: always()  # ensures it runs even if previous steps fail
