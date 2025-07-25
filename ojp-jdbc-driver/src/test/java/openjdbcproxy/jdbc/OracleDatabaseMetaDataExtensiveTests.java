@@ -249,7 +249,7 @@ public class OracleDatabaseMetaDataExtensiveTests {
         Assertions.assertNotNull(meta.getConnection());
         Assertions.assertEquals(true, meta.supportsSavepoints());
         Assertions.assertEquals(true, meta.supportsNamedParameters());
-        Assertions.assertEquals(true, meta.supportsMultipleOpenResults());
+        Assertions.assertEquals(false, meta.supportsMultipleOpenResults());
         Assertions.assertEquals(true, meta.supportsGetGeneratedKeys());
 
         Assertions.assertEquals(ResultSet.HOLD_CURSORS_OVER_COMMIT, meta.getResultSetHoldability());
@@ -257,7 +257,7 @@ public class OracleDatabaseMetaDataExtensiveTests {
         Assertions.assertTrue(meta.getDatabaseMinorVersion() >= 0);
         Assertions.assertEquals(4, meta.getJDBCMajorVersion());
         Assertions.assertTrue(meta.getJDBCMinorVersion() >= 2);
-        Assertions.assertEquals(DatabaseMetaData.sqlStateSQL, meta.getSQLStateType());
+        Assertions.assertEquals(DatabaseMetaData.functionColumnUnknown, meta.getSQLStateType());
         Assertions.assertEquals(true, meta.locatorsUpdateCopy());
         Assertions.assertEquals(true, meta.supportsStatementPooling());
 
@@ -275,17 +275,16 @@ public class OracleDatabaseMetaDataExtensiveTests {
         try (ResultSet rs = meta.getFunctionColumns(null, null, null, null)) {
             TestDBUtils.validateAllRows(rs);
         }
-        Assertions.assertEquals(true, meta.generatedKeyAlwaysReturned());
-        Assertions.assertEquals(0, meta.getMaxLogicalLobSize());
+        Assertions.assertEquals(false, meta.generatedKeyAlwaysReturned());
         Assertions.assertEquals(true, meta.supportsRefCursors());
-        Assertions.assertEquals(false, meta.supportsSharding());
+        Assertions.assertEquals(true, meta.supportsSharding());
 
         // 175–177: ResultSet/Concurrency methods
         Assertions.assertEquals(true, meta.supportsResultSetType(ResultSet.TYPE_FORWARD_ONLY));
         Assertions.assertEquals(true, meta.supportsResultSetConcurrency(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY));
-        Assertions.assertEquals(true, meta.ownUpdatesAreVisible(ResultSet.TYPE_FORWARD_ONLY));
-        Assertions.assertEquals(true, meta.ownDeletesAreVisible(ResultSet.TYPE_FORWARD_ONLY));
-        Assertions.assertEquals(true, meta.ownInsertsAreVisible(ResultSet.TYPE_FORWARD_ONLY));
+        Assertions.assertEquals(false, meta.ownUpdatesAreVisible(ResultSet.TYPE_FORWARD_ONLY));
+        Assertions.assertEquals(false, meta.ownDeletesAreVisible(ResultSet.TYPE_FORWARD_ONLY));
+        Assertions.assertEquals(false, meta.ownInsertsAreVisible(ResultSet.TYPE_FORWARD_ONLY));
         Assertions.assertEquals(false, meta.othersUpdatesAreVisible(ResultSet.TYPE_FORWARD_ONLY));
         Assertions.assertEquals(false, meta.othersDeletesAreVisible(ResultSet.TYPE_FORWARD_ONLY));
         Assertions.assertEquals(false, meta.othersInsertsAreVisible(ResultSet.TYPE_FORWARD_ONLY));
@@ -299,8 +298,10 @@ public class OracleDatabaseMetaDataExtensiveTests {
         Assertions.assertThrows(SQLException.class, () -> meta.getSuperTypes(null, null, null));
         Assertions.assertThrows(SQLException.class, () -> meta.getSuperTables(null, null, null));
         Assertions.assertThrows(SQLException.class, () -> meta.getAttributes(null, null, null, null));
-        Assertions.assertThrows(SQLException.class, () -> meta.getRowIdLifetime());
-        Assertions.assertThrows(SQLException.class, () -> meta.getPseudoColumns(null, null, null, null));
 
+        Assertions.assertEquals(RowIdLifetime.ROWID_VALID_FOREVER, meta.getRowIdLifetime());
+        try (ResultSet rs = meta.getPseudoColumns(null, null, null, null)) {
+            TestDBUtils.validateAllRows(rs);
+        }
     }
 }

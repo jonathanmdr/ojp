@@ -47,8 +47,8 @@ public class OracleBinaryStreamIntegrationTest {
 
         // Create table with Oracle-specific binary types
         executeUpdate(conn, "create table oracle_binary_stream_test(" +
-                " val_raw1 RAW(4000)," +  // Oracle RAW for binary data
-                " val_raw2 RAW(4000)" +
+                " val_raw1 RAW(2000)," +  // Oracle RAW for binary data
+                " val_raw2 RAW(2000)" +
                 ")");
 
         conn.setAutoCommit(false);

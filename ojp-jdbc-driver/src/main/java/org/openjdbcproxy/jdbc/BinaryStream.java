@@ -22,6 +22,6 @@ public class BinaryStream extends Lob {
     }
 
     public InputStream getBinaryStream() throws SQLException {
-        return super.getBinaryStream(1, Long.MAX_VALUE);
+        return super.getBinaryStream(1, Integer.MAX_VALUE);
     }
 }

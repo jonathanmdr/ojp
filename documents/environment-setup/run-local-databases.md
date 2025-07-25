@@ -40,7 +40,7 @@ Have docker installed in your machine.
 
 ### Run command
 
-> docker run --name ojp-mysql -e MYSQL_ROOT_PASSWORD=testpassword -e MYSQL_DATABASE=defaultdb -e MYSQL_USER=testuser -e MYSQL_PASSWORD=testpassword -d -p 3307:3306 mysql:8.0
+> docker run --name ojp-mysql -e MYSQL_ROOT_PASSWORD=testpassword -e MYSQL_DATABASE=defaultdb -e MYSQL_USER=testuser -e MYSQL_PASSWORD=testpassword -d -p 3306:3306 mysql:8.0
 
 #### docker run
 Tells Docker to run a new container.

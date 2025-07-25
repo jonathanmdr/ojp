@@ -59,6 +59,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -92,6 +93,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
     private final Map<String, HikariDataSource> datasourceMap = new ConcurrentHashMap<>();
     private final SessionManager sessionManager;
     private final CircuitBreaker circuitBreaker;
+    private static final List<String> INPUT_STREAM_TYPES = Arrays.asList("RAW", "BINARY VARYING", "BYTEA");
 
     static {
         //Register all JDBC drivers supported here.
@@ -221,9 +223,13 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 assert stmt != null;
                 try {
                     stmt.close();
+                } catch (SQLException e) {
+                    log.error("Failure closing statement: " + e.getMessage(), e);
+                }
+                try {
                     stmt.getConnection().close();
                 } catch (SQLException e) {
-                    log.error("Failure closing statement or connection: " + e.getMessage(), e);
+                    log.error("Failure closing connection: " + e.getMessage(), e);
                 }
             }
         }
@@ -514,6 +520,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 }
             }
 
+            @SneakyThrows
             @Override
             public void onCompleted() {
                 if (lobDataBlocksInputStream != null) {
@@ -522,6 +529,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         lobDataBlocksInputStream.finish(true);
                     });
                 }
+
                 //Send the final Lob reference with total count of written bytes.
                 responseObserver.onNext(LobReference.newBuilder()
                         .setSession(this.sessionInfo)
@@ -647,7 +655,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 readLobContextBuilder.lobLength(Optional.empty());
                 readLobContextBuilder.availableLength(Optional.empty());
                 Object lobObj = sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
-                if (lobObj instanceof Blob b) {
+                if (lobObj instanceof Blob) {
                     inputStream = this.inputStreamFromBlob(sessionManager, lobReference, request, readLobContextBuilder);
                 } else {
                     inputStream = sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
@@ -930,7 +938,8 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 List<Object> paramsReceived2 = (request.getTarget().getNextCall().getParams().size() > 0) ?
                         deserialize(request.getTarget().getNextCall().getParams().toByteArray(), List.class) :
                         EMPTY_LIST;
-                Method methodNext = this.findMethodByName(clazzNext, methodName(request.getTarget().getNextCall()),
+                Method methodNext = this.findMethodByName(JavaSqlInterfacesConverter.interfaceClass(clazzNext),
+                        methodName(request.getTarget().getNextCall()),
                         paramsReceived2);
                 params = methodNext.getParameters();
                 Object resultSecondLevel = null;
@@ -1242,10 +1251,14 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                     }
                     case Types.CLOB: {
                         Clob clob = rs.getClob(i + 1);
-                        String clobUUID = UUID.randomUUID().toString();
-                        //CLOB needs to be prefixed as per it can be read in the JDBC driver by getString method and it would be valid to return just a UUID as string
-                        currentValue = CommonConstants.OJP_CLOB_PREFIX + clobUUID;
-                        this.sessionManager.registerLob(session, clob, clobUUID);
+                        if (clob == null) {
+                            currentValue = null;
+                        } else {
+                            String clobUUID = UUID.randomUUID().toString();
+                            //CLOB needs to be prefixed as per it can be read in the JDBC driver by getString method and it would be valid to return just a UUID as string
+                            currentValue = CommonConstants.OJP_CLOB_PREFIX + clobUUID;
+                            this.sessionManager.registerLob(session, clob, clobUUID);
+                        }
                         break;
                     }
                     case Types.BINARY: {
@@ -1294,6 +1307,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
 
     private Object treatAsBlob(SessionInfo session, ResultSet rs, int i) throws SQLException {
         Blob blob = rs.getBlob(i + 1);
+        if (blob == null) {
+            return null;
+        }
         Object logUUID = UUID.randomUUID().toString();
         this.sessionManager.registerLob(session, blob, logUUID.toString());
         return logUUID;
@@ -1303,13 +1319,19 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         int precision = rs.getMetaData().getPrecision(i + 1);
         String catalogName = rs.getMetaData().getCatalogName(i + 1);
         String colClassName = rs.getMetaData().getColumnClassName(i + 1);
+        String colTypeName = rs.getMetaData().getColumnTypeName(i + 1);
+        colTypeName = colTypeName != null ? colTypeName : "";
         Object binaryValue = null;
         if (precision == 1 && !"[B".equalsIgnoreCase(colClassName)) { //it is a single byte and is not of class byte array([B)
             binaryValue = rs.getByte(i + 1);
-        } else if (StringUtils.isNotEmpty(catalogName) || "[B".equalsIgnoreCase(colClassName)) {
+        } else if ((StringUtils.isNotEmpty(catalogName) || "[B".equalsIgnoreCase(colClassName)) &&
+                !INPUT_STREAM_TYPES.contains(colTypeName.toUpperCase())) {
             binaryValue = rs.getBytes(i + 1);
         } else {
             InputStream inputStream = rs.getBinaryStream(i + 1);
+            if (inputStream == null) {
+                return null;
+            }
             binaryValue = UUID.randomUUID().toString();
             this.sessionManager.registerLob(session, inputStream, binaryValue.toString());
         }
@@ -1372,20 +1394,36 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 break;
             //LOB types
             case BLOB:
-                ps.setBlob(idx, this.sessionManager.<Blob>getLob(session, (String) param.getValues().get(0)));
+                Object blobUUID = param.getValues().get(0);
+                if (blobUUID == null) {
+                    ps.setBlob(idx, (Blob) null);
+                } else {
+                    ps.setBlob(idx, this.sessionManager.<Blob>getLob(session, (String) blobUUID));
+                }
                 break;
             case CLOB: {
+                Object clobUUID = param.getValues().get(0);
+                if (clobUUID == null) {
+                    ps.setBlob(idx, (Blob) null);
+                } else {
+                    ps.setBlob(idx, this.sessionManager.<Blob>getLob(session, (String) clobUUID));
+                }
                 Clob clob = this.sessionManager.getLob(session, (String) param.getValues().get(0));
                 ps.setClob(idx, clob.getCharacterStream());
                 break;
             }
             case BINARY_STREAM: {
-                InputStream is = (InputStream) param.getValues().get(0);
-                if (param.getValues().size() > 1) {
-                    Long size = (Long) param.getValues().get(1);
-                    ps.setBinaryStream(idx, is, size);
+                Object inputStreamValue = param.getValues().get(0);
+                if (inputStreamValue == null) {
+                    ps.setBinaryStream(idx, null);
                 } else {
-                    ps.setBinaryStream(idx, is);
+                    InputStream is = (InputStream) inputStreamValue;
+                    if (param.getValues().size() > 1) {
+                        Long size = (Long) param.getValues().get(1);
+                        ps.setBinaryStream(idx, is, size);
+                    } else {
+                        ps.setBinaryStream(idx, is);
+                    }
                 }
                 break;
             }

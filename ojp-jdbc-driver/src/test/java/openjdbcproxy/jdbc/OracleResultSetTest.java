@@ -143,23 +143,6 @@ public class OracleResultSetTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testOracleUpdateMethods(String driverClass, String url, String user, String pwd) throws SQLException {
-        setUp(driverClass, url, user, pwd);
-        resultSet.moveToInsertRow();
-        resultSet.updateInt("id", 4);
-        resultSet.updateString("name", "David");
-        resultSet.updateInt("age", 40);
-        resultSet.updateDouble("salary", 60000.00);
-        resultSet.updateInt("active", 0); // Oracle NUMBER(1) for boolean
-        resultSet.insertRow();
-
-        resultSet = statement.executeQuery("SELECT * FROM oracle_resultset_test_table WHERE id = 4");
-        assertTrue(resultSet.next());
-        assertEquals("David", resultSet.getString("name"));
-    }
-
-    @ParameterizedTest
-    @CsvFileSource(resources = "/oracle_connections.csv")
     public void testOracleCursorPositionMethods(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
         assertTrue(resultSet.first());

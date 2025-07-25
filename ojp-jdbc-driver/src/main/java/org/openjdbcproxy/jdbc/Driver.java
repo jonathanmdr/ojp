@@ -79,7 +79,6 @@ public class Driver implements java.sql.Driver {
                         .setProperties(propertiesBytes)
                         .build()
                 );
-        //TODO create centralized handling of exceptions returned that coverts automatically to SQLException.
         log.debug("Returning new Connection with sessionInfo: {}", sessionInfo);
         return new Connection(sessionInfo, statementService, dbType);
     }

@@ -40,10 +40,12 @@ public class JavaSqlInterfacesConverter {
     public static Class<?> interfaceClass(Class<?> clazz) {
         if (Savepoint.class.isAssignableFrom(clazz)) {
             return Savepoint.class;
-        } else if (Statement.class.isAssignableFrom(clazz)) {
-            return Statement.class;
+        } else if (CallableStatement.class.isAssignableFrom(clazz)) { // CallableStatement has to be before PreparedStatement as per PreparedStatement extends CallableStatement
+            return CallableStatement.class;
         } else if (PreparedStatement.class.isAssignableFrom(clazz)) {
             return PreparedStatement.class;
+        } else if (Statement.class.isAssignableFrom(clazz)) {// Statement has to be after PreparedStatement and CallableStatement as per both inherit Statement
+            return Statement.class;
         } else if (Connection.class.isAssignableFrom(clazz)) {
             return Connection.class;
         } else if (ResultSet.class.isAssignableFrom(clazz)) {
@@ -52,8 +54,6 @@ public class JavaSqlInterfacesConverter {
             return Blob.class;
         } else if (Array.class.isAssignableFrom(clazz)) {
             return Array.class;
-        } else if (CallableStatement.class.isAssignableFrom(clazz)) {
-            return CallableStatement.class;
         } else if (Clob.class.isAssignableFrom(clazz)) {
             return Clob.class;
         } else if (ConnectionBuilder.class.isAssignableFrom(clazz)) {

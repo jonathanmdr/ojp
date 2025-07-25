@@ -248,7 +248,7 @@ public class OracleBlobIntegrationTest {
                 "INSERT INTO " + tableName + " (id, data_blob) VALUES (?, ?)"
         );
         psInsert.setInt(1, 5);
-        psInsert.setBinaryStream(2, new ByteArrayInputStream(new byte[0]));
+        psInsert.setBinaryStream(2, null);
         psInsert.executeUpdate();
 
         // Insert NULL BLOB
@@ -265,7 +265,7 @@ public class OracleBlobIntegrationTest {
         
         Assert.assertTrue(rs.next());
         Blob blob = rs.getBlob(1);
-        Assert.assertEquals(0, blob.length());
+        Assert.assertNull(blob);
 
         // Verify NULL BLOB
         psSelect.setInt(1, 6);

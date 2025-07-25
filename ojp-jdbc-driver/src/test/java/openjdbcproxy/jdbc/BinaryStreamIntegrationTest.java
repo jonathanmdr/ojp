@@ -1,7 +1,6 @@
 package openjdbcproxy.jdbc;
 
 import org.junit.Assert;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
@@ -20,21 +19,16 @@ import static openjdbcproxy.helpers.SqlHelper.executeUpdate;
 public class BinaryStreamIntegrationTest {
 
     private static boolean isPostgresTestDisabled;
-    private static boolean isOracleTestEnabled;
 
     @BeforeAll
     public static void setup() {
         isPostgresTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
-        isOracleTestEnabled = Boolean.parseBoolean(System.getProperty("enableOracleTests", "false"));
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_oracle_connections.csv")
+    @CsvFileSource(resources = "/h2_postgres_connections.csv")
     public void createAndReadingBinaryStreamSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         if (isPostgresTestDisabled && url.contains("postgresql")) {
-            return;
-        }
-        if (!isOracleTestEnabled && url.contains("oracle")) {
             return;
         }
 
@@ -49,19 +43,11 @@ public class BinaryStreamIntegrationTest {
         }
 
         // Create table with database-specific binary types
-        String createTableSql;
-        if (url.contains("oracle")) {
-            createTableSql = "create table binary_stream_test_blob(" +
-                    " val_blob1 RAW(4000)," +  // Oracle RAW for binary data
-                    " val_blob2 RAW(4000)" +
-                    ")";
-        } else {
-            // PostgreSQL/H2
-            createTableSql = "create table binary_stream_test_blob(" +
+        String createTableSql = "create table binary_stream_test_blob(" +
                     " val_blob1 BYTEA," +
                     " val_blob2 BYTEA" +
                     ")";
-        }
+
         executeUpdate(conn, createTableSql);
 
         conn.setAutoCommit(false);
@@ -106,12 +92,9 @@ public class BinaryStreamIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_postgres_oracle_connections.csv")
+    @CsvFileSource(resources = "/h2_postgres_connections.csv")
     public void createAndReadingLargeBinaryStreamSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         if (isPostgresTestDisabled && url.contains("postgresql")) {
-            return;
-        }
-        if (!isOracleTestEnabled && url.contains("oracle")) {
             return;
         }
 
@@ -126,17 +109,10 @@ public class BinaryStreamIntegrationTest {
         }
 
         // Create table with database-specific binary types for large data
-        String createTableSql;
-        if (url.contains("oracle")) {
-            createTableSql = "create table binary_stream_test_blob(" +
-                    " val_blob BLOB" +  // Oracle BLOB for large binary data
-                    ")";
-        } else {
-            // PostgreSQL/H2
-            createTableSql = "create table binary_stream_test_blob(" +
+        String createTableSql = "create table binary_stream_test_blob(" +
                     " val_blob  BYTEA" +
                     ")";
-        }
+
         executeUpdate(conn, createTableSql);
 
         PreparedStatement psInsert = conn.prepareStatement(

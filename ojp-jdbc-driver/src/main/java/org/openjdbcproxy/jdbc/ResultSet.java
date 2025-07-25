@@ -1310,6 +1310,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getBlob(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
+        if (lastValueRead == null) {
+            return null;
+        }
         Object objUUID = lastValueRead;
         String blobRefUUID = String.valueOf(objUUID);
         return new org.openjdbcproxy.jdbc.Blob((Connection) this.statement.getConnection(),
@@ -1329,6 +1332,9 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getClob(columnIndex);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
+        if (lastValueRead == null) {
+            return null;
+        }
         String clobRefUUID = (String) lastValueRead;
         if (clobRefUUID != null && clobRefUUID.startsWith(CommonConstants.OJP_CLOB_PREFIX)) {
             clobRefUUID = clobRefUUID.replaceAll(CommonConstants.OJP_CLOB_PREFIX, "");
