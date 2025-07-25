@@ -29,12 +29,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.input.ReaderInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.openjdbcproxy.constants.CommonConstants;
 import org.openjdbcproxy.grpc.dto.OpQueryResult;
 import org.openjdbcproxy.grpc.dto.Parameter;
 
 import java.io.InputStream;
+import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -57,6 +59,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -76,8 +79,8 @@ import static org.openjdbcproxy.grpc.server.Constants.EMPTY_MAP;
 import static org.openjdbcproxy.grpc.server.Constants.EMPTY_STRING;
 import static org.openjdbcproxy.grpc.server.Constants.H2_DRIVER_CLASS;
 import static org.openjdbcproxy.grpc.server.Constants.MARIADB_DRIVER_CLASS;
-import static org.openjdbcproxy.grpc.server.Constants.POSTGRES_DRIVER_CLASS;
 import static org.openjdbcproxy.grpc.server.Constants.MYSQL_DRIVER_CLASS;
+import static org.openjdbcproxy.grpc.server.Constants.POSTGRES_DRIVER_CLASS;
 import static org.openjdbcproxy.grpc.server.Constants.SHA_256;
 import static org.openjdbcproxy.grpc.server.GrpcExceptionHandler.sendSQLExceptionMetadata;
 
@@ -90,6 +93,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
     private final Map<String, HikariDataSource> datasourceMap = new ConcurrentHashMap<>();
     private final SessionManager sessionManager;
     private final CircuitBreaker circuitBreaker;
+    private static final List<String> INPUT_STREAM_TYPES = Arrays.asList("RAW", "BINARY VARYING", "BYTEA");
 
     static {
         //Register all JDBC drivers supported here.
@@ -114,10 +118,10 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             config.setJdbcUrl(this.parseUrl(connectionDetails.getUrl()));
             config.setUsername(connectionDetails.getUser());
             config.setPassword(connectionDetails.getPassword());
-            
+
             // Configure HikariCP using client properties or defaults
             configureHikariPool(config, connectionDetails);
-            
+
             ds = new HikariDataSource(config);
             this.datasourceMap.put(connHash, ds);
         }
@@ -217,9 +221,13 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 assert stmt != null;
                 try {
                     stmt.close();
+                } catch (SQLException e) {
+                    log.error("Failure closing statement: " + e.getMessage(), e);
+                }
+                try {
                     stmt.getConnection().close();
                 } catch (SQLException e) {
-                    log.error("Failure closing statement or connection: " + e.getMessage(), e);
+                    log.error("Failure closing connection: " + e.getMessage(), e);
                 }
             }
         }
@@ -510,6 +518,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 }
             }
 
+            @SneakyThrows
             @Override
             public void onCompleted() {
                 if (lobDataBlocksInputStream != null) {
@@ -518,6 +527,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         lobDataBlocksInputStream.finish(true);
                     });
                 }
+
                 //Send the final Lob reference with total count of written bytes.
                 responseObserver.onNext(LobReference.newBuilder()
                         .setSession(this.sessionInfo)
@@ -533,7 +543,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
 
     @Override
     public void readLob(ReadLobRequest request, StreamObserver<LobDataBlock> responseObserver) {
-        log.info("Reading lob {}", request.getLobReference().getUuid());
+        log.debug("Reading lob {}", request.getLobReference().getUuid());
         try {
             LobReference lobRef = request.getLobReference();
             ReadLobContext readLobContext = this.findLobContext(request);
@@ -643,7 +653,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 readLobContextBuilder.lobLength(Optional.empty());
                 readLobContextBuilder.availableLength(Optional.empty());
                 Object lobObj = sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
-                if (lobObj instanceof Blob b) {
+                if (lobObj instanceof Blob) {
                     inputStream = this.inputStreamFromBlob(sessionManager, lobReference, request, readLobContextBuilder);
                 } else {
                     inputStream = sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
@@ -651,10 +661,31 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 }
                 break;
             }
+            case LT_CLOB: {
+                inputStream = this.inputStreamFromClob(sessionManager, lobReference, request, readLobContextBuilder);
+                break;
+            }
         }
         readLobContextBuilder.inputStream(inputStream);
 
         return readLobContextBuilder.build();
+    }
+
+    @SneakyThrows
+    private InputStream inputStreamFromClob(SessionManager sessionManager, LobReference lobReference,
+                                            ReadLobRequest request,
+                                            ReadLobContext.ReadLobContextBuilder readLobContextBuilder) {
+        Clob clob = sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
+        long lobLength = clob.length();
+        readLobContextBuilder.lobLength(Optional.of(lobLength));
+        int availableLength = (request.getPosition() + request.getLength()) < lobLength ? request.getLength() :
+                (int) (lobLength - request.getPosition() + 1);
+        readLobContextBuilder.availableLength(Optional.of(availableLength));
+        Reader reader = clob.getCharacterStream(request.getPosition(), availableLength);
+        return ReaderInputStream.builder()
+                .setReader(reader)
+                .setCharset(StandardCharsets.UTF_8)
+                .getInputStream();
     }
 
     private InputStream inputStreamFromBlob(SessionManager sessionManager, LobReference lobReference,
@@ -863,15 +894,16 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             Class<?> clazz = resource.getClass();
             if ((paramsReceived != null && paramsReceived.size() > 0) &&
                     ((CallType.CALL_RELEASE.equals(request.getTarget().getCallType()) &&
-                    "Savepoint".equalsIgnoreCase(request.getTarget().getResourceName())) ||
-                        (CallType.CALL_ROLLBACK.equals(request.getTarget().getCallType()))
+                            "Savepoint".equalsIgnoreCase(request.getTarget().getResourceName())) ||
+                            (CallType.CALL_ROLLBACK.equals(request.getTarget().getCallType()))
                     )
-                ) {
+            ) {
                 Savepoint savepoint = (Savepoint) this.sessionManager.getAttr(request.getSession(),
                         (String) paramsReceived.get(0));
                 paramsReceived.set(0, savepoint);
             }
-            Method method = this.findMethodByName(clazz, methodName(request.getTarget()), paramsReceived);
+            Method method = this.findMethodByName(JavaSqlInterfacesConverter.interfaceClass(clazz),
+                    methodName(request.getTarget()), paramsReceived);
             java.lang.reflect.Parameter[] params = method.getParameters();
             Object resultFirstLevel = null;
             if (params != null && params.length > 0) {
@@ -904,7 +936,8 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 List<Object> paramsReceived2 = (request.getTarget().getNextCall().getParams().size() > 0) ?
                         deserialize(request.getTarget().getNextCall().getParams().toByteArray(), List.class) :
                         EMPTY_LIST;
-                Method methodNext = this.findMethodByName(clazzNext, methodName(request.getTarget().getNextCall()),
+                Method methodNext = this.findMethodByName(JavaSqlInterfacesConverter.interfaceClass(clazzNext),
+                        methodName(request.getTarget().getNextCall()),
                         paramsReceived2);
                 params = methodNext.getParameters();
                 Object resultSecondLevel = null;
@@ -1122,6 +1155,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             case CALL_REGISTER:
                 prefix = "register";
                 break;
+            case CALL_LENGTH:
+                prefix = "length";
+                break;
             case UNRECOGNIZED:
                 throw new SQLException("CALL type not supported.");
             default:
@@ -1213,8 +1249,14 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                     }
                     case Types.CLOB: {
                         Clob clob = rs.getClob(i + 1);
-                        currentValue = UUID.randomUUID().toString();
-                        this.sessionManager.registerLob(session, clob, currentValue.toString());
+                        if (clob == null) {
+                            currentValue = null;
+                        } else {
+                            String clobUUID = UUID.randomUUID().toString();
+                            //CLOB needs to be prefixed as per it can be read in the JDBC driver by getString method and it would be valid to return just a UUID as string
+                            currentValue = CommonConstants.OJP_CLOB_PREFIX + clobUUID;
+                            this.sessionManager.registerLob(session, clob, clobUUID);
+                        }
                         break;
                     }
                     case Types.BINARY: {
@@ -1228,6 +1270,10 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         } else {
                             currentValue = date;
                         }
+                        break;
+                    }
+                    case Types.TIMESTAMP: {
+                        currentValue = rs.getTimestamp(i + 1);
                         break;
                     }
                     default: {
@@ -1259,6 +1305,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
 
     private Object treatAsBlob(SessionInfo session, ResultSet rs, int i) throws SQLException {
         Blob blob = rs.getBlob(i + 1);
+        if (blob == null) {
+            return null;
+        }
         Object logUUID = UUID.randomUUID().toString();
         this.sessionManager.registerLob(session, blob, logUUID.toString());
         return logUUID;
@@ -1267,13 +1316,20 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
     private Object treatAsBinary(SessionInfo session, ResultSet rs, int i) throws SQLException {
         int precision = rs.getMetaData().getPrecision(i + 1);
         String catalogName = rs.getMetaData().getCatalogName(i + 1);
+        String colClassName = rs.getMetaData().getColumnClassName(i + 1);
+        String colTypeName = rs.getMetaData().getColumnTypeName(i + 1);
+        colTypeName = colTypeName != null ? colTypeName : "";
         Object binaryValue = null;
-        if (precision == 1) { //it is a single byte
-            binaryValue =  rs.getByte(i + 1);
-        } else if (StringUtils.isNotEmpty(catalogName)) {
-            binaryValue =  rs.getBytes(i + 1);
+        if (precision == 1 && !"[B".equalsIgnoreCase(colClassName)) { //it is a single byte and is not of class byte array([B)
+            binaryValue = rs.getByte(i + 1);
+        } else if ((StringUtils.isNotEmpty(catalogName) || "[B".equalsIgnoreCase(colClassName)) &&
+                !INPUT_STREAM_TYPES.contains(colTypeName.toUpperCase())) {
+            binaryValue = rs.getBytes(i + 1);
         } else {
             InputStream inputStream = rs.getBinaryStream(i + 1);
+            if (inputStream == null) {
+                return null;
+            }
             binaryValue = UUID.randomUUID().toString();
             this.sessionManager.registerLob(session, inputStream, binaryValue.toString());
         }
@@ -1336,20 +1392,36 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 break;
             //LOB types
             case BLOB:
-                ps.setBlob(idx, this.sessionManager.<Blob>getLob(session, (String) param.getValues().get(0)));
+                Object blobUUID = param.getValues().get(0);
+                if (blobUUID == null) {
+                    ps.setBlob(idx, (Blob) null);
+                } else {
+                    ps.setBlob(idx, this.sessionManager.<Blob>getLob(session, (String) blobUUID));
+                }
                 break;
             case CLOB: {
+                Object clobUUID = param.getValues().get(0);
+                if (clobUUID == null) {
+                    ps.setBlob(idx, (Blob) null);
+                } else {
+                    ps.setBlob(idx, this.sessionManager.<Blob>getLob(session, (String) clobUUID));
+                }
                 Clob clob = this.sessionManager.getLob(session, (String) param.getValues().get(0));
                 ps.setClob(idx, clob.getCharacterStream());
                 break;
             }
             case BINARY_STREAM: {
-                InputStream is = (InputStream) param.getValues().get(0);
-                if (param.getValues().size() > 1) {
-                    Long size = (Long) param.getValues().get(1);
-                    ps.setBinaryStream(idx, is, size);
+                Object inputStreamValue = param.getValues().get(0);
+                if (inputStreamValue == null) {
+                    ps.setBinaryStream(idx, null);
                 } else {
-                    ps.setBinaryStream(idx, is);
+                    InputStream is = (InputStream) inputStreamValue;
+                    if (param.getValues().size() > 1) {
+                        Long size = (Long) param.getValues().get(1);
+                        ps.setBinaryStream(idx, is, size);
+                    } else {
+                        ps.setBinaryStream(idx, is);
+                    }
                 }
                 break;
             }
@@ -1384,7 +1456,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
 
     private void configureHikariPool(HikariConfig config, ConnectionDetails connectionDetails) {
         Properties clientProperties = null;
-        
+
         // Try to deserialize properties from client if provided
         if (!connectionDetails.getProperties().isEmpty()) {
             try {
@@ -1394,12 +1466,12 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 log.warn("Failed to deserialize client properties, using defaults: {}", e.getMessage());
             }
         }
-        
+
         // Configure basic connection pool settings first
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-        
+
         // Configure HikariCP pool settings using client properties or defaults
         config.setMaximumPoolSize(getIntProperty(clientProperties, "ojp.connection.pool.maximumPoolSize", CommonConstants.DEFAULT_MAXIMUM_POOL_SIZE));
         config.setMinimumIdle(getIntProperty(clientProperties, "ojp.connection.pool.minimumIdle", CommonConstants.DEFAULT_MINIMUM_IDLE));
@@ -1407,10 +1479,10 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         config.setMaxLifetime(getLongProperty(clientProperties, "ojp.connection.pool.maxLifetime", CommonConstants.DEFAULT_MAX_LIFETIME));
         config.setConnectionTimeout(getLongProperty(clientProperties, "ojp.connection.pool.connectionTimeout", CommonConstants.DEFAULT_CONNECTION_TIMEOUT));
 
-        log.info("HikariCP configured with maximumPoolSize={}, minimumIdle={}, poolName={}", 
+        log.info("HikariCP configured with maximumPoolSize={}, minimumIdle={}, poolName={}",
                 config.getMaximumPoolSize(), config.getMinimumIdle(), config.getPoolName());
     }
-    
+
     private int getIntProperty(Properties properties, String key, int defaultValue) {
         if (properties == null || !properties.containsKey(key)) {
             return defaultValue;
@@ -1422,7 +1494,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             return defaultValue;
         }
     }
-    
+
     private long getLongProperty(Properties properties, String key, long defaultValue) {
         if (properties == null || !properties.containsKey(key)) {
             return defaultValue;
@@ -1434,14 +1506,14 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             return defaultValue;
         }
     }
-    
+
     private boolean getBooleanProperty(Properties properties, String key, boolean defaultValue) {
         if (properties == null || !properties.containsKey(key)) {
             return defaultValue;
         }
         return Boolean.parseBoolean(properties.getProperty(key));
     }
-    
+
     private String getStringProperty(Properties properties, String key, String defaultValue) {
         if (properties == null || !properties.containsKey(key)) {
             return defaultValue;

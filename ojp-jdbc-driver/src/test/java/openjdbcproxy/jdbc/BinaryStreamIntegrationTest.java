@@ -1,7 +1,6 @@
 package openjdbcproxy.jdbc;
 
 import org.junit.Assert;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
@@ -19,17 +18,19 @@ import static openjdbcproxy.helpers.SqlHelper.executeUpdate;
 
 public class BinaryStreamIntegrationTest {
 
-    private static boolean isTestDisabled;
+    private static boolean isPostgresTestDisabled;
 
     @BeforeAll
     public static void setup() {
-        isTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
+        isPostgresTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/postgres_connection.csv")
+    @CsvFileSource(resources = "/h2_postgres_connections.csv")
     public void createAndReadingBinaryStreamSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
-        Assumptions.assumeFalse(isTestDisabled, "Skipping Postgres tests");
+        if (isPostgresTestDisabled && url.contains("postgresql")) {
+            return;
+        }
 
         Connection conn = DriverManager.getConnection(url, user, pwd);
 
@@ -41,12 +42,13 @@ public class BinaryStreamIntegrationTest {
             //If fails disregard as per the table is most possibly not created yet
         }
 
-        executeUpdate(conn,
-                "create table binary_stream_test_blob(" +
-                        " val_blob1 BYTEA," +
-                        " val_blob2 BYTEA" +
-                        ")"
-        );
+        // Create table with database-specific binary types
+        String createTableSql = "create table binary_stream_test_blob(" +
+                    " val_blob1 BYTEA," +
+                    " val_blob2 BYTEA" +
+                    ")";
+
+        executeUpdate(conn, createTableSql);
 
         conn.setAutoCommit(false);
 
@@ -90,9 +92,11 @@ public class BinaryStreamIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/postgres_connection.csv")
+    @CsvFileSource(resources = "/h2_postgres_connections.csv")
     public void createAndReadingLargeBinaryStreamSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
-        Assumptions.assumeFalse(isTestDisabled, "Skipping Postgres tests");
+        if (isPostgresTestDisabled && url.contains("postgresql")) {
+            return;
+        }
 
         Connection conn = DriverManager.getConnection(url, user, pwd);
 
@@ -104,11 +108,12 @@ public class BinaryStreamIntegrationTest {
             //If fails disregard as per the table is most possibly not created yet
         }
 
-        executeUpdate(conn,
-                "create table binary_stream_test_blob(" +
-                        " val_blob  BYTEA" +
-                        ")"
-        );
+        // Create table with database-specific binary types for large data
+        String createTableSql = "create table binary_stream_test_blob(" +
+                    " val_blob  BYTEA" +
+                    ")";
+
+        executeUpdate(conn, createTableSql);
 
         PreparedStatement psInsert = conn.prepareStatement(
                 "insert into binary_stream_test_blob (val_blob) values (?)"

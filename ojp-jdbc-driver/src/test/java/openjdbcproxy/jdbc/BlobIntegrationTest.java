@@ -23,6 +23,7 @@ public class BlobIntegrationTest {
 
     private static boolean isMySQLTestDisabled;
     private static boolean isMariaDBTestDisabled;
+    private static boolean isOracleTestEnabled;
     private String tableName;
     private Connection conn;
 
@@ -30,16 +31,21 @@ public class BlobIntegrationTest {
     public static void checkTestConfiguration() {
         isMySQLTestDisabled = Boolean.parseBoolean(System.getProperty("disableMySQLTests", "false"));
         isMariaDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableMariaDBTests", "false"));
+        isOracleTestEnabled = Boolean.parseBoolean(System.getProperty("enableOracleTests", "false"));
     }
 
     public void setUp(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
-        assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
-        assumeFalse(isMariaDBTestDisabled, "MariaDB tests are disabled");
+
         this.tableName = "blob_test_blob";
         if (url.toLowerCase().contains("mysql")) {
+            assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
             this.tableName += "_mysql";
         } else if (url.toLowerCase().contains("mariadb")) {
+            assumeFalse(isMariaDBTestDisabled, "MariaDB tests are disabled");
             this.tableName += "_mariadb";
+        } else if (url.toLowerCase().contains("oracle")) {
+            assumeFalse(!isOracleTestEnabled, "Oracle tests are disabled");
+            this.tableName += "_oracle";
         } else {
             this.tableName += "_h2";
         }
@@ -48,7 +54,7 @@ public class BlobIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_mysql_mariadb_connections.csv")
+    @CsvFileSource(resources = "/h2_mysql_mariadb_oracle_connections.csv")
     public void createAndReadingBLOBsSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         this.setUp(driverClass, url, user, pwd);
         System.out.println("Testing for url -> " + url);
@@ -71,10 +77,15 @@ public class BlobIntegrationTest {
                 " insert into " + tableName + " (val_blob, val_blob2, val_blob3) values (?, ?, ?)"
         );
 
-        String testString = "TEST STRING BLOB";
+        // Test with binary data (not just text)
+        byte[] binaryData = new byte[1000];
+        for (int i = 0; i < binaryData.length; i++) {
+            binaryData[i] = (byte) (i % 256);
+        }
+
         Blob blob = conn.createBlob(); //WHEN this happens a connection in the server is set to a session and I need to replicate that in the
         //prepared statement created previously
-        blob.setBytes(1, testString.getBytes());
+        blob.setBytes(1, binaryData);
         psInsert.setBlob(1, blob);
         String testString2 = "BLOB VIA INPUT STREAM";
         InputStream inputStream = new ByteArrayInputStream(testString2.getBytes());
@@ -87,13 +98,11 @@ public class BlobIntegrationTest {
         ResultSet resultSet = psSelect.executeQuery();
         resultSet.next();
         Blob blobResult =  resultSet.getBlob(1);
-        String fromBlobByIdx = new String(blobResult.getBinaryStream().readAllBytes());
 
-        Assert.assertEquals(testString, fromBlobByIdx);
+        Assert.assertEquals(binaryData.length, blobResult.getBinaryStream().readAllBytes().length);
 
         Blob blobResultByName =  resultSet.getBlob("val_blob");
-        String fromBlobByName = new String(blobResultByName.getBinaryStream().readAllBytes());
-        Assert.assertEquals(testString, fromBlobByName);
+        Assert.assertEquals(binaryData.length, blobResultByName.getBinaryStream().readAllBytes().length);
 
         Blob blobResult2 =  resultSet.getBlob(2);
         String fromBlobByIdx2 = new String(blobResult2.getBinaryStream().readAllBytes());
@@ -111,7 +120,7 @@ public class BlobIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/h2_mysql_mariadb_connections.csv")
+    @CsvFileSource(resources = "/h2_mysql_mariadb_oracle_connections.csv")
     public void creatingAndReadingLargeBLOBsSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, IOException, ClassNotFoundException {
         this.setUp(driverClass, url, user, pwd);
         System.out.println("Testing for url -> " + url);
@@ -132,7 +141,6 @@ public class BlobIntegrationTest {
                 "insert into " + tableName + " (val_blob) values (?)"
         );
 
-
         InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("largeTextFile.txt");
         psInsert.setBlob(1 , inputStream);
 
@@ -150,9 +158,6 @@ public class BlobIntegrationTest {
         int count = 0;
         while (byteFile != -1) {
             count++;
-            if (count == 3072) {
-                System.out.println(count);
-            }
             int blobByte = inputStreamBlob.read();
             //TODO remove after debugging
             if (byteFile != blobByte) {

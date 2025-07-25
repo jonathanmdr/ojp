@@ -26,7 +26,7 @@ public class Clob extends Lob implements java.sql.Clob {
     @Override
     public String getSubString(long pos, int length) throws SQLException {
         log.debug("getSubString: {}, {}", pos, length);
-        BufferedInputStream bis = new BufferedInputStream(this.getBinaryStream(pos, length));
+        BufferedInputStream bis = new BufferedInputStream(this.getBinaryStream(pos, length + 1));
         try {
             return new String(bis.readAllBytes());
         } catch (IOException e) {

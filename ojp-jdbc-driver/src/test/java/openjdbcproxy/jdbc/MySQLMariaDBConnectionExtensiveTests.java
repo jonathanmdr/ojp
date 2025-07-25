@@ -279,11 +279,8 @@ public class MySQLMariaDBConnectionExtensiveTests {
         // Test named savepoint
         Savepoint savepoint2 = connection.setSavepoint("test_savepoint");
         Assert.assertNotNull(savepoint2);
-        if (url.toLowerCase().contains("mysql"))
-            Assert.assertEquals("test_savepoint", savepoint2.getSavepointName());
-        else
-            Assert.assertThrows(SQLException.class, () -> savepoint2.getSavepointName());
-        
+        Assert.assertEquals("test_savepoint", savepoint2.getSavepointName());
+
         // Test rollback to savepoint
         connection.rollback(savepoint2);
         connection.rollback(savepoint1);

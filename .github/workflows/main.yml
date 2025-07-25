@@ -65,6 +65,21 @@ jobs:
         ports:
           - 5432:5432
 
+      oracle:
+        image: gvenzl/oracle-xe:21-slim
+        env:
+          ORACLE_PASSWORD: testpassword
+          APP_USER: testuser
+          APP_USER_PASSWORD: testpassword
+        options: >-
+          --name ojp-oracle
+          --health-cmd "echo 'SELECT 1 FROM DUAL;' | sqlplus -s system/testpassword@localhost/XEPDB1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 1521:1521
+
     steps:
       - name: Git checkout
         uses: actions/checkout@v4
@@ -77,6 +92,12 @@ jobs:
           java-version: 22
           distribution: 'temurin'
           cache: maven
+
+      - name: Build and Install (ojp-grpc-commons)
+        run: mvn clean install -pl ojp-grpc-commons -DskipTests -Dgpg.skip=true
+
+      - name: Test (ojp-grpc-commons)
+        run: mvn test -pl ojp-grpc-commons -Dgpg.skip=true
 
       - name: Build (ojp-server)
         run: mvn clean install -DskipTests  -Dgpg.skip=true
@@ -97,11 +118,11 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Build (ojp-grpc-commons, ojp-jdbc-driver)
-        run: mvn clean install -pl ojp-grpc-commons,ojp-jdbc-driver -DskipTests -Dgpg.skip=true
+      - name: Build (ojp-jdbc-driver)
+        run: mvn clean install -pl ojp-jdbc-driver -DskipTests -Dgpg.skip=true
 
-      - name: Test (ojp-grpc-commons, ojp-jdbc-driver)
-        run: mvn test -pl ojp-grpc-commons,ojp-jdbc-driver -Dgpg.skip=true
+      - name: Test (ojp-jdbc-driver)
+        run: mvn test -pl ojp-jdbc-driver -Dgpg.skip=true
 
       - name: Show ojp-server.log
         if: always()  # ensures it runs even if previous steps fail

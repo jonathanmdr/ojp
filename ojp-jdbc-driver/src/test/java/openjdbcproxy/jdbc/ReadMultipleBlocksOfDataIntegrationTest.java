@@ -16,7 +16,6 @@ public class ReadMultipleBlocksOfDataIntegrationTest {
 
     private static boolean isPostgresTestDisabled;
 
-
     @BeforeAll
     public static void checkTestConfiguration() {
         isPostgresTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
@@ -37,11 +36,12 @@ public class ReadMultipleBlocksOfDataIntegrationTest {
         } catch (Exception e) {
             //Does not matter
         }
-        executeUpdate(conn,
-                "create table read_blocks_test_multi(" +
-                        "id INT NOT NULL, " +
-                        "title VARCHAR(50) NOT NULL)"
-        );
+        
+        // Create table for H2/PostgreSQL
+        String createTableSql = "create table read_blocks_test_multi(" +
+                "id INT NOT NULL, " +
+                "title VARCHAR(50) NOT NULL)";
+        executeUpdate(conn, createTableSql);
 
         for (int i = 0; i < totalRecords; i++) { //TODO make this test parameterized with multiple parameters
             executeUpdate(conn,

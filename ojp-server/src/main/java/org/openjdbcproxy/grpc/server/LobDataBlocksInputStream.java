@@ -10,8 +10,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,13 +45,12 @@ public class LobDataBlocksInputStream extends InputStream {
     @SneakyThrows
     @Override
     public int read() {
-        //TODO remove
-        log.info("Reading lob {}", this.uuid);
+        log.debug("Reading lob {}", this.uuid);
         if (this.currentIdx >= this.currentBlock.length - 1) {
             log.info("Current block has no bytes to read.");
             if (this.blocksReceived.isEmpty()) {
                 log.info("No new blocks received, will wait for block to arrive if stream not finished");
-                Thread.sleep(10);//TODO review if possible to remove, here because it was reading the flag beffore blocks feeder thread had a chance to mark it as finished.
+                Thread.sleep(10);//TODO review if possible to remove, here because it was reading the flag before blocks feeder thread had a chance to mark it as finished.
                 if (this.atomicFinished.get()) {
                     log.info("All blocks exhausted, finishing byte stream. lob {}", this.uuid);
                     this.fullyConsumed.set(true);

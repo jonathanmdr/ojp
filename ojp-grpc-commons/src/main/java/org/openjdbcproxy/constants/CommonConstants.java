@@ -21,6 +21,7 @@ public class CommonConstants {
     public static final String STATEMENT_COLUMN_NAMES_KEY = "STATEMENT_COLUMN_NAMES_KEY";
     public static final int DEFAULT_PORT_NUMBER = 1059;
     public static final String OJP_REGEX_PATTERN = "ojp\\[([^\\]]+)\\]";
+    public static final String OJP_CLOB_PREFIX = "OJP_CLOB_PREFIX:";
 
     // HikariCP default connection pool settings
     public static final int DEFAULT_MAXIMUM_POOL_SIZE = 10;

@@ -39,11 +39,14 @@ docker run --rm -d -p 1059:1059 rrobetti/ojp:0.0.4-alpha
 Replace your existing connection URL by prefixing with `ojp[host:port]_`:
 
 ```java
-// Before
+// Before (PostgreSQL example)
 "jdbc:postgresql://user@localhost/mydb"
 
 // After  
 "jdbc:ojp[localhost:1059]_postgresql://user@localhost/mydb"
+
+// Oracle example
+"jdbc:ojp[localhost:1059]_oracle:thin:@localhost:1521/XEPDB1"
 ```
 Use the ojp driver: `org.openjdbcproxy.jdbc.Driver`
 
@@ -139,9 +142,23 @@ Welcome to OJP! We appreciate your interest in contributing. This guide will hel
    Navigate to the ojp-jdbc-driver folder first:
    ```bash
    cd ojp-jdbc-driver
-   mvn test -DdisablePostgresTests -DdisableMySQLTests -DdisableMariaDBTests
+   mvn test -DdisablePostgresTests -DdisableMySQLTests -DdisableMariaDBTests -DdisableOracleTests
    ```
 **Note:** With the disable flags only H2 integration tests will run, to run the full set of integration tests you have to run all the databases locally, follow the instructions at [Run Local Databases](documents/environment-setup/run-local-databases.md)
+
+### Databases with integration tests
+We have comprehensive JDBC integration tests with OJP for the following databases:
+- Postgres
+- MariaDB
+- MySQL
+- Oracle
+- H2
+
+The free and open source databases (H2, Postgres, MySQL and MariaDB) jdbc drivers are packed with OJP and have integration tests always running in our CI pipelines, for proprietary databases as Oracle vide specific sections.
+
+### Oracle Database Setup (Optional)
+Oracle integration tests require the Oracle JDBC driver and due to licensing restrictions we do not pack it with OJP.
+For detailed Oracle setup instructions, see [Oracle Testing Guide](documents/environment-setup/oracle-testing-guide.md).
 
 ### Testing Configuration
 - Test connection configurations are stored in CSV files under `test/resources`
@@ -151,6 +168,7 @@ Welcome to OJP! We appreciate your interest in contributing. This guide will hel
 
 ### Test Options
 - `-DdisablePostgresTests` - Skip PostgreSQL integration tests
+- `-DenableOracleTests` - Skip Oracle integration tests by default (requires manual Oracle JDBC driver setup)
 
 ### Contributing
 1. Fork the repository

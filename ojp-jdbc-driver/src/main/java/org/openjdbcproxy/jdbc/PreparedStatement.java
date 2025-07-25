@@ -50,6 +50,7 @@ import static org.openjdbcproxy.grpc.SerializationHandler.serialize;
 import static org.openjdbcproxy.grpc.dto.ParameterType.ARRAY;
 import static org.openjdbcproxy.grpc.dto.ParameterType.ASCII_STREAM;
 import static org.openjdbcproxy.grpc.dto.ParameterType.BIG_DECIMAL;
+import static org.openjdbcproxy.grpc.dto.ParameterType.BINARY_STREAM;
 import static org.openjdbcproxy.grpc.dto.ParameterType.BLOB;
 import static org.openjdbcproxy.grpc.dto.ParameterType.BOOLEAN;
 import static org.openjdbcproxy.grpc.dto.ParameterType.BYTE;
@@ -400,7 +401,7 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
     public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
         log.debug("setCharacterStream: {}, <Reader>, {}", parameterIndex, length);
         this.checkClosed();
-        //TODO this will require an implementation of Reader that communicates across GRPC
+        //TODO this will require an implementation of Reader that communicates across GRPC or maybe a conversion to InputStream
         this.paramsMap.put(parameterIndex,
                 Parameter.builder()
                         .type(CHARACTER_READER)
@@ -730,7 +731,16 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
     public void setBinaryStream(int parameterIndex, InputStream x) throws SQLException {
         log.debug("setBinaryStream: {}, <InputStream>", parameterIndex);
         this.checkClosed();
-        this.setBinaryStream(parameterIndex, x, -1); //-1 means not provided in OJP BynaryStrem server side
+        if (x == null) {
+            this.paramsMap.put(parameterIndex,
+                    Parameter.builder()
+                            .type(BINARY_STREAM)
+                            .index(parameterIndex)
+                            .values(Arrays.asList(x))
+                            .build());
+        } else {
+            this.setBinaryStream(parameterIndex, x, -1); //-1 means not provided.
+        }
     }
 
     @Override

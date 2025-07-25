@@ -55,6 +55,8 @@ public class ResultSetTest {
         } catch (Exception e) {
             //Expected if table does not exist.
         }
+        
+        // Create table for H2/PostgreSQL
         statement.execute("CREATE TABLE resultset_test_table (id INT PRIMARY KEY, name VARCHAR(255), age INT, salary DECIMAL(10,2), active BOOLEAN, created_at TIMESTAMP)");
         statement.execute("INSERT INTO resultset_test_table (id, name, age, salary, active, created_at) VALUES (1, 'Alice', 30, 50000.00, TRUE, CURRENT_TIMESTAMP)");
         statement.execute("INSERT INTO resultset_test_table (id, name, age, salary, active, created_at) VALUES (2, 'Bob', 25, 45000.00, FALSE, CURRENT_TIMESTAMP)");

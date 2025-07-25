@@ -102,7 +102,7 @@ public class ResultSet extends RemoteProxyResultSet {
 
     private OpResult nextWithSessionUpdate(OpResult next) throws SQLException {
         log.debug("nextWithSessionUpdate called");
-        ((Connection)this.statement.getConnection()).setSession(next.getSession());
+        ((Connection) this.statement.getConnection()).setSession(next.getSession());
         return next;
     }
 
@@ -113,7 +113,10 @@ public class ResultSet extends RemoteProxyResultSet {
         this.blockIdx = null;
         this.itResults = null;
         this.currentDataBlock = null;
-        super.close();
+        //If the parent statement is closed the result set is closed already, attempting to close it again would produce an error.
+        if (this.statement == null || !this.statement.isClosed()) {
+            super.close();
+        }
     }
 
     @Override
@@ -131,9 +134,16 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getString(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return null;
+        }
+        if (String.valueOf(lastValueRead).startsWith(CommonConstants.OJP_CLOB_PREFIX)) {
+            Clob clob = this.getClob(columnIndex);
+            if (clob.length() > Integer.MAX_VALUE) {
+                throw new SQLException("Attempt to read large CLOB (>2MB) via getString not allowed due to memory overflow danger.");
+            }
+            return clob.getSubString(1, (int) clob.length());
         }
         return (String) lastValueRead;
     }
@@ -144,7 +154,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getBoolean(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return false;
         }
@@ -157,7 +167,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getByte(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return 0;
         } else if (lastValueRead instanceof byte[]) {
@@ -172,7 +182,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getShort(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return 0;
         }
@@ -190,7 +200,7 @@ public class ResultSet extends RemoteProxyResultSet {
             return 0;
         }
         Object value = lastValueRead;
-        if (value instanceof Integer){
+        if (value instanceof Integer) {
             return (int) value;
         } else if (value instanceof Long) {
             Long lValue = (Long) value;
@@ -209,8 +219,8 @@ public class ResultSet extends RemoteProxyResultSet {
                 return ld.getYear();
             }
             return (int) dValue.getTime();
-        }  else {
-            return Integer.parseInt(""+value);
+        } else {
+            return Integer.parseInt("" + value);
         }
     }
 
@@ -220,15 +230,18 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getLong(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return 0;
         }
         if (lastValueRead instanceof BigInteger) {
-            return ((BigInteger)lastValueRead).longValue();
+            return ((BigInteger) lastValueRead).longValue();
         }
         if (lastValueRead instanceof Integer) {
-            return ((Integer)lastValueRead).longValue();
+            return ((Integer) lastValueRead).longValue();
+        }
+        if (lastValueRead instanceof BigDecimal) {
+            return ((BigDecimal) lastValueRead).longValue();
         }
         return (long) lastValueRead;
     }
@@ -239,7 +252,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getFloat(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return 0;
         }
@@ -257,7 +270,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getDouble(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return 0d;
         }
@@ -275,7 +288,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getBigDecimal(columnIndex, scale);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return null;
         }
@@ -289,7 +302,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getBytes(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead instanceof String) {// Means the server is treating it as a binary stream
             InputStream is = this.getBinaryStream(columnIndex);
             return is.readAllBytes();
@@ -303,7 +316,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getDate(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return null;
         }
@@ -321,7 +334,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getTime(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return null;
         }
@@ -334,7 +347,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getTimestamp(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return null;
         }
@@ -367,7 +380,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getBinaryStream(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return null;
         }
@@ -602,7 +615,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getObject(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         return lastValueRead;
     }
 
@@ -641,7 +654,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getBigDecimal(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return null;
         }
@@ -1296,7 +1309,10 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getBlob(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
+        if (lastValueRead == null) {
+            return null;
+        }
         Object objUUID = lastValueRead;
         String blobRefUUID = String.valueOf(objUUID);
         return new org.openjdbcproxy.jdbc.Blob((Connection) this.statement.getConnection(),
@@ -1315,8 +1331,14 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getClob(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
+        if (lastValueRead == null) {
+            return null;
+        }
         String clobRefUUID = (String) lastValueRead;
+        if (clobRefUUID != null && clobRefUUID.startsWith(CommonConstants.OJP_CLOB_PREFIX)) {
+            clobRefUUID = clobRefUUID.replaceAll(CommonConstants.OJP_CLOB_PREFIX, "");
+        }
         return new org.openjdbcproxy.jdbc.Clob((Connection) this.statement.getConnection(),
                 new LobServiceImpl((Connection) this.statement.getConnection(), this.getStatementService()),
                 this.getStatementService(),
@@ -1462,7 +1484,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getURL(columnIndex);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return null;
         }
@@ -2047,7 +2069,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.getObject(columnIndex, type);
         }
-        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex -1];
+        lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return null;
         }
