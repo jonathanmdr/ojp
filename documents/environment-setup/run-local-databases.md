@@ -178,8 +178,8 @@ Specifies the Docker image to use (in this case, the official Microsoft SQL Serv
 After the container starts, you can create a test database and user:
 
 ```bash
-# Connect to SQL Server
-docker exec -it ojp-sqlserver /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P TestPassword123!
+# Connect to SQL Server (using sqlcmd directly - it's in the PATH)
+docker exec -it ojp-sqlserver sqlcmd -S localhost -U sa -P TestPassword123!
 
 # Create database and user
 CREATE DATABASE defaultdb;
@@ -197,3 +197,12 @@ GO
 ALTER ROLE db_ddladmin ADD MEMBER testuser;
 GO
 ```
+
+> **Note**: If the above `sqlcmd` command doesn't work, try these alternatives:
+> ```bash
+> # Alternative 1: Use the newer tools path
+> docker exec -it ojp-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P TestPassword123! -C
+> 
+> # Alternative 2: Use bash to access sqlcmd
+> docker exec -it ojp-sqlserver bash -c "sqlcmd -S localhost -U sa -P TestPassword123!"
+> ```
