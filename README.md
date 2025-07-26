@@ -145,7 +145,7 @@ Welcome to OJP! We appreciate your interest in contributing. This guide will hel
    Navigate to the ojp-jdbc-driver folder first:
    ```bash
    cd ojp-jdbc-driver
-   mvn test -DdisablePostgresTests -DdisableMySQLTests -DdisableMariaDBTests -DdisableOracleTests -DdisableSqlServerTests
+   mvn test -DdisablePostgresTests -DdisableMySQLTests -DdisableMariaDBTests
    ```
 **Note:** With the disable flags only H2 integration tests will run, to run the full set of integration tests you have to run all the databases locally, follow the instructions at [Run Local Databases](documents/environment-setup/run-local-databases.md)
 
@@ -165,7 +165,7 @@ Oracle integration tests require the Oracle JDBC driver and due to licensing res
 For detailed Oracle setup instructions, see [Oracle Testing Guide](documents/environment-setup/oracle-testing-guide.md).
 
 ### SQL Server Database Setup (Optional)
-SQL Server integration tests use the Microsoft SQL Server JDBC driver which is included in OJP dependencies.
+SQL Server integration tests use the Microsoft SQL Server JDBC driver which is not included in OJP dependencies.
 For detailed SQL Server setup instructions, see [SQL Server Testing Guide](documents/environment-setup/sqlserver-testing-guide.md).
 
 ### Testing Configuration
