@@ -184,7 +184,7 @@ docker exec -it ojp-sqlserver sqlcmd -S localhost -U sa -P TestPassword123!
 # Create database and user
 CREATE DATABASE defaultdb;
 GO
-CREATE LOGIN testuser WITH PASSWORD = 'testpassword';
+CREATE LOGIN testuser WITH PASSWORD = 'TestPassword123!';
 GO
 USE defaultdb;
 GO
