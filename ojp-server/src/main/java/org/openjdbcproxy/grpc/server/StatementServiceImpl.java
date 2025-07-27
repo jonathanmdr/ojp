@@ -34,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.openjdbcproxy.constants.CommonConstants;
 import org.openjdbcproxy.grpc.dto.OpQueryResult;
 import org.openjdbcproxy.grpc.dto.Parameter;
+import org.openjdbcproxy.grpc.server.utils.DateTimeUtils;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -1278,6 +1279,10 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                     }
                     default: {
                         currentValue = rs.getObject(i + 1);
+                        //com.microsoft.sqlserver.jdbc.DateTimeOffset special case as per it does not implement any standar java.sql interface.
+                        if ("datetimeoffset".equalsIgnoreCase(colTypeName) && colType == -155) {
+                            currentValue = DateTimeUtils.extractOffsetDateTime(currentValue);
+                        }
                         break;
                     }
                 }

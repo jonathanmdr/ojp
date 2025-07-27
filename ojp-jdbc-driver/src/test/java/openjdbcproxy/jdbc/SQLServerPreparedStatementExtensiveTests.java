@@ -32,7 +32,7 @@ public class SQLServerPreparedStatementExtensiveTests {
         Connection conn = DriverManager.getConnection(url, user, pwd);
         System.out.println("Testing SQL Server PreparedStatement basics for url -> " + url);
 
-        TestDBUtils.createBasicTestTable(conn, "sqlserver_ps_test", TestDBUtils.SqlSyntax.SQLSERVER);
+        TestDBUtils.createBasicTestTable(conn, "sqlserver_ps_test", TestDBUtils.SqlSyntax.SQLSERVER, true);
 
         // Test basic PreparedStatement operations
         PreparedStatement ps = conn.prepareStatement("INSERT INTO sqlserver_ps_test (id, name) VALUES (?, ?)");
@@ -120,13 +120,16 @@ public class SQLServerPreparedStatementExtensiveTests {
         Connection conn = DriverManager.getConnection(url, user, pwd);
         System.out.println("Testing SQL Server batch updates for url -> " + url);
 
-        TestDBUtils.createBasicTestTable(conn, "sqlserver_batch_test", TestDBUtils.SqlSyntax.SQLSERVER);
+        TestDBUtils.createBasicTestTable(conn, "sqlserver_batch_test", TestDBUtils.SqlSyntax.SQLSERVER, false);
+
+        Statement statement = conn.createStatement();
+        statement.execute("DELETE FROM sqlserver_batch_test");
 
         PreparedStatement ps = conn.prepareStatement("INSERT INTO sqlserver_batch_test (id, name) VALUES (?, ?)");
 
         // Add multiple batches
         for (int i = 1; i <= 5; i++) {
-            ps.setInt(1, i);
+            ps.setInt(1, i + 100);
             ps.setString(2, "Batch Item " + i);
             ps.addBatch();
         }
@@ -158,6 +161,7 @@ public class SQLServerPreparedStatementExtensiveTests {
         Connection conn = DriverManager.getConnection(url, user, pwd);
         System.out.println("Testing SQL Server null parameters for url -> " + url);
 
+        TestDBUtils.cleanupTestTables(conn, "sqlserver_null_param_test");
         TestDBUtils.createMultiTypeTestTable(conn, "sqlserver_null_param_test", TestDBUtils.SqlSyntax.SQLSERVER);
 
         PreparedStatement ps = conn.prepareStatement(
@@ -262,7 +266,9 @@ public class SQLServerPreparedStatementExtensiveTests {
         Connection conn = DriverManager.getConnection(url, user, pwd);
         System.out.println("Testing SQL Server UPDATE and DELETE for url -> " + url);
 
-        TestDBUtils.createBasicTestTable(conn, "sqlserver_update_test", TestDBUtils.SqlSyntax.SQLSERVER);
+        TestDBUtils.createBasicTestTable(conn, "sqlserver_update_test", TestDBUtils.SqlSyntax.SQLSERVER, false);
+        Statement statement = conn.createStatement();
+        statement.execute("DELETE FROM sqlserver_update_test");
 
         // Insert test data
         PreparedStatement psInsert = conn.prepareStatement("INSERT INTO sqlserver_update_test (id, name) VALUES (?, ?)");

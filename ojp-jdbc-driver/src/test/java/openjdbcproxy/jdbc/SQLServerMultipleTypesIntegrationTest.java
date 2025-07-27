@@ -76,7 +76,7 @@ public class SQLServerMultipleTypesIntegrationTest {
         Assert.assertEquals(255, resultSet.getInt(5)); // SQL Server TINYINT max value
         Assert.assertEquals(32767, resultSet.getInt(6));
         Assert.assertEquals(true, resultSet.getBoolean(7)); // SQL Server BIT
-        Assert.assertEquals(new BigDecimal(10), resultSet.getBigDecimal(8));
+        Assert.assertEquals(new BigDecimal("10.00"), resultSet.getBigDecimal(8));
         Assert.assertEquals(20.20f+"", ""+resultSet.getFloat(9));
         
         // SQL Server VARBINARY columns 
@@ -148,11 +148,11 @@ public class SQLServerMultipleTypesIntegrationTest {
         
         // Verify MONEY
         BigDecimal moneyValue = resultSet.getBigDecimal("money_col");
-        Assert.assertEquals(new BigDecimal("123.45"), moneyValue);
+        Assert.assertEquals(new BigDecimal("123.4500"), moneyValue);
         
         // Verify SMALLMONEY
         BigDecimal smallmoneyValue = resultSet.getBigDecimal("smallmoney_col");
-        Assert.assertEquals(new BigDecimal("67.89"), smallmoneyValue);
+        Assert.assertEquals(new BigDecimal("67.8900"), smallmoneyValue);
         
         // Verify UNIQUEIDENTIFIER was generated
         String guidValue = resultSet.getString("uniqueidentifier_col");
@@ -160,7 +160,7 @@ public class SQLServerMultipleTypesIntegrationTest {
         Assert.assertTrue(guidValue.length() > 30); // GUID format
         
         // Verify date/time types are not null
-        Assert.assertNotNull(resultSet.getTimestamp("datetimeoffset_col"));
+        Assert.assertNotNull(resultSet.getObject("datetimeoffset_col", java.time.OffsetDateTime.class));
         Assert.assertNotNull(resultSet.getTimestamp("datetime2_col"));
         Assert.assertNotNull(resultSet.getTimestamp("smalldatetime_col"));
 

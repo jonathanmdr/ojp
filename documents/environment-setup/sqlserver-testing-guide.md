@@ -47,6 +47,8 @@ ALTER ROLE db_datawriter ADD MEMBER testuser;
 GO
 ALTER ROLE db_ddladmin ADD MEMBER testuser;
 GO
+ALTER SERVER ROLE sysadmin ADD MEMBER testuser;
+GO
 ```
 
 ### 3. SQL Server JDBC Driver

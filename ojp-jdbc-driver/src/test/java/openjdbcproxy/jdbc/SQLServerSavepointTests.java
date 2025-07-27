@@ -42,7 +42,7 @@ public class SQLServerSavepointTests {
             return;
         }
 
-        TestDBUtils.createBasicTestTable(conn, "sqlserver_savepoint_test", TestDBUtils.SqlSyntax.SQLSERVER);
+        TestDBUtils.createBasicTestTable(conn, "sqlserver_savepoint_test", TestDBUtils.SqlSyntax.SQLSERVER, false);
 
         conn.setAutoCommit(false);
 
@@ -116,7 +116,7 @@ public class SQLServerSavepointTests {
             return;
         }
 
-        TestDBUtils.createBasicTestTable(conn, "sqlserver_nested_savepoint_test", TestDBUtils.SqlSyntax.SQLSERVER);
+        TestDBUtils.createBasicTestTable(conn, "sqlserver_nested_savepoint_test", TestDBUtils.SqlSyntax.SQLSERVER, false);
 
         conn.setAutoCommit(false);
 
@@ -198,7 +198,7 @@ public class SQLServerSavepointTests {
             return;
         }
 
-        TestDBUtils.createBasicTestTable(conn, "sqlserver_savepoint_release_test", TestDBUtils.SqlSyntax.SQLSERVER);
+        TestDBUtils.createBasicTestTable(conn, "sqlserver_savepoint_release_test", TestDBUtils.SqlSyntax.SQLSERVER, false);
 
         conn.setAutoCommit(false);
 
@@ -261,7 +261,7 @@ public class SQLServerSavepointTests {
             return;
         }
 
-        TestDBUtils.createBasicTestTable(conn, "sqlserver_savepoint_batch_test", TestDBUtils.SqlSyntax.SQLSERVER);
+        TestDBUtils.createBasicTestTable(conn, "sqlserver_savepoint_batch_test", TestDBUtils.SqlSyntax.SQLSERVER, false);
 
         conn.setAutoCommit(false);
 
@@ -332,7 +332,7 @@ public class SQLServerSavepointTests {
             return;
         }
 
-        TestDBUtils.createBasicTestTable(conn, "sqlserver_savepoint_exception_test", TestDBUtils.SqlSyntax.SQLSERVER);
+        TestDBUtils.createBasicTestTable(conn, "sqlserver_savepoint_exception_test", TestDBUtils.SqlSyntax.SQLSERVER, false);
 
         conn.setAutoCommit(false);
 

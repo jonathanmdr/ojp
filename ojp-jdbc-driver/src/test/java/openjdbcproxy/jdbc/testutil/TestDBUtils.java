@@ -35,7 +35,7 @@ public class TestDBUtils {
      * @param sqlSyntax The SQL syntax to use (H2, POSTGRES, MYSQL, ORACLE, or SQLSERVER)
      * @throws SQLException if table creation fails
      */
-    public static void createBasicTestTable(Connection connection, String tableName, SqlSyntax sqlSyntax) throws SQLException {
+    public static void createBasicTestTable(Connection connection, String tableName, SqlSyntax sqlSyntax, boolean createDefalutData) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             // Drop table if exists with database-specific syntax
             if (sqlSyntax == SqlSyntax.ORACLE) {
@@ -65,8 +65,10 @@ public class TestDBUtils {
             statement.execute(createTableSql);
 
             // Insert initial test data
-            statement.execute("INSERT INTO " + tableName + " (id, name) VALUES (1, 'Alice')");
-            statement.execute("INSERT INTO " + tableName + " (id, name) VALUES (2, 'Bob')");
+            if (createDefalutData) {
+                statement.execute("INSERT INTO " + tableName + " (id, name) VALUES (1, 'Alice')");
+                statement.execute("INSERT INTO " + tableName + " (id, name) VALUES (2, 'Bob')");
+            }
         }
     }
 
@@ -195,13 +197,13 @@ public class TestDBUtils {
                 // SQL Server syntax - SQL Server-specific types and adjustments
                 createTableSql = "CREATE TABLE " + tableName + "(" +
                         " val_int INT NOT NULL," +
-                        " val_varchar NVARCHAR(50) NOT NULL," +  // SQL Server uses NVARCHAR for Unicode
+                        " val_varchar NVARCHAR(50)," +  // SQL Server uses NVARCHAR for Unicode
                         " val_double_precision FLOAT," +  // SQL Server uses FLOAT for double precision
                         " val_bigint BIGINT," +
                         " val_tinyint TINYINT," +
                         " val_smallint SMALLINT," +
                         " val_boolean BIT," +  // SQL Server uses BIT for boolean
-                        " val_decimal DECIMAL," +
+                        " val_decimal DECIMAL(10, 2)," +
                         " val_float REAL," +  // SQL Server uses REAL for single precision
                         " val_byte VARBINARY(1)," +  // SQL Server uses VARBINARY for binary data
                         " val_binary VARBINARY(4)," +

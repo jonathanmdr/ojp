@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
 import java.sql.*;
+import java.time.OffsetDateTime;
 
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
@@ -31,7 +32,7 @@ public class SQLServerResultSetTest {
         Connection conn = DriverManager.getConnection(url, user, pwd);
         System.out.println("Testing SQL Server basic ResultSet operations for url -> " + url);
 
-        TestDBUtils.createBasicTestTable(conn, "sqlserver_rs_basic_test", TestDBUtils.SqlSyntax.SQLSERVER);
+        TestDBUtils.createBasicTestTable(conn, "sqlserver_rs_basic_test", TestDBUtils.SqlSyntax.SQLSERVER, false);
 
         // Insert test data
         PreparedStatement psInsert = conn.prepareStatement(
@@ -72,7 +73,7 @@ public class SQLServerResultSetTest {
         Connection conn = DriverManager.getConnection(url, user, pwd);
         System.out.println("Testing SQL Server scrollable ResultSet for url -> " + url);
 
-        TestDBUtils.createBasicTestTable(conn, "sqlserver_rs_scroll_test", TestDBUtils.SqlSyntax.SQLSERVER);
+        TestDBUtils.createBasicTestTable(conn, "sqlserver_rs_scroll_test", TestDBUtils.SqlSyntax.SQLSERVER, false);
 
         // Insert test data
         PreparedStatement psInsert = conn.prepareStatement(
@@ -153,7 +154,7 @@ public class SQLServerResultSetTest {
         Assert.assertEquals("Type Test", rs.getString(2));
         Assert.assertEquals(3.14159, rs.getDouble(3), 0.00001);
         Assert.assertEquals(9876543210L, rs.getLong(4));
-        Assert.assertEquals(255, rs.getByte(5));
+        Assert.assertEquals((byte) 255, rs.getByte(5) );
         Assert.assertEquals(32000, rs.getShort(6));
         Assert.assertTrue(rs.getBoolean(7));
         Assert.assertEquals(new java.math.BigDecimal("123.45"), rs.getBigDecimal(8));
@@ -163,7 +164,7 @@ public class SQLServerResultSetTest {
         Assert.assertEquals("Type Test", rs.getString("val_varchar"));
         Assert.assertEquals(3.14159, rs.getDouble("val_double_precision"), 0.00001);
         Assert.assertEquals(9876543210L, rs.getLong("val_bigint"));
-        Assert.assertEquals(255, rs.getByte("val_tinyint"));
+        Assert.assertEquals((byte) 255, rs.getByte("val_tinyint"));
         Assert.assertEquals(32000, rs.getShort("val_smallint"));
         Assert.assertTrue(rs.getBoolean("val_boolean"));
         Assert.assertEquals(new java.math.BigDecimal("123.45"), rs.getBigDecimal("val_decimal"));
@@ -328,7 +329,7 @@ public class SQLServerResultSetTest {
         Assert.assertNotNull(retrievedTimestamp);
         Assert.assertTrue(retrievedTimestamp.toString().contains("2025-01-15"));
 
-        Timestamp retrievedOffset = rs.getTimestamp("datetimeoffset_col");
+        OffsetDateTime retrievedOffset = rs.getObject("datetimeoffset_col", OffsetDateTime.class);
         Assert.assertNotNull(retrievedOffset);
         Assert.assertTrue(retrievedOffset.toString().contains("2025-01-15"));
 

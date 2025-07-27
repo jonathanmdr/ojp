@@ -88,7 +88,7 @@ public class PostgresConnectionExtensiveTests {
         this.setUp(driverClass, url, user, password);
         
         // PostgreSQL DDL statements are transactional, so we need to create and commit the table first
-        TestDBUtils.createBasicTestTable(connection, "postgres_connection_test", TestDBUtils.SqlSyntax.POSTGRES);
+        TestDBUtils.createBasicTestTable(connection, "postgres_connection_test", TestDBUtils.SqlSyntax.POSTGRES, true);
         connection.commit(); // Ensure table creation is committed
         
         connection.setAutoCommit(false);
@@ -112,7 +112,7 @@ public class PostgresConnectionExtensiveTests {
         this.setUp(driverClass, url, user, password);
         
         // PostgreSQL DDL statements are transactional, so we need to create and commit the table first
-        TestDBUtils.createBasicTestTable(connection, "postgres_connection_test", TestDBUtils.SqlSyntax.POSTGRES);
+        TestDBUtils.createBasicTestTable(connection, "postgres_connection_test", TestDBUtils.SqlSyntax.POSTGRES, true);
         connection.commit(); // Ensure table creation is committed
         
         connection.setAutoCommit(false);

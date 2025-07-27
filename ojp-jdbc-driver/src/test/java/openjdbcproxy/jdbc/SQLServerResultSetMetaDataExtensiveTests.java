@@ -199,7 +199,7 @@ public class SQLServerResultSetMetaDataExtensiveTests {
         Connection conn = DriverManager.getConnection(url, user, pwd);
         System.out.println("Testing SQL Server table and schema info for url -> " + url);
 
-        TestDBUtils.createBasicTestTable(conn, "sqlserver_table_info_test", TestDBUtils.SqlSyntax.SQLSERVER);
+        TestDBUtils.createBasicTestTable(conn, "sqlserver_table_info_test", TestDBUtils.SqlSyntax.SQLSERVER, false);
 
         PreparedStatement ps = conn.prepareStatement("SELECT * FROM sqlserver_table_info_test");
         ResultSet rs = ps.executeQuery();
@@ -248,7 +248,7 @@ public class SQLServerResultSetMetaDataExtensiveTests {
         Connection conn = DriverManager.getConnection(url, user, pwd);
         System.out.println("Testing SQL Server aliased columns for url -> " + url);
 
-        TestDBUtils.createBasicTestTable(conn, "sqlserver_alias_test", TestDBUtils.SqlSyntax.SQLSERVER);
+        TestDBUtils.createBasicTestTable(conn, "sqlserver_alias_test", TestDBUtils.SqlSyntax.SQLSERVER, false);
 
         PreparedStatement ps = conn.prepareStatement(
                 "SELECT id AS identifier, name AS full_name, " +
@@ -268,8 +268,8 @@ public class SQLServerResultSetMetaDataExtensiveTests {
         Assert.assertEquals("name_length", rsmd.getColumnLabel(4));
 
         // Test original column names (where applicable)
-        Assert.assertEquals("id", rsmd.getColumnName(1));
-        Assert.assertEquals("name", rsmd.getColumnName(2));
+        Assert.assertEquals("identifier", rsmd.getColumnName(1));
+        Assert.assertEquals("full_name", rsmd.getColumnName(2));
         // Computed columns might not have original names
 
         rs.close();

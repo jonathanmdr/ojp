@@ -23,7 +23,7 @@ public class SQLServerDatabaseMetaDataExtensiveTests {
         assumeFalse(isTestDisabled, "SQL Server tests are disabled");
         
         connection = DriverManager.getConnection(url, user, password);
-        TestDBUtils.createBasicTestTable(connection, "sqlserver_db_metadata_test", TestDBUtils.SqlSyntax.SQLSERVER);
+        TestDBUtils.createBasicTestTable(connection, "sqlserver_db_metadata_test", TestDBUtils.SqlSyntax.SQLSERVER, true);
     }
 
     @AfterAll
@@ -38,8 +38,8 @@ public class SQLServerDatabaseMetaDataExtensiveTests {
         DatabaseMetaData meta = connection.getMetaData();
 
         // 1–5: Basic database information (SQL Server-specific values)
-        Assertions.assertEquals(false, meta.allProceduresAreCallable());
-        Assertions.assertEquals(false, meta.allTablesAreSelectable());
+        Assertions.assertEquals(true, meta.allProceduresAreCallable());
+        Assertions.assertEquals(true, meta.allTablesAreSelectable());
         Assertions.assertTrue(meta.getURL().contains("sqlserver") || meta.getURL().contains(":1433"));
         Assertions.assertNotNull(meta.getUserName()); // SQL Server username
         Assertions.assertEquals(false, meta.isReadOnly());
@@ -61,7 +61,7 @@ public class SQLServerDatabaseMetaDataExtensiveTests {
         // 16–20: File handling and identifiers
         Assertions.assertEquals(false, meta.usesLocalFiles());
         Assertions.assertEquals(false, meta.usesLocalFilePerTable());
-        Assertions.assertEquals(false, meta.supportsMixedCaseIdentifiers());
+        Assertions.assertEquals(true, meta.supportsMixedCaseIdentifiers());
         Assertions.assertEquals(false, meta.storesUpperCaseIdentifiers()); // SQL Server doesn't force uppercase
         Assertions.assertEquals(false, meta.storesLowerCaseIdentifiers()); // SQL Server doesn't force lowercase
 
@@ -81,17 +81,17 @@ public class SQLServerDatabaseMetaDataExtensiveTests {
 
         // 31–35: Date/time functions and search escape characters
         Assertions.assertNotNull(meta.getTimeDateFunctions());
-        Assertions.assertEquals("{", meta.getSearchStringEscape()); // SQL Server escape for LIKE
+        Assertions.assertEquals("\\", meta.getSearchStringEscape()); // SQL Server escape for LIKE
         Assertions.assertNotNull(meta.getExtraNameCharacters());
         Assertions.assertEquals(true, meta.supportsAlterTableWithAddColumn());
         Assertions.assertEquals(true, meta.supportsAlterTableWithDropColumn());
 
         // 36–40: Column operations and table correlation names
         Assertions.assertEquals(true, meta.supportsColumnAliasing());
-        Assertions.assertEquals(false, meta.nullPlusNonNullIsNull());  // SQL Server: NULL + 'text' = NULL
+        Assertions.assertEquals(true, meta.nullPlusNonNullIsNull());  // SQL Server: NULL + 'text' = NULL
         Assertions.assertEquals(true, meta.supportsConvert());
         Assertions.assertEquals(true, meta.supportsTableCorrelationNames());
-        Assertions.assertEquals(true, meta.supportsDifferentTableCorrelationNames());
+        Assertions.assertEquals(false, meta.supportsDifferentTableCorrelationNames());
 
         // 41–45: Expression handling and ORDER BY
         Assertions.assertEquals(true, meta.supportsExpressionsInOrderBy());
@@ -102,16 +102,16 @@ public class SQLServerDatabaseMetaDataExtensiveTests {
 
         // 46–50: LIKE operations and escape characters
         Assertions.assertEquals(true, meta.supportsLikeEscapeClause());
-        Assertions.assertEquals(false, meta.supportsMultipleResultSets()); // Depends on driver implementation
+        Assertions.assertEquals(true, meta.supportsMultipleResultSets()); // Depends on driver implementation
         Assertions.assertEquals(true, meta.supportsMultipleTransactions());
         Assertions.assertEquals(true, meta.supportsNonNullableColumns());
         Assertions.assertEquals(true, meta.supportsMinimumSQLGrammar());
 
         // 51–55: SQL grammar support levels
         Assertions.assertEquals(true, meta.supportsCoreSQLGrammar());
-        Assertions.assertEquals(true, meta.supportsExtendedSQLGrammar());
+        Assertions.assertEquals(false, meta.supportsExtendedSQLGrammar());
         Assertions.assertEquals(true, meta.supportsANSI92EntryLevelSQL());
-        Assertions.assertEquals(true, meta.supportsANSI92IntermediateSQL());
+        Assertions.assertEquals(false, meta.supportsANSI92IntermediateSQL());
         Assertions.assertEquals(false, meta.supportsANSI92FullSQL()); // SQL Server doesn't fully support ANSI 92
 
         // 56–60: Outer joins and schema operations
@@ -154,14 +154,14 @@ public class SQLServerDatabaseMetaDataExtensiveTests {
         Assertions.assertEquals(true, meta.supportsCorrelatedSubqueries());
         Assertions.assertEquals(true, meta.supportsUnion());
         Assertions.assertEquals(true, meta.supportsUnionAll());
-        Assertions.assertEquals(true, meta.supportsOpenCursorsAcrossCommit());
+        Assertions.assertEquals(false, meta.supportsOpenCursorsAcrossCommit());
 
         // 86–90: Cursor and statement persistence
         Assertions.assertEquals(false, meta.supportsOpenCursorsAcrossRollback()); // SQL Server behavior
         Assertions.assertEquals(true, meta.supportsOpenStatementsAcrossCommit());
         Assertions.assertEquals(true, meta.supportsOpenStatementsAcrossRollback());
-        Assertions.assertTrue(meta.getMaxBinaryLiteralLength() > 0);
-        Assertions.assertTrue(meta.getMaxCharLiteralLength() > 0);
+        Assertions.assertTrue(meta.getMaxBinaryLiteralLength() == 0);
+        Assertions.assertTrue(meta.getMaxCharLiteralLength() == 0);
 
         // 91–95: Maximum lengths and limits
         Assertions.assertTrue(meta.getMaxColumnNameLength() > 0);

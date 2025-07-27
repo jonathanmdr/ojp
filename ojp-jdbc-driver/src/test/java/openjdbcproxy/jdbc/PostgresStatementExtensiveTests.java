@@ -40,7 +40,7 @@ public class PostgresStatementExtensiveTests {
         connection = DriverManager.getConnection(url, user, password);
         statement = connection.createStatement();
 
-        TestDBUtils.createBasicTestTable(connection, "postgres_statement_test", TestDBUtils.SqlSyntax.POSTGRES);
+        TestDBUtils.createBasicTestTable(connection, "postgres_statement_test", TestDBUtils.SqlSyntax.POSTGRES, true);
     }
 
     @AfterEach

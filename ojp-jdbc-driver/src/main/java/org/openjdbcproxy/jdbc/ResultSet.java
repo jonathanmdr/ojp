@@ -172,6 +172,8 @@ public class ResultSet extends RemoteProxyResultSet {
             return 0;
         } else if (lastValueRead instanceof byte[]) {
             return ((byte[]) lastValueRead)[0];
+        } else if (lastValueRead instanceof Short) {
+            return (byte)(short) lastValueRead;
         }
         return (byte) lastValueRead;
     }

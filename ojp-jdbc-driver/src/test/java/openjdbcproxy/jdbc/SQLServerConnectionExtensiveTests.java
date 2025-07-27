@@ -43,7 +43,7 @@ public class SQLServerConnectionExtensiveTests {
             // Test basic SQL Server functionality
             try (Statement statement = connection.createStatement()) {
                 // Create a simple test table
-                TestDBUtils.createBasicTestTable(connection, "sqlserver_test_table", TestDBUtils.SqlSyntax.SQLSERVER);
+                TestDBUtils.createBasicTestTable(connection, "sqlserver_test_table", TestDBUtils.SqlSyntax.SQLSERVER, true);
                 
                 // Verify data was inserted correctly
                 try (ResultSet rs = statement.executeQuery("SELECT COUNT(*) FROM sqlserver_test_table")) {
@@ -190,12 +190,13 @@ public class SQLServerConnectionExtensiveTests {
         log.info("Testing SQL Server transaction handling with URL: {}", url);
         
         try (Connection connection = DriverManager.getConnection(url, user, pwd)) {
-            connection.setAutoCommit(false);
             
             try (Statement statement = connection.createStatement()) {
                 // Create test table
-                TestDBUtils.createBasicTestTable(connection, "sqlserver_transaction_test", TestDBUtils.SqlSyntax.SQLSERVER);
-                
+                TestDBUtils.createBasicTestTable(connection, "sqlserver_transaction_test", TestDBUtils.SqlSyntax.SQLSERVER, true);
+
+                connection.setAutoCommit(false);//Start transaction.
+
                 // Insert data in transaction
                 statement.execute("INSERT INTO sqlserver_transaction_test (id, name) VALUES (10, N'Transaction Test')");
                 
