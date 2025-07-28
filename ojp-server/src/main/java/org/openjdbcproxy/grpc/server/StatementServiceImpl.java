@@ -35,6 +35,7 @@ import org.openjdbcproxy.constants.CommonConstants;
 import org.openjdbcproxy.grpc.dto.OpQueryResult;
 import org.openjdbcproxy.grpc.dto.Parameter;
 import org.openjdbcproxy.grpc.server.utils.DateTimeUtils;
+import org.openjdbcproxy.grpc.server.utils.DbUrlUtils;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -103,6 +104,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             Class.forName(POSTGRES_DRIVER_CLASS);
             Class.forName(MYSQL_DRIVER_CLASS);
             Class.forName(MARIADB_DRIVER_CLASS);
+            //TODO remove below before merging to master
+            //Class.forName("oracle.jdbc.OracleDriver");
+            //Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -132,6 +136,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         responseObserver.onNext(SessionInfo.newBuilder()
                 .setConnHash(connHash)
                 .setClientUUID(connectionDetails.getClientUUID())
+                .setDbName(DbUrlUtils.resolveDbName(connectionDetails.getUrl()))
                 .build()
         );
         responseObserver.onCompleted();
@@ -372,6 +377,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         return new ServerCallStreamObserver<>() {
             private SessionInfo sessionInfo;
             private String lobUUID;
+            private String stmtUUID;
             private LobType lobType;
             private LobDataBlocksInputStream lobDataBlocksInputStream = null;
             private final AtomicBoolean isFirstBlock = new AtomicBoolean(true);
@@ -463,20 +469,20 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                                 PreparedStatement ps;
                                 String preparedStatementUUID = (String) metadata.get(CommonConstants.PREPARED_STATEMENT_UUID_BINARY_STREAM);
                                 if (StringUtils.isNotEmpty(preparedStatementUUID)) {
-                                    lobUUID = preparedStatementUUID;//TODO probably would be more readable to have a separate UUID, review this later, reads will have actual lob ids referring to inputstreams saved in session
-                                    ps = sessionManager.getPreparedStatement(dto.getSession(), preparedStatementUUID);
+                                    stmtUUID = preparedStatementUUID;
                                 } else {
                                     ps = dto.getConnection().prepareStatement(sql);
-                                    lobUUID = sessionManager.registerPreparedStatement(dto.getSession(), ps);
+                                    stmtUUID = sessionManager.registerPreparedStatement(dto.getSession(), ps);
                                 }
-                                //Need to first send the ref to the client before adding the stream as a parameter
-                                sendLobRef(dto, lobDataBlock.getData().toByteArray().length);
 
                                 //Add bite stream as parameter to the prepared statement
                                 lobDataBlocksInputStream = new LobDataBlocksInputStream(lobDataBlock);
+                                this.lobUUID = lobDataBlocksInputStream.getUuid();
                                 //Only needs to be registered so we can wait it to receive all bytes before performing the update.
                                 sessionManager.registerLob(dto.getSession(), lobDataBlocksInputStream, lobDataBlocksInputStream.getUuid());
                                 sessionManager.registerAttr(dto.getSession(), lobDataBlocksInputStream.getUuid(), metadata);
+                                //Need to first send the ref to the client before adding the stream as a parameter
+                                sendLobRef(dto, lobDataBlock.getData().toByteArray().length);
                             } else {
                                 lobDataBlocksInputStream.addBlock(lobDataBlock);
                             }
@@ -501,13 +507,15 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 log.info("Returning lob ref {}", this.lobUUID);
                 //Send one flag response to indicate that the Blob has been created successfully and the first
                 // block fo data has been written successfully.
-                responseObserver.onNext(LobReference.newBuilder()
+                LobReference.Builder lobRefBuilder = LobReference.newBuilder()
                         .setSession(dto.getSession())
                         .setUuid(this.lobUUID)
                         .setLobType(this.lobType)
-                        .setBytesWritten(bytesWritten)
-                        .build()
-                );
+                        .setBytesWritten(bytesWritten);
+                if (this.stmtUUID != null) {
+                    lobRefBuilder.setStmtUUID(this.stmtUUID);
+                }
+                responseObserver.onNext(lobRefBuilder.build());
                 isFirstBlock.set(false);
             }
 
@@ -529,14 +537,17 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                     });
                 }
 
-                //Send the final Lob reference with total count of written bytes.
-                responseObserver.onNext(LobReference.newBuilder()
+                LobReference.Builder lobRefBuilder = LobReference.newBuilder()
                         .setSession(this.sessionInfo)
                         .setUuid(this.lobUUID)
                         .setLobType(this.lobType)
-                        .setBytesWritten(this.countBytesWritten.get())
-                        .build()
-                );
+                        .setBytesWritten(this.countBytesWritten.get());
+                if (this.stmtUUID != null) {
+                    lobRefBuilder.setStmtUUID(this.stmtUUID);
+                }
+
+                //Send the final Lob reference with total count of written bytes.
+                responseObserver.onNext(lobRefBuilder.build());
                 responseObserver.onCompleted();
             }
         };
@@ -656,7 +667,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 Object lobObj = sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
                 if (lobObj instanceof Blob) {
                     inputStream = this.inputStreamFromBlob(sessionManager, lobReference, request, readLobContextBuilder);
-                } else {
+                } else if (lobObj instanceof InputStream) {
                     inputStream = sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
                     inputStream.reset();//Might be a second read of the same stream, this guarantees that the position is at the start.
                 }

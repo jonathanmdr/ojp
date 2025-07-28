@@ -2,6 +2,7 @@ package org.openjdbcproxy.jdbc;
 
 import com.google.common.primitives.Bytes;
 import com.google.protobuf.ByteString;
+import com.openjdbcproxy.grpc.DbName;
 import com.openjdbcproxy.grpc.LobDataBlock;
 import com.openjdbcproxy.grpc.LobReference;
 import com.openjdbcproxy.grpc.LobType;
@@ -65,7 +66,7 @@ public class LobServiceImpl implements LobService {
                 byte[] bytesRead;
                 if (nextBytes.length > 0) {
                     //H2 does not support multiple writes to the same blob. All is written at once. H2 error = Feature not supported: "Allocate a new object to set its value." [50100-232]
-                    if (DbType.H2.equals(connection.getDbType())) {
+                    if (DbName.H2.equals(connection.getDbName())) {
                         bytesRead = Bytes.concat(nextBytes, bis.readAllBytes());
                     } else {
                         //Concatenate the one byte already read in the hasNext method

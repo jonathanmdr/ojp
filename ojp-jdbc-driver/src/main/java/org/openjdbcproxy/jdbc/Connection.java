@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import com.openjdbcproxy.grpc.CallResourceRequest;
 import com.openjdbcproxy.grpc.CallResourceResponse;
 import com.openjdbcproxy.grpc.CallType;
+import com.openjdbcproxy.grpc.DbName;
 import com.openjdbcproxy.grpc.ResourceType;
 import com.openjdbcproxy.grpc.SessionInfo;
 import com.openjdbcproxy.grpc.TargetCall;
@@ -40,16 +41,16 @@ public class Connection implements java.sql.Connection {
     private SessionInfo session;
     private final StatementService statementService;
     @Getter
-    private final DbType dbType;
+    private final DbName dbName;
     private boolean autoCommit = true;
     private boolean readOnly = false;
     private boolean closed;
 
-    public Connection(SessionInfo session, StatementService statementService, DbType dbType) {
+    public Connection(SessionInfo session, StatementService statementService, DbName dbName) {
         this.session = session;
         this.statementService = statementService;
         this.closed = false;
-        this.dbType = dbType;
+        this.dbName = dbName;
     }
 
     @Override
@@ -145,7 +146,7 @@ public class Connection implements java.sql.Connection {
     @Override
     public void setReadOnly(boolean readOnly) throws SQLException {
         log.debug("setReadOnly: {}", readOnly);
-        if (!DbType.H2.equals(this.dbType)) {
+        if (!DbName.H2.equals(this.dbName)) {
             this.readOnly = readOnly;
         }
     }
@@ -406,10 +407,10 @@ public class Connection implements java.sql.Connection {
     @Override
     public Array createArrayOf(String typeName, Object[] elements) throws SQLException {
         log.debug("createArrayOf: {}, <Object[]>", typeName);
-        if (DbType.MYSQL.equals(this.dbType)) {
+        if (DbName.MYSQL.equals(this.dbName)) {
             throw new SQLFeatureNotSupportedException("MySql does not support creating array of.");
         }
-        if (DbType.MARIADB.equals(this.dbType)) {
+        if (DbName.MARIADB.equals(this.dbName)) {
             throw new SQLFeatureNotSupportedException("MariaDB does not support creating array of.");
         }
         return new org.openjdbcproxy.jdbc.Array();

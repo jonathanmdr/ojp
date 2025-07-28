@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import com.openjdbcproxy.grpc.CallResourceRequest;
 import com.openjdbcproxy.grpc.CallResourceResponse;
 import com.openjdbcproxy.grpc.CallType;
+import com.openjdbcproxy.grpc.DbName;
 import com.openjdbcproxy.grpc.LobReference;
 import com.openjdbcproxy.grpc.LobType;
 import com.openjdbcproxy.grpc.OpResult;
@@ -414,7 +415,7 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
     public void setRef(int parameterIndex, Ref x) throws SQLException {
         log.debug("setRef: {}, {}", parameterIndex, x);
         this.checkClosed();
-        if (DbType.H2.equals(this.getConnection().getDbType())) {
+        if (DbName.H2.equals(this.getConnection().getDbName())) {
             throw new SQLException("Not supported.");
         }
         this.paramsMap.put(parameterIndex,
@@ -522,7 +523,7 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
     public void setURL(int parameterIndex, URL x) throws SQLException {
         log.debug("setURL: {}, {}", parameterIndex, x);
         this.checkClosed();
-        if (DbType.H2.equals(this.getConnection().getDbType())) {
+        if (DbName.H2.equals(this.getConnection().getDbName())) {
             throw new SQLException("Not supported.");
         }
         this.paramsMap.put(parameterIndex,
@@ -544,7 +545,7 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
     public void setRowId(int parameterIndex, RowId x) throws SQLException {
         log.debug("setRowId: {}, {}", parameterIndex, x);
         this.checkClosed();
-        if (DbType.H2.equals(this.getConnection().getDbType())) {
+        if (DbName.H2.equals(this.getConnection().getDbName())) {
             throw new SQLException("Not supported.");
         }
         this.paramsMap.put(parameterIndex,
@@ -709,7 +710,8 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
             metadata.put(CommonConstants.PREPARED_STATEMENT_BINARY_STREAM_SQL, this.sql);
             metadata.put(CommonConstants.PREPARED_STATEMENT_UUID_BINARY_STREAM, this.getStatementUUID());
             LobReference lobReference = binaryStream.sendBinaryStream(LobType.LT_BINARY_STREAM, is, metadata);
-            this.setStatementUUID(lobReference.getUuid());//Lob reference UUID for binary streams is the prepared statement uuid.
+            this.setStatementUUID(lobReference.getStmtUUID());
+            binaryStream.getLobReference().set(lobReference);
         } catch (RuntimeException e) {
             throw new SQLException("Unable to write binary stream: " + e.getMessage(), e);
         }
