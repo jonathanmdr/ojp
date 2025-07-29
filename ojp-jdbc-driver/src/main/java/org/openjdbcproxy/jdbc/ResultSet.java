@@ -11,7 +11,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.openjdbcproxy.constants.CommonConstants;
 import org.openjdbcproxy.grpc.client.StatementService;
 import org.openjdbcproxy.grpc.dto.OpQueryResult;
+import org.openjdbcproxy.jdbc.sqlserver.SqlServerSerialBlob;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -386,6 +388,8 @@ public class ResultSet extends RemoteProxyResultSet {
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return null;
+        } else if (lastValueRead instanceof byte[]) {// Only used by SQL server
+            return new ByteArrayInputStream((byte[]) lastValueRead);
         }
         Object objUUID = lastValueRead;
         String lobRefUUID = String.valueOf(objUUID);
@@ -1322,6 +1326,8 @@ public class ResultSet extends RemoteProxyResultSet {
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return null;
+        } else if (lastValueRead instanceof byte[]) { //Only for SQL server
+            return new SqlServerSerialBlob((byte[]) lastValueRead);
         }
         Object objUUID = lastValueRead;
         String blobRefUUID = String.valueOf(objUUID);

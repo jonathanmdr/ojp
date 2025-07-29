@@ -28,7 +28,9 @@ docker logs ojp-sqlserver
 Connect to the SQL Server instance and create a test database:
 
 ```bash
-docker exec -it ojp-sqlserver /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P TestPassword123!
+docker run -it --network container:ojp-sqlserver mcr.microsoft.com/mssql-tools /bin/bash
+
+sqlcmd -S localhost -U sa -P TestPassword123!
 ```
 
 Then run:

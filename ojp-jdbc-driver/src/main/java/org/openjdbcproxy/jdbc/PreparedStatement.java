@@ -625,7 +625,7 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
         log.debug("setBlob: {}, <InputStream>, {}", parameterIndex, length);
         this.checkClosed();
         try {
-            org.openjdbcproxy.jdbc.Blob blob = (org.openjdbcproxy.jdbc.Blob) this.getConnection().createBlob();
+            org.openjdbcproxy.jdbc.Blob blob = this.getConnection().createBlob();
             OutputStream os = blob.setBinaryStream(1);
             int byteRead = inputStream.read();
             int writtenLength = 0;

@@ -65,21 +65,22 @@ jobs:
         ports:
           - 5432:5432
 
-      oracle:
-        image: gvenzl/oracle-xe:21-slim
-        env:
-          ORACLE_PASSWORD: testpassword
-          APP_USER: testuser
-          APP_USER_PASSWORD: testpassword
-        options: >-
-          --name ojp-oracle
-          --health-cmd "echo 'SELECT 1 FROM DUAL;' | sqlplus -s system/testpassword@localhost/XEPDB1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 1521:1521
-      # maybe put proprietary DBs in separated workflows, seem to be insufficient memory in github to run all at once
+      #TODO maybe put proprietary DBs in separated workflows, seem to be insufficient memory in github to run all at once
+      #oracle:
+      #  image: gvenzl/oracle-xe:21-slim
+      #  env:
+      #    ORACLE_PASSWORD: testpassword
+      #    APP_USER: testuser
+      #    APP_USER_PASSWORD: testpassword
+      #  options: >-
+      #    --name ojp-oracle
+      #    --health-cmd "echo 'SELECT 1 FROM DUAL;' | sqlplus -s system/testpassword@localhost/XEPDB1"
+      #    --health-interval 10s
+      #    --health-timeout 5s
+      #    --health-retries 5
+      #  ports:
+      #    - 1521:1521
+
       #sqlserver:
       #  image: mcr.microsoft.com/mssql/server:2022-latest
       #  env:

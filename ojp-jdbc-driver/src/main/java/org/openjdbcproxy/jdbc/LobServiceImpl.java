@@ -51,10 +51,18 @@ public class LobServiceImpl implements LobService {
         Iterator<LobDataBlock> itLobDataBlocks = new Iterator<LobDataBlock>() {
 
             byte[] nextBytes = new byte[]{};
+            boolean startBlockSent = false;
 
             @SneakyThrows
             @Override
             public synchronized boolean hasNext() {
+                //TODO remove if not needed
+                if (DbName.H2.equals(connection.getDbName())) {
+                    startBlockSent = true; //H2 does not support partial binary streams
+                }
+                if (!startBlockSent) {
+                    return  true;
+                }
                 //Read one next byte to know if the stream of bytes finished.
                 nextBytes = bis.readNBytes(1);
                 return nextBytes.length > 0;
@@ -63,6 +71,21 @@ public class LobServiceImpl implements LobService {
             @SneakyThrows
             @Override
             public synchronized LobDataBlock next() {
+                //TODO remove if not needed
+                if (DbName.H2.equals(connection.getDbName())) {
+                    startBlockSent = true; //H2 does not support partial binary streams
+                }
+                // A start block with empty bytes is always sent for cases where an empty array is set.
+                if (!startBlockSent) {
+                    startBlockSent = true;
+                    return LobDataBlock.newBuilder()
+                            .setLobType(lobType)
+                            .setSession(connection.getSession())
+                            .setPosition(1)
+                            .setData(ByteString.copyFrom(new byte[0]))
+                            .setMetadata(ByteString.copyFrom(metadataBytes))
+                            .build();
+                }
                 byte[] bytesRead;
                 if (nextBytes.length > 0) {
                     //H2 does not support multiple writes to the same blob. All is written at once. H2 error = Feature not supported: "Allocate a new object to set its value." [50100-232]

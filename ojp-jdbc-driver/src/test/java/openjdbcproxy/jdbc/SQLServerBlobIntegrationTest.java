@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
  * SQL Server-specific BLOB-like integration tests.
  * Tests SQL Server VARBINARY(MAX) functionality (equivalent to BLOB).
  */
-@Disabled //TODO fix it, hanging forever
 public class SQLServerBlobIntegrationTest {
 
     private static boolean isTestDisabled;

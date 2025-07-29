@@ -12,7 +12,6 @@ import com.openjdbcproxy.grpc.ResourceType;
 import com.openjdbcproxy.grpc.TargetCall;
 import io.grpc.StatusRuntimeException;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.openjdbcproxy.grpc.client.StatementService;

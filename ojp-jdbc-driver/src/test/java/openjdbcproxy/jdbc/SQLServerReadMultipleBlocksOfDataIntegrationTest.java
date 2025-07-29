@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
  * SQL Server-specific tests for reading multiple blocks of data.
  * Tests SQL Server-specific large result set handling and streaming capabilities.
  */
-@Disabled //TODO fix hanging forever when storing byte stream
 public class SQLServerReadMultipleBlocksOfDataIntegrationTest {
 
     private static boolean isTestDisabled;

@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
  * SQL Server-specific binary stream integration tests.
  * Tests SQL Server-specific binary data types (VARBINARY, IMAGE) and stream handling.
  */
-@Disabled //TODO hanging out forever, needs fixing
 public class SQLServerBinaryStreamIntegrationTest {
 
     private static boolean isTestDisabled;
