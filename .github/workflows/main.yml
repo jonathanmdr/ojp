@@ -79,19 +79,19 @@ jobs:
           --health-retries 5
         ports:
           - 1521:1521
-
-      sqlserver:
-        image: mcr.microsoft.com/mssql/server:2022-latest
-        env:
-          ACCEPT_EULA: Y
-          SA_PASSWORD: TestPassword123!
-        options: >-
-          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P TestPassword123! -Q 'SELECT 1'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 1433:1433
+      # maybe put proprietary DBs in separated workflows, seem to be insufficient memory in github to run all at once
+      #sqlserver:
+      #  image: mcr.microsoft.com/mssql/server:2022-latest
+      #  env:
+      #    ACCEPT_EULA: Y
+      #    SA_PASSWORD: TestPassword123!
+      #  options: >-
+      #    --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P TestPassword123! -Q 'SELECT 1'"
+      #    --health-interval 10s
+      #    --health-timeout 5s
+      #    --health-retries 5
+      #  ports:
+      #    - 1433:1433
 
     steps:
       - name: Git checkout
