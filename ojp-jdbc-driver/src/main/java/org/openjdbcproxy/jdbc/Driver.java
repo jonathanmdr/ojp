@@ -4,11 +4,10 @@ import com.google.protobuf.ByteString;
 import com.openjdbcproxy.grpc.ConnectionDetails;
 import com.openjdbcproxy.grpc.SessionInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.openjdbcproxy.database.DatabaseUtils;
 import org.openjdbcproxy.grpc.SerializationHandler;
 import org.openjdbcproxy.grpc.client.StatementService;
 import org.openjdbcproxy.grpc.client.StatementServiceGrpcClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,17 +49,6 @@ public class Driver implements java.sql.Driver {
     @Override
     public java.sql.Connection connect(String url, Properties info) throws SQLException {
         log.debug("connect: url={}, info={}", url, info);
-        DbType dbType = DbType.UNKNOWN;
-        if (url.toUpperCase().contains("H2:")) {
-            dbType = DbType.H2;
-            log.debug("H2DB detected");
-        } else if (url.toUpperCase().contains("MYSQL:")) {
-            dbType = DbType.MYSQL;
-            log.debug("MySql detected");
-        } else if (url.toUpperCase().contains("MARIADB:")) {
-            dbType = DbType.MARIADB;
-            log.debug("MariaDB detected");
-        }
         
         // Load ojp.properties file if it exists
         Properties ojpProperties = loadOjpProperties();
@@ -80,7 +68,7 @@ public class Driver implements java.sql.Driver {
                         .build()
                 );
         log.debug("Returning new Connection with sessionInfo: {}", sessionInfo);
-        return new Connection(sessionInfo, statementService, dbType);
+        return new Connection(sessionInfo, statementService, DatabaseUtils.resolveDbName(url));
     }
     
     private Properties loadOjpProperties() {

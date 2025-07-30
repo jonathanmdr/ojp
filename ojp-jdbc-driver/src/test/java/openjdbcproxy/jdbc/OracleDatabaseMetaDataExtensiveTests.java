@@ -23,7 +23,7 @@ public class OracleDatabaseMetaDataExtensiveTests {
         assumeFalse(isTestDisabled, "Oracle tests are disabled");
         
         connection = DriverManager.getConnection(url, user, password);
-        TestDBUtils.createBasicTestTable(connection, "oracle_db_metadata_test", TestDBUtils.SqlSyntax.ORACLE);
+        TestDBUtils.createBasicTestTable(connection, "oracle_db_metadata_test", TestDBUtils.SqlSyntax.ORACLE, true);
     }
 
     @AfterAll

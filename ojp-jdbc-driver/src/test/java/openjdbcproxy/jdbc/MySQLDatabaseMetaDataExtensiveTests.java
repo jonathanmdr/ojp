@@ -30,7 +30,7 @@ public class MySQLDatabaseMetaDataExtensiveTests {
         assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
         assumeFalse(isMariaDBTestDisabled, "MariaDB tests are disabled");
         connection = DriverManager.getConnection(url, user, password);
-        TestDBUtils.createBasicTestTable(connection, "mysql_db_metadata_test", TestDBUtils.SqlSyntax.MYSQL);
+        TestDBUtils.createBasicTestTable(connection, "mysql_db_metadata_test", TestDBUtils.SqlSyntax.MYSQL, true);
     }
 
     @AfterAll

@@ -7,7 +7,18 @@ message ConnectionDetails {
     string user = 2;
     string password = 3;
     string clientUUID = 4;
-    bytes properties = 5;
+    bytes properties = 6;
+}
+
+enum DbName {
+    H2 = 0;
+    MYSQL = 1;
+    MARIADB = 2;
+    POSTGRES = 3;
+    ORACLE = 4;
+    SQL_SERVER = 5;
+    DB2 = 6;
+    UNMAPPED = 7;
 }
 
 enum SessionStatus {
@@ -88,7 +99,9 @@ message LobReference {
     string uuid = 2;
     int32 bytesWritten = 3;
     LobType lobType = 4;
-    int32 columnIndex = 5;//Only used to query Binary streams.
+    //5 till 6 only used to query Binary streams.
+    int32 columnIndex = 5;
+    string stmtUUID = 6;
 }
 
 message ReadLobRequest {

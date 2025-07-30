@@ -28,7 +28,7 @@ public class H2StatementExtensiveTests {
     public void setUp(String driverClass, String url, String user, String password) throws Exception {
         connection = DriverManager.getConnection(url, user, password);
         statement = connection.createStatement();
-        TestDBUtils.createBasicTestTable(connection, "h2_statement_test", TestDBUtils.SqlSyntax.H2);
+        TestDBUtils.createBasicTestTable(connection, "h2_statement_test", TestDBUtils.SqlSyntax.H2, true);
     }
 
     @AfterEach

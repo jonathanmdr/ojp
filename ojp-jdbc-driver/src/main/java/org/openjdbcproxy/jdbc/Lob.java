@@ -11,6 +11,7 @@ import com.openjdbcproxy.grpc.LobType;
 import com.openjdbcproxy.grpc.ResourceType;
 import com.openjdbcproxy.grpc.TargetCall;
 import io.grpc.StatusRuntimeException;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.openjdbcproxy.grpc.client.StatementService;
@@ -38,6 +39,7 @@ public class Lob {
     protected final Connection connection;
     protected final LobService lobService;
     protected final StatementService statementService;
+    @Getter
     protected final SettableFuture<LobReference> lobReference = SettableFuture.create();
 
     public Lob(Connection connection, LobService lobService, StatementService statementService, LobReference lobReference) {

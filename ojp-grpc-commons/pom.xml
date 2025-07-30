@@ -21,9 +21,17 @@
         <grpc.version>1.73.0</grpc.version>
         <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
         <lombok.version>1.18.38</lombok.version>
+        <slf4j.version>2.0.17</slf4j.version>
     </properties>
 
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty</artifactId>

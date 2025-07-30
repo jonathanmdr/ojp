@@ -41,7 +41,7 @@ public class OracleStatementExtensiveTests {
         connection = DriverManager.getConnection(url, user, password);
         statement = connection.createStatement();
 
-        TestDBUtils.createBasicTestTable(connection, "oracle_statement_test", TestDBUtils.SqlSyntax.ORACLE);
+        TestDBUtils.createBasicTestTable(connection, "oracle_statement_test", TestDBUtils.SqlSyntax.ORACLE, true);
     }
 
     @AfterEach

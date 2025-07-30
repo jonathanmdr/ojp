@@ -34,7 +34,7 @@ public class MySQLStatementExtensiveTests {
 
         connection = DriverManager.getConnection(url, user, password);
         statement = connection.createStatement();
-        TestDBUtils.createBasicTestTable(connection, "mysql_statement_test", TestDBUtils.SqlSyntax.MYSQL);
+        TestDBUtils.createBasicTestTable(connection, "mysql_statement_test", TestDBUtils.SqlSyntax.MYSQL, true);
     }
 
     @AfterEach

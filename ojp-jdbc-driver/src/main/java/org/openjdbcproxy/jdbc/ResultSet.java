@@ -7,10 +7,13 @@ import io.grpc.StatusRuntimeException;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.openjdbcproxy.constants.CommonConstants;
 import org.openjdbcproxy.grpc.client.StatementService;
 import org.openjdbcproxy.grpc.dto.OpQueryResult;
+import org.openjdbcproxy.jdbc.sqlserver.SqlServerSerialBlob;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -172,6 +175,8 @@ public class ResultSet extends RemoteProxyResultSet {
             return 0;
         } else if (lastValueRead instanceof byte[]) {
             return ((byte[]) lastValueRead)[0];
+        } else if (lastValueRead instanceof Short) {
+            return (byte)(short) lastValueRead;
         }
         return (byte) lastValueRead;
     }
@@ -383,18 +388,27 @@ public class ResultSet extends RemoteProxyResultSet {
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return null;
+        } else if (lastValueRead instanceof byte[]) {// Only used by SQL server
+            return new ByteArrayInputStream((byte[]) lastValueRead);
         }
         Object objUUID = lastValueRead;
         String lobRefUUID = String.valueOf(objUUID);
+        LobReference.Builder lobRefBuilder = LobReference.newBuilder()
+                .setSession(this.getConnection().getSession())
+                .setLobType(LobType.LT_BINARY_STREAM)
+                .setUuid(lobRefUUID)
+                .setColumnIndex(columnIndex);
+        if (this.statement != null) {
+            if (this.statement instanceof Statement) {
+                Statement stmt = (Statement) this.statement;
+                if (StringUtils.isNotBlank(stmt.getStatementUUID())) {
+                    lobRefBuilder.setStmtUUID(stmt.getStatementUUID());
+                }
+            }
+        }
         BinaryStream binaryStream = new BinaryStream((Connection) this.statement.getConnection(),
                 new LobServiceImpl((Connection) this.statement.getConnection(), this.getStatementService()),
-                this.getStatementService(),
-                LobReference.newBuilder()
-                        .setSession(this.getConnection().getSession())
-                        .setLobType(LobType.LT_BINARY_STREAM)
-                        .setUuid(lobRefUUID)
-                        .setColumnIndex(columnIndex)
-                        .build());
+                this.getStatementService(), lobRefBuilder.build());
         return binaryStream.getBinaryStream();
     }
 
@@ -1312,17 +1326,25 @@ public class ResultSet extends RemoteProxyResultSet {
         lastValueRead = currentDataBlock.get(blockIdx.get())[columnIndex - 1];
         if (lastValueRead == null) {
             return null;
+        } else if (lastValueRead instanceof byte[]) { //Only for SQL server
+            return new SqlServerSerialBlob((byte[]) lastValueRead);
         }
         Object objUUID = lastValueRead;
         String blobRefUUID = String.valueOf(objUUID);
+        LobReference.Builder lobRefBuilder = LobReference.newBuilder()
+                .setSession(((Connection) this.statement.getConnection()).getSession())
+                .setUuid(blobRefUUID);
+        if (this.statement != null) {
+            if (this.statement instanceof Statement) {
+                Statement stmt = (Statement) this.statement;
+                if (stmt.getStatementUUID() != null) {
+                    lobRefBuilder.setStmtUUID(stmt.getStatementUUID());
+                }
+            }
+        }
         return new org.openjdbcproxy.jdbc.Blob((Connection) this.statement.getConnection(),
                 new LobServiceImpl((Connection) this.statement.getConnection(), this.getStatementService()),
-                this.getStatementService(),
-                LobReference.newBuilder()
-                        .setSession(((Connection) this.statement.getConnection()).getSession())
-                        .setUuid(blobRefUUID)
-                        .build()
-        );
+                this.getStatementService(), lobRefBuilder.build());
     }
 
     @Override

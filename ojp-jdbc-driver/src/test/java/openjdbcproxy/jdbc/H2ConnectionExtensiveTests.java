@@ -78,7 +78,7 @@ public class H2ConnectionExtensiveTests {
         this.setUp(driverClass, url, user, password);
         connection.setAutoCommit(false);
 
-        TestDBUtils.createBasicTestTable(connection, "h2_connection_test", TestDBUtils.SqlSyntax.H2);
+        TestDBUtils.createBasicTestTable(connection, "h2_connection_test", TestDBUtils.SqlSyntax.H2, true);
         connection.createStatement().execute("INSERT INTO h2_connection_test (id, name) VALUES (3, 'Charlie')");
         connection.rollback();
 
@@ -97,7 +97,7 @@ public class H2ConnectionExtensiveTests {
     public void testSavepoints(String driverClass, String url, String user, String password) throws SQLException {
         this.setUp(driverClass, url, user, password);
         connection.setAutoCommit(false);
-        TestDBUtils.createBasicTestTable(connection, "h2_connection_test", TestDBUtils.SqlSyntax.H2);
+        TestDBUtils.createBasicTestTable(connection, "h2_connection_test", TestDBUtils.SqlSyntax.H2, true);
 
         Savepoint sp1 = connection.setSavepoint("Savepoint1");
         assertEquals("Savepoint1", sp1.getSavepointName());

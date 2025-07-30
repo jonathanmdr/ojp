@@ -43,7 +43,7 @@ public class OracleConnectionExtensiveTests {
             // Test basic Oracle functionality
             try (Statement statement = connection.createStatement()) {
                 // Create a simple test table
-                TestDBUtils.createBasicTestTable(connection, "oracle_test_table", TestDBUtils.SqlSyntax.ORACLE);
+                TestDBUtils.createBasicTestTable(connection, "oracle_test_table", TestDBUtils.SqlSyntax.ORACLE, true);
                 
                 // Verify data was inserted correctly
                 try (ResultSet rs = statement.executeQuery("SELECT COUNT(*) FROM oracle_test_table")) {
