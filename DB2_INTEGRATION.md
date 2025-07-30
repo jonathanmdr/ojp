@@ -81,7 +81,7 @@ DB2 database service configuration has been added to `.github/workflows/main.yml
 
 ```yaml
 #db2:
-#  image: ibmcom/db2:11.5.9.0
+#  image: ibmcom/db2:11.5.8.0
 #  env:
 #    LICENSE: accept
 #    DB2INSTANCE: db2inst1
@@ -143,7 +143,7 @@ docker run -it --name db2 --privileged=true \
   -e DB2INSTANCE=db2inst1 \
   -e DB2INST1_PASSWORD=testpassword \
   -e DBNAME=defaultdb \
-  ibmcom/db2:11.5.9.0
+  ibmcom/db2:11.5.8.0
 ```
 
 2. Start OJP server:

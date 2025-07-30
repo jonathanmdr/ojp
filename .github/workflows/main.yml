@@ -95,7 +95,7 @@ jobs:
       #    - 1433:1433
 
       #db2:
-      #  image: ibmcom/db2:11.5.9.0
+      #  image: ibmcom/db2:11.5.8.0
       #  env:
       #    LICENSE: accept
       #    DB2INSTANCE: db2inst1
