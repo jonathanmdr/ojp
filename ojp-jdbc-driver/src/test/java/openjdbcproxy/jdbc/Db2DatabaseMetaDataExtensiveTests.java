@@ -12,6 +12,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
@@ -47,11 +48,11 @@ public class Db2DatabaseMetaDataExtensiveTests {
         }
         
         stmt.execute("CREATE TABLE db2_metadata_test (" +
-                "id INTEGER PRIMARY KEY, " +
+                "id INTEGER NOT NULL PRIMARY KEY, " +
                 "name VARCHAR(100) NOT NULL, " +
                 "age INTEGER, " +
                 "salary DECIMAL(10,2), " +
-                "is_active BOOLEAN, " +
+                "is_active SMALLINT, " +
                 "created_date DATE, " +
                 "notes CLOB(1M))");
         
@@ -165,7 +166,7 @@ public class Db2DatabaseMetaDataExtensiveTests {
                     break;
                 case "IS_ACTIVE":
                     foundIsActive = true;
-                    assertEquals(java.sql.Types.BOOLEAN, dataType);
+                    assertEquals(Types.SMALLINT, dataType);
                     break;
                 case "CREATED_DATE":
                     foundCreatedDate = true;

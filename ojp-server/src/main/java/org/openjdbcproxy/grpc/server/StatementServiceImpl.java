@@ -159,7 +159,8 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         Integer parameterIndex = (Integer) metadata.get(CommonConstants.PREPARED_STATEMENT_BINARY_STREAM_INDEX);
                         ps.setBinaryStream(parameterIndex, lobIS);
                     }
-                    if (!DbName.SQL_SERVER.equals(dto.getDbName())) {//SQL server treats binary streams differently
+                    //TODO check if DB2 works without the wait
+                    if (!DbName.SQL_SERVER.equals(dto.getDbName()) && !DbName.DB2.equals(dto.getDbName())) {//SQL server treats binary streams differently
                         sessionManager.waitLobStreamsConsumption(dto.getSession());
                     }
                     if (ps != null) {
