@@ -33,7 +33,7 @@ public class Db2ConnectionExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2BasicConnection(String driverClass, String url, String user, String pwd) throws SQLException {
         Assumptions.assumeFalse(!isDb2TestEnabled, "Skipping DB2 tests");
         
@@ -69,7 +69,7 @@ public class Db2ConnectionExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2DataTypes(String driverClass, String url, String user, String pwd) throws SQLException {
         Assumptions.assumeFalse(!isDb2TestEnabled, "Skipping DB2 tests");
         
@@ -119,7 +119,7 @@ public class Db2ConnectionExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2BooleanHandling(String driverClass, String url, String user, String pwd) throws SQLException {
         Assumptions.assumeFalse(!isDb2TestEnabled, "Skipping DB2 tests");
         
@@ -164,7 +164,7 @@ public class Db2ConnectionExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2NullVsEmptyString(String driverClass, String url, String user, String pwd) throws SQLException {
         Assumptions.assumeFalse(!isDb2TestEnabled, "Skipping DB2 tests");
         

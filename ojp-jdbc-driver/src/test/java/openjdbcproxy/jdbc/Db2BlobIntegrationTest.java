@@ -52,7 +52,7 @@ public class Db2BlobIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2BlobCreationAndRetrieval(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         setUp(driverClass, url, user, pwd);
 
@@ -96,7 +96,7 @@ public class Db2BlobIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2BlobPerformance(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         setUp(driverClass, url, user, pwd);
 

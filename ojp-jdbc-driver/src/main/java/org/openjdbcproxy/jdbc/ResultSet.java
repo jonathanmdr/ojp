@@ -148,7 +148,8 @@ public class ResultSet extends RemoteProxyResultSet {
             }
             return clob.getSubString(1, (int) clob.length());
         }
-        return (String) lastValueRead;
+
+        return lastValueRead.toString();
     }
 
     @Override

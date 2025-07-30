@@ -1,16 +1,11 @@
 package openjdbcproxy.jdbc;
 
-import openjdbcproxy.jdbc.testutil.TestDBUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
-import java.io.ByteArrayInputStream;
-import java.io.StringReader;
 import java.math.BigDecimal;
-import java.sql.Blob;
-import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -18,7 +13,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
-import java.util.Calendar;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -81,7 +75,7 @@ public class Db2PreparedStatementExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2PreparedStatementBasicOperations(String driverClass, String url, String user, String password) throws Exception {
         setUp(driverClass, url, user, password);
 
@@ -134,7 +128,7 @@ public class Db2PreparedStatementExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2PreparedStatementDataTypes(String driverClass, String url, String user, String password) throws Exception {
         setUp(driverClass, url, user, password);
 
@@ -169,7 +163,7 @@ public class Db2PreparedStatementExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2PreparedStatementNullHandling(String driverClass, String url, String user, String password) throws Exception {
         setUp(driverClass, url, user, password);
 
@@ -205,7 +199,7 @@ public class Db2PreparedStatementExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2PreparedStatementBatch(String driverClass, String url, String user, String password) throws Exception {
         setUp(driverClass, url, user, password);
 

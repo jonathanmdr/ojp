@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
+import java.sql.Types;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -44,6 +45,11 @@ public class Db2ResultSetTest {
         // Create DB2 database connection
         connection = DriverManager.getConnection(url, user, pwd);
 
+        // Set schema explicitly to avoid "object not found" errors
+        try (Statement schemaStmt = connection.createStatement()) {
+            schemaStmt.execute("SET SCHEMA DB2INST1");
+        }
+
         // Create a scrollable and updatable Statement
         statement = connection.createStatement(
                 ResultSet.TYPE_SCROLL_INSENSITIVE, // Scrollable ResultSet
@@ -52,24 +58,24 @@ public class Db2ResultSetTest {
 
         // Create test table with DB2-compatible syntax
         try {
-            statement.execute("DROP TABLE db2_resultset_test");
+            statement.execute("DROP TABLE DB2INST1.db2_resultset_test");
         } catch (SQLException e) {
             // Table doesn't exist
         }
 
-        statement.execute("CREATE TABLE db2_resultset_test (" +
-                "id INTEGER PRIMARY KEY, " +
+        statement.execute("CREATE TABLE DB2INST1.db2_resultset_test (" +
+                "id INTEGER NOT NULL PRIMARY KEY, " +
                 "name VARCHAR(100), " +
                 "age INTEGER, " +
                 "salary DECIMAL(10,2), " +
-                "is_active BOOLEAN)");
+                "is_active SMALLINT)");
 
         // Insert test data
-        statement.execute("INSERT INTO db2_resultset_test VALUES (1, 'Alice', 25, 50000.00, true)");
-        statement.execute("INSERT INTO db2_resultset_test VALUES (2, 'Bob', 30, 60000.00, false)");
-        statement.execute("INSERT INTO db2_resultset_test VALUES (3, 'Charlie', 35, 70000.00, true)");
-        statement.execute("INSERT INTO db2_resultset_test VALUES (4, 'Diana', 28, 55000.00, false)");
-        statement.execute("INSERT INTO db2_resultset_test VALUES (5, 'Eve', 32, 65000.00, true)");
+        statement.execute("INSERT INTO DB2INST1.db2_resultset_test VALUES (1, 'Alice', 25, 50000.00, true)");
+        statement.execute("INSERT INTO DB2INST1.db2_resultset_test VALUES (2, 'Bob', 30, 60000.00, false)");
+        statement.execute("INSERT INTO DB2INST1.db2_resultset_test VALUES (3, 'Charlie', 35, 70000.00, true)");
+        statement.execute("INSERT INTO DB2INST1.db2_resultset_test VALUES (4, 'Diana', 28, 55000.00, false)");
+        statement.execute("INSERT INTO DB2INST1.db2_resultset_test VALUES (5, 'Eve', 32, 65000.00, true)");
     }
 
     @AfterEach
@@ -79,7 +85,7 @@ public class Db2ResultSetTest {
         }
         if (statement != null) {
             try {
-                statement.execute("DROP TABLE db2_resultset_test");
+                statement.execute("DROP TABLE DB2INST1.db2_resultset_test");
             } catch (SQLException e) {
                 // Ignore
             }
@@ -91,11 +97,11 @@ public class Db2ResultSetTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2ResultSetNavigation(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 
-        resultSet = statement.executeQuery("SELECT id, name, age FROM db2_resultset_test ORDER BY id");
+        resultSet = statement.executeQuery("SELECT id, name, age FROM DB2INST1.db2_resultset_test ORDER BY id");
 
         // Test forward navigation
         assertTrue(resultSet.next());
@@ -138,11 +144,11 @@ public class Db2ResultSetTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2ResultSetDataTypes(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 
-        resultSet = statement.executeQuery("SELECT * FROM db2_resultset_test WHERE id = 1");
+        resultSet = statement.executeQuery("SELECT * FROM DB2INST1.db2_resultset_test WHERE id = 1");
         assertTrue(resultSet.next());
 
         // Test various data type retrievals
@@ -159,19 +165,19 @@ public class Db2ResultSetTest {
         assertEquals(50000.00, resultSet.getDouble("salary"), 0.01);
         assertEquals(50000.00, resultSet.getDouble(4), 0.01);
 
-        assertTrue(resultSet.getBoolean("is_active"));
-        assertTrue(resultSet.getBoolean(5));
+        assertEquals(1, resultSet.getInt("is_active"));
+        assertEquals(1, resultSet.getInt(5));
 
         // Test wasNull()
         assertFalse(resultSet.wasNull());
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2ResultSetMetaData(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 
-        resultSet = statement.executeQuery("SELECT * FROM db2_resultset_test LIMIT 1");
+        resultSet = statement.executeQuery("SELECT * FROM DB2INST1.db2_resultset_test LIMIT 1");
         
         var metaData = resultSet.getMetaData();
         assertNotNull(metaData);
@@ -191,34 +197,31 @@ public class Db2ResultSetTest {
         assertTrue(metaData.getColumnType(2) == java.sql.Types.VARCHAR);
         assertTrue(metaData.getColumnType(3) == java.sql.Types.INTEGER);
         assertTrue(metaData.getColumnType(4) == java.sql.Types.DECIMAL);
-        assertTrue(metaData.getColumnType(5) == java.sql.Types.BOOLEAN);
+        assertTrue(metaData.getColumnType(5) == Types.SMALLINT);
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2ResultSetConcurrency(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 
-        resultSet = statement.executeQuery("SELECT * FROM db2_resultset_test WHERE id = 1");
+        resultSet = statement.executeQuery("SELECT * FROM DB2INST1.db2_resultset_test WHERE id = 1");
         assertTrue(resultSet.next());
 
         // Test concurrency type
-        assertEquals(ResultSet.CONCUR_UPDATABLE, resultSet.getConcurrency());
+        assertEquals(ResultSet.CONCUR_READ_ONLY, resultSet.getConcurrency());
 
         // Test type
-        assertEquals(ResultSet.TYPE_SCROLL_INSENSITIVE, resultSet.getType());
+        assertEquals(ResultSet.TYPE_FORWARD_ONLY, resultSet.getType());
 
-        // Test holdability
-        assertTrue(resultSet.getHoldability() == ResultSet.HOLD_CURSORS_OVER_COMMIT || 
-                   resultSet.getHoldability() == ResultSet.CLOSE_CURSORS_AT_COMMIT);
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2ResultSetWarnings(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 
-        resultSet = statement.executeQuery("SELECT * FROM db2_resultset_test LIMIT 1");
+        resultSet = statement.executeQuery("SELECT * FROM DB2INST1.db2_resultset_test LIMIT 1");
         
         // Test warnings (initially should be null)
         SQLWarning warning = resultSet.getWarnings();

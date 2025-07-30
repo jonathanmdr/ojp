@@ -76,7 +76,7 @@ public class Db2DatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2DatabaseInfo(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 
@@ -105,7 +105,7 @@ public class Db2DatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2TableMetaData(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 
@@ -124,7 +124,7 @@ public class Db2DatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2ColumnMetaData(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 
@@ -190,7 +190,7 @@ public class Db2DatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2PrimaryKeyMetaData(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 
@@ -209,7 +209,7 @@ public class Db2DatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2IndexMetaData(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 
@@ -243,7 +243,7 @@ public class Db2DatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2DatabaseCapabilities(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 
@@ -271,7 +271,7 @@ public class Db2DatabaseMetaDataExtensiveTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2SqlKeywords(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 

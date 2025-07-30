@@ -62,7 +62,7 @@ public class Db2SavepointTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2SavepointBasicOperations(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 
@@ -106,7 +106,7 @@ public class Db2SavepointTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2MultipleSavepoints(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 
@@ -154,7 +154,7 @@ public class Db2SavepointTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2SavepointRelease(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 
@@ -185,7 +185,7 @@ public class Db2SavepointTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2UnnamedSavepoint(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 
@@ -215,7 +215,7 @@ public class Db2SavepointTests {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/db2_connections.csv")
+    @CsvFileSource(resources = "/db2_connection.csv")
     public void testDb2SavepointWithCommit(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
 
