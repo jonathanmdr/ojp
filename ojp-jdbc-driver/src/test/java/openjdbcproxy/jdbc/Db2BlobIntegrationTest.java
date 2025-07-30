@@ -36,8 +36,13 @@ public class Db2BlobIntegrationTest {
     public void setUp(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
         
-        this.tableName = "db2_blob_test";
+        this.tableName = "DB2INST1.db2_blob_test";
         conn = DriverManager.getConnection(url, user, pwd);
+        
+        // Set schema explicitly to avoid "object not found" errors
+        try (Statement schemaStmt = conn.createStatement()) {
+            schemaStmt.execute("SET SCHEMA DB2INST1");
+        }
         
         try {
             executeUpdate(conn, "DROP TABLE " + tableName);
@@ -47,7 +52,7 @@ public class Db2BlobIntegrationTest {
         
         // Create table with DB2 BLOB type
         executeUpdate(conn, "CREATE TABLE " + tableName + " (" +
-                "id INTEGER PRIMARY KEY, " +
+                "id INTEGER NOT NULL PRIMARY KEY, " +
                 "data_blob BLOB(1M))");
     }
 

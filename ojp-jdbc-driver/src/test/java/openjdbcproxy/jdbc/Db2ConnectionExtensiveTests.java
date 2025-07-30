@@ -40,30 +40,40 @@ public class Db2ConnectionExtensiveTests {
         log.info("Testing DB2 connection with URL: {}", url);
         
         try (Connection connection = DriverManager.getConnection(url, user, pwd)) {
+            
+            // Set schema explicitly to avoid "object not found" errors
+            try (Statement schemaStmt = connection.createStatement()) {
+                schemaStmt.execute("SET SCHEMA DB2INST1");
+            }
             assertTrue(connection.isValid(5), "Connection should be valid");
+            
+            // Set schema explicitly to avoid "object not found" errors
+            try (Statement schemaStmt = connection.createStatement()) {
+                schemaStmt.execute("SET SCHEMA DB2INST1");
+            }
             
             // Test basic DB2 functionality
             try (Statement statement = connection.createStatement()) {
                 // Create a simple test table
-                TestDBUtils.createBasicTestTable(connection, "db2_test_table", TestDBUtils.SqlSyntax.DB2, true);
+                TestDBUtils.createBasicTestTable(connection, "DB2INST1.db2_test_table", TestDBUtils.SqlSyntax.DB2, true);
                 
                 // Verify data was inserted correctly
-                try (ResultSet rs = statement.executeQuery("SELECT COUNT(*) FROM db2_test_table")) {
+                try (ResultSet rs = statement.executeQuery("SELECT COUNT(*) FROM DB2INST1.db2_test_table")) {
                     assertTrue(rs.next());
                     assertEquals(2, rs.getInt(1), "Should have 2 test records");
                 }
                 
                 // Test DB2-specific INTEGER data type
-                statement.execute("INSERT INTO db2_test_table (id, name) VALUES (3, 'Charlie')");
+                statement.execute("INSERT INTO DB2INST1.db2_test_table (id, name) VALUES (3, 'Charlie')");
                 
-                try (ResultSet rs = statement.executeQuery("SELECT id, name FROM db2_test_table WHERE id = 3")) {
+                try (ResultSet rs = statement.executeQuery("SELECT id, name FROM DB2INST1.db2_test_table WHERE id = 3")) {
                     assertTrue(rs.next());
                     assertEquals(3, rs.getInt("id"));
                     assertEquals("Charlie", rs.getString("name"));
                 }
                 
                 // Clean up
-                TestDBUtils.cleanupTestTables(connection, "db2_test_table");
+                TestDBUtils.cleanupTestTables(connection, "DB2INST1.db2_test_table");
             }
         }
     }
@@ -76,6 +86,11 @@ public class Db2ConnectionExtensiveTests {
         log.info("Testing DB2 data types with URL: {}", url);
         
         try (Connection connection = DriverManager.getConnection(url, user, pwd)) {
+            
+            // Set schema explicitly to avoid "object not found" errors
+            try (Statement schemaStmt = connection.createStatement()) {
+                schemaStmt.execute("SET SCHEMA DB2INST1");
+            }
             try (Statement statement = connection.createStatement()) {
                 // Create table with DB2-specific data types
                 try {
@@ -126,23 +141,28 @@ public class Db2ConnectionExtensiveTests {
         log.info("Testing DB2 boolean handling with URL: {}", url);
         
         try (Connection connection = DriverManager.getConnection(url, user, pwd)) {
+            
+            // Set schema explicitly to avoid "object not found" errors
+            try (Statement schemaStmt = connection.createStatement()) {
+                schemaStmt.execute("SET SCHEMA DB2INST1");
+            }
             try (Statement statement = connection.createStatement()) {
                 // Create table with boolean column
                 try {
-                    statement.execute("DROP TABLE db2_boolean_test");
+                    statement.execute("DROP TABLE DB2INST1.db2_boolean_test");
                 } catch (SQLException e) {
                     // Ignore if table doesn't exist
                 }
                 
-                statement.execute("CREATE TABLE db2_boolean_test (id INTEGER, is_active BOOLEAN)");
+                statement.execute("CREATE TABLE DB2INST1.db2_boolean_test (id INTEGER, is_active BOOLEAN)");
                 
                 // Insert test data with different boolean representations
-                statement.execute("INSERT INTO db2_boolean_test VALUES (1, TRUE)");
-                statement.execute("INSERT INTO db2_boolean_test VALUES (2, FALSE)");
-                statement.execute("INSERT INTO db2_boolean_test VALUES (3, NULL)");
+                statement.execute("INSERT INTO DB2INST1.db2_boolean_test VALUES (1, TRUE)");
+                statement.execute("INSERT INTO DB2INST1.db2_boolean_test VALUES (2, FALSE)");
+                statement.execute("INSERT INTO DB2INST1.db2_boolean_test VALUES (3, NULL)");
                 
                 // Verify boolean values
-                try (ResultSet rs = statement.executeQuery("SELECT id, is_active FROM db2_boolean_test ORDER BY id")) {
+                try (ResultSet rs = statement.executeQuery("SELECT id, is_active FROM DB2INST1.db2_boolean_test ORDER BY id")) {
                     assertTrue(rs.next());
                     assertEquals(1, rs.getInt("id"));
                     assertTrue(rs.getBoolean("is_active"));
@@ -158,7 +178,7 @@ public class Db2ConnectionExtensiveTests {
                 }
                 
                 // Clean up
-                TestDBUtils.cleanupTestTables(connection, "db2_boolean_test");
+                TestDBUtils.cleanupTestTables(connection, "DB2INST1.db2_boolean_test");
             }
         }
     }
@@ -171,23 +191,28 @@ public class Db2ConnectionExtensiveTests {
         log.info("Testing DB2 NULL vs empty string handling with URL: {}", url);
         
         try (Connection connection = DriverManager.getConnection(url, user, pwd)) {
+            
+            // Set schema explicitly to avoid "object not found" errors
+            try (Statement schemaStmt = connection.createStatement()) {
+                schemaStmt.execute("SET SCHEMA DB2INST1");
+            }
             try (Statement statement = connection.createStatement()) {
                 // Create table for NULL vs empty string testing
                 try {
-                    statement.execute("DROP TABLE db2_null_test");
+                    statement.execute("DROP TABLE DB2INST1.db2_null_test");
                 } catch (SQLException e) {
                     // Ignore if table doesn't exist
                 }
                 
-                statement.execute("CREATE TABLE db2_null_test (id INTEGER, text_col VARCHAR(100))");
+                statement.execute("CREATE TABLE DB2INST1.db2_null_test (id INTEGER, text_col VARCHAR(100))");
                 
                 // Insert test data with NULL and empty string
-                statement.execute("INSERT INTO db2_null_test VALUES (1, NULL)");
-                statement.execute("INSERT INTO db2_null_test VALUES (2, '')");
-                statement.execute("INSERT INTO db2_null_test VALUES (3, 'Valid Text')");
+                statement.execute("INSERT INTO DB2INST1.db2_null_test VALUES (1, NULL)");
+                statement.execute("INSERT INTO DB2INST1.db2_null_test VALUES (2, '')");
+                statement.execute("INSERT INTO DB2INST1.db2_null_test VALUES (3, 'Valid Text')");
                 
                 // Verify NULL vs empty string handling
-                try (ResultSet rs = statement.executeQuery("SELECT id, text_col FROM db2_null_test ORDER BY id")) {
+                try (ResultSet rs = statement.executeQuery("SELECT id, text_col FROM DB2INST1.db2_null_test ORDER BY id")) {
                     assertTrue(rs.next());
                     assertEquals(1, rs.getInt("id"));
                     assertNull(rs.getString("text_col"));
@@ -205,7 +230,7 @@ public class Db2ConnectionExtensiveTests {
                 }
                 
                 // Clean up
-                TestDBUtils.cleanupTestTables(connection, "db2_null_test");
+                TestDBUtils.cleanupTestTables(connection, "DB2INST1.db2_null_test");
             }
         }
     }

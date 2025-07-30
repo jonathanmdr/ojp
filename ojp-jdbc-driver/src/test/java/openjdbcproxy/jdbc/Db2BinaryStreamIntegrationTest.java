@@ -37,16 +37,21 @@ public class Db2BinaryStreamIntegrationTest {
 
         Connection conn = DriverManager.getConnection(url, user, pwd);
 
+        // Set schema explicitly to avoid "object not found" errors
+        try (Statement schemaStmt = conn.createStatement()) {
+            schemaStmt.execute("SET SCHEMA DB2INST1");
+        }
+
         System.out.println("Testing DB2 binary stream for url -> " + url);
 
         try {
-            executeUpdate(conn, "drop table db2_binary_stream_test");
+            executeUpdate(conn, "drop table DB2INST1.db2_binary_stream_test");
         } catch (Exception e) {
             //If fails disregard as per the table is most possibly not created yet
         }
 
         // Create table with DB2-specific binary types
-        executeUpdate(conn, "create table db2_binary_stream_test(" +
+        executeUpdate(conn, "create table DB2INST1.db2_binary_stream_test(" +
                 " val_varbinary1 VARBINARY(2000)," +  // DB2 VARBINARY for binary data
                 " val_varbinary2 VARBINARY(2000)" +
                 ")");
@@ -54,7 +59,7 @@ public class Db2BinaryStreamIntegrationTest {
         conn.setAutoCommit(false);
 
         PreparedStatement psInsert = conn.prepareStatement(
-                "insert into db2_binary_stream_test (val_varbinary1, val_varbinary2) values (?, ?)"
+                "insert into DB2INST1.db2_binary_stream_test (val_varbinary1, val_varbinary2) values (?, ?)"
         );
 
         String testString = "DB2 VARBINARY VIA INPUT STREAM";
@@ -67,7 +72,7 @@ public class Db2BinaryStreamIntegrationTest {
 
         conn.commit();
 
-        PreparedStatement psSelect = conn.prepareStatement("select val_varbinary1, val_varbinary2 from db2_binary_stream_test ");
+        PreparedStatement psSelect = conn.prepareStatement("select val_varbinary1, val_varbinary2 from DB2INST1.db2_binary_stream_test ");
         ResultSet resultSet = psSelect.executeQuery();
         resultSet.next();
         

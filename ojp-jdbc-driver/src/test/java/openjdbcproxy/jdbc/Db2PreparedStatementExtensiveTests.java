@@ -37,20 +37,26 @@ public class Db2PreparedStatementExtensiveTests {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
         
         connection = DriverManager.getConnection(url, user, password);
+        
+        // Set schema explicitly to avoid "object not found" errors
+        try (Statement schemaStmt = connection.createStatement()) {
+            schemaStmt.execute("SET SCHEMA DB2INST1");
+        }
+        
         Statement stmt = connection.createStatement();
         try {
-            stmt.execute("DROP TABLE db2_prepared_stmt_test");
+            stmt.execute("DROP TABLE DB2INST1.db2_prepared_stmt_test");
         } catch (SQLException e) {
             // Table doesn't exist
         }
         
         // Create table with DB2-compatible syntax
-        stmt.execute("CREATE TABLE db2_prepared_stmt_test (" +
-                "id INTEGER PRIMARY KEY, " +
+        stmt.execute("CREATE TABLE DB2INST1.db2_prepared_stmt_test (" +
+                "id INTEGER NOT NULL PRIMARY KEY, " +
                 "name VARCHAR(100), " +
                 "age INTEGER, " +
                 "salary DECIMAL(10,2), " +
-                "is_active BOOLEAN, " +
+                "is_active SMALLINT, " +
                 "created_date DATE, " +
                 "notes CLOB(1M), " +
                 "data_blob BLOB(1M))");
@@ -65,7 +71,7 @@ public class Db2PreparedStatementExtensiveTests {
         if (connection != null) {
             Statement stmt = connection.createStatement();
             try {
-                stmt.execute("DROP TABLE db2_prepared_stmt_test");
+                stmt.execute("DROP TABLE DB2INST1.db2_prepared_stmt_test");
             } catch (SQLException e) {
                 // Ignore
             }
@@ -80,19 +86,19 @@ public class Db2PreparedStatementExtensiveTests {
         setUp(driverClass, url, user, password);
 
         // Test INSERT operation
-        ps = connection.prepareStatement("INSERT INTO db2_prepared_stmt_test (id, name, age, salary, is_active) VALUES (?, ?, ?, ?, ?)");
+        ps = connection.prepareStatement("INSERT INTO DB2INST1.db2_prepared_stmt_test (id, name, age, salary, is_active) VALUES (?, ?, ?, ?, ?)");
         ps.setInt(1, 1);
         ps.setString(2, "John Doe");
         ps.setInt(3, 30);
         ps.setBigDecimal(4, new BigDecimal("50000.00"));
-        ps.setBoolean(5, true);
+        ps.setInt(5, 1); // Use 1 for true since is_active is SMALLINT
         
         int insertCount = ps.executeUpdate();
         assertEquals(1, insertCount);
         ps.close();
 
         // Test SELECT operation
-        ps = connection.prepareStatement("SELECT id, name, age, salary, is_active FROM db2_prepared_stmt_test WHERE id = ?");
+        ps = connection.prepareStatement("SELECT id, name, age, salary, is_active FROM DB2INST1.db2_prepared_stmt_test WHERE id = ?");
         ps.setInt(1, 1);
         
         ResultSet rs = ps.executeQuery();
@@ -101,13 +107,13 @@ public class Db2PreparedStatementExtensiveTests {
         assertEquals("John Doe", rs.getString("name"));
         assertEquals(30, rs.getInt("age"));
         assertEquals(new BigDecimal("50000.00"), rs.getBigDecimal("salary"));
-        assertTrue(rs.getBoolean("is_active"));
+        assertEquals(1, rs.getInt("is_active")); // Check for 1 since is_active is SMALLINT
         assertFalse(rs.next());
         rs.close();
         ps.close();
 
         // Test UPDATE operation
-        ps = connection.prepareStatement("UPDATE db2_prepared_stmt_test SET age = ?, salary = ? WHERE id = ?");
+        ps = connection.prepareStatement("UPDATE DB2INST1.db2_prepared_stmt_test SET age = ?, salary = ? WHERE id = ?");
         ps.setInt(1, 31);
         ps.setBigDecimal(2, new BigDecimal("55000.00"));
         ps.setInt(3, 1);
@@ -117,7 +123,7 @@ public class Db2PreparedStatementExtensiveTests {
         ps.close();
 
         // Verify update
-        ps = connection.prepareStatement("SELECT age, salary FROM db2_prepared_stmt_test WHERE id = ?");
+        ps = connection.prepareStatement("SELECT age, salary FROM DB2INST1.db2_prepared_stmt_test WHERE id = ?");
         ps.setInt(1, 1);
         rs = ps.executeQuery();
         assertTrue(rs.next());
@@ -133,13 +139,13 @@ public class Db2PreparedStatementExtensiveTests {
         setUp(driverClass, url, user, password);
 
         // Test various data types
-        ps = connection.prepareStatement("INSERT INTO db2_prepared_stmt_test (id, name, age, salary, is_active, created_date) VALUES (?, ?, ?, ?, ?, ?)");
+        ps = connection.prepareStatement("INSERT INTO DB2INST1.db2_prepared_stmt_test (id, name, age, salary, is_active, created_date) VALUES (?, ?, ?, ?, ?, ?)");
         
         ps.setInt(1, 2);
         ps.setString(2, "Jane Smith");
         ps.setInt(3, 25);
         ps.setBigDecimal(4, new BigDecimal("45000.50"));
-        ps.setBoolean(5, false);
+        ps.setInt(5, 0); // Use 0 for false since is_active is SMALLINT
         ps.setDate(6, java.sql.Date.valueOf("2023-12-25"));
         
         int insertCount = ps.executeUpdate();
@@ -147,7 +153,7 @@ public class Db2PreparedStatementExtensiveTests {
         ps.close();
 
         // Verify data types
-        ps = connection.prepareStatement("SELECT * FROM db2_prepared_stmt_test WHERE id = ?");
+        ps = connection.prepareStatement("SELECT * FROM DB2INST1.db2_prepared_stmt_test WHERE id = ?");
         ps.setInt(1, 2);
         
         ResultSet rs = ps.executeQuery();
@@ -156,7 +162,7 @@ public class Db2PreparedStatementExtensiveTests {
         assertEquals("Jane Smith", rs.getString("name"));
         assertEquals(25, rs.getInt("age"));
         assertEquals(new BigDecimal("45000.50"), rs.getBigDecimal("salary"));
-        assertFalse(rs.getBoolean("is_active"));
+        assertEquals(0, rs.getInt("is_active")); // Check for 0 since is_active is SMALLINT
         assertEquals(java.sql.Date.valueOf("2023-12-25"), rs.getDate("created_date"));
         rs.close();
         ps.close();
@@ -168,7 +174,7 @@ public class Db2PreparedStatementExtensiveTests {
         setUp(driverClass, url, user, password);
 
         // Test NULL values
-        ps = connection.prepareStatement("INSERT INTO db2_prepared_stmt_test (id, name, age, salary, is_active) VALUES (?, ?, ?, ?, ?)");
+        ps = connection.prepareStatement("INSERT INTO DB2INST1.db2_prepared_stmt_test (id, name, age, salary, is_active) VALUES (?, ?, ?, ?, ?)");
         
         ps.setInt(1, 3);
         ps.setString(2, null);
@@ -181,7 +187,7 @@ public class Db2PreparedStatementExtensiveTests {
         ps.close();
 
         // Verify NULL handling
-        ps = connection.prepareStatement("SELECT name, age, salary, is_active FROM db2_prepared_stmt_test WHERE id = ?");
+        ps = connection.prepareStatement("SELECT name, age, salary, is_active FROM DB2INST1.db2_prepared_stmt_test WHERE id = ?");
         ps.setInt(1, 3);
         
         ResultSet rs = ps.executeQuery();
@@ -192,7 +198,7 @@ public class Db2PreparedStatementExtensiveTests {
         assertTrue(rs.wasNull());
         rs.getBigDecimal("salary");
         assertTrue(rs.wasNull());
-        rs.getBoolean("is_active");
+        rs.getInt("is_active"); // Check SMALLINT column
         assertTrue(rs.wasNull());
         rs.close();
         ps.close();
@@ -204,7 +210,7 @@ public class Db2PreparedStatementExtensiveTests {
         setUp(driverClass, url, user, password);
 
         // Test batch operations
-        ps = connection.prepareStatement("INSERT INTO db2_prepared_stmt_test (id, name, age, salary, is_active) VALUES (?, ?, ?, ?, ?)");
+        ps = connection.prepareStatement("INSERT INTO DB2INST1.db2_prepared_stmt_test (id, name, age, salary, is_active) VALUES (?, ?, ?, ?, ?)");
         
         // Add multiple batch entries
         for (int i = 10; i < 15; i++) {
@@ -212,7 +218,7 @@ public class Db2PreparedStatementExtensiveTests {
             ps.setString(2, "Batch User " + i);
             ps.setInt(3, 20 + i);
             ps.setBigDecimal(4, new BigDecimal((i * 1000) + ".00"));
-            ps.setBoolean(5, i % 2 == 0);
+            ps.setInt(5, i % 2); // Use 0/1 instead of boolean since is_active is SMALLINT
             ps.addBatch();
         }
         
@@ -224,7 +230,7 @@ public class Db2PreparedStatementExtensiveTests {
         ps.close();
 
         // Verify batch insert
-        ps = connection.prepareStatement("SELECT COUNT(*) FROM db2_prepared_stmt_test WHERE id >= 10 AND id < 15");
+        ps = connection.prepareStatement("SELECT COUNT(*) FROM DB2INST1.db2_prepared_stmt_test WHERE id >= 10 AND id < 15");
         ResultSet rs = ps.executeQuery();
         assertTrue(rs.next());
         assertEquals(5, rs.getInt(1));

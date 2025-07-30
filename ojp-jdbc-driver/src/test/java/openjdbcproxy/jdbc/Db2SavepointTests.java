@@ -33,16 +33,21 @@ public class Db2SavepointTests {
         connection = DriverManager.getConnection(url, user, pwd);
         connection.setAutoCommit(false);
         
+        // Set schema explicitly to avoid "object not found" errors
+        try (Statement schemaStmt = connection.createStatement()) {
+            schemaStmt.execute("SET SCHEMA DB2INST1");
+        }
+        
         Statement stmt = connection.createStatement();
         try {
-            stmt.execute("DROP TABLE savepoint_test_table");
+            stmt.execute("DROP TABLE DB2INST1.savepoint_test_table");
         } catch (SQLException e) {
             // Table might not exist
         }
         
         // DB2-specific CREATE TABLE syntax
         stmt.execute(
-            "CREATE TABLE savepoint_test_table (id INTEGER PRIMARY KEY, name VARCHAR(255))"
+            "CREATE TABLE DB2INST1.savepoint_test_table (id INTEGER NOT NULL PRIMARY KEY, name VARCHAR(255))"
         );
         stmt.close();
     }
@@ -52,7 +57,7 @@ public class Db2SavepointTests {
         if (connection != null) {
             try {
                 Statement stmt = connection.createStatement();
-                stmt.execute("DROP TABLE savepoint_test_table");
+                stmt.execute("DROP TABLE DB2INST1.savepoint_test_table");
                 stmt.close();
             } catch (SQLException e) {
                 // Ignore
@@ -69,7 +74,7 @@ public class Db2SavepointTests {
         Statement stmt = connection.createStatement();
 
         // Insert initial data
-        stmt.executeUpdate("INSERT INTO savepoint_test_table (id, name) VALUES (1, 'Initial Record')");
+        stmt.executeUpdate("INSERT INTO DB2INST1.savepoint_test_table (id, name) VALUES (1, 'Initial Record')");
 
         // Create a savepoint
         Savepoint savepoint1 = connection.setSavepoint("SavePoint1");
@@ -77,10 +82,10 @@ public class Db2SavepointTests {
         assertEquals("SavePoint1", savepoint1.getSavepointName());
 
         // Insert more data after savepoint
-        stmt.executeUpdate("INSERT INTO savepoint_test_table (id, name) VALUES (2, 'After Savepoint')");
+        stmt.executeUpdate("INSERT INTO DB2INST1.savepoint_test_table (id, name) VALUES (2, 'After Savepoint')");
 
         // Verify both records exist
-        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM savepoint_test_table");
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM DB2INST1.savepoint_test_table");
         assertTrue(rs.next());
         assertEquals(2, rs.getInt(1));
         rs.close();
@@ -89,13 +94,13 @@ public class Db2SavepointTests {
         connection.rollback(savepoint1);
 
         // Verify only initial record exists
-        rs = stmt.executeQuery("SELECT COUNT(*) FROM savepoint_test_table");
+        rs = stmt.executeQuery("SELECT COUNT(*) FROM DB2INST1.savepoint_test_table");
         assertTrue(rs.next());
         assertEquals(1, rs.getInt(1));
         rs.close();
 
         // Verify the remaining record
-        rs = stmt.executeQuery("SELECT id, name FROM savepoint_test_table");
+        rs = stmt.executeQuery("SELECT id, name FROM DB2INST1.savepoint_test_table");
         assertTrue(rs.next());
         assertEquals(1, rs.getInt("id"));
         assertEquals("Initial Record", rs.getString("name"));
@@ -113,39 +118,39 @@ public class Db2SavepointTests {
         Statement stmt = connection.createStatement();
 
         // Insert initial data
-        stmt.executeUpdate("INSERT INTO savepoint_test_table (id, name) VALUES (1, 'Record 1')");
+        stmt.executeUpdate("INSERT INTO DB2INST1.savepoint_test_table (id, name) VALUES (1, 'Record 1')");
 
         // Create first savepoint
         Savepoint sp1 = connection.setSavepoint("SP1");
 
         // Insert more data
-        stmt.executeUpdate("INSERT INTO savepoint_test_table (id, name) VALUES (2, 'Record 2')");
+        stmt.executeUpdate("INSERT INTO DB2INST1.savepoint_test_table (id, name) VALUES (2, 'Record 2')");
 
         // Create second savepoint
         Savepoint sp2 = connection.setSavepoint("SP2");
 
         // Insert more data
-        stmt.executeUpdate("INSERT INTO savepoint_test_table (id, name) VALUES (3, 'Record 3')");
+        stmt.executeUpdate("INSERT INTO DB2INST1.savepoint_test_table (id, name) VALUES (3, 'Record 3')");
 
         // Verify all three records exist
-        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM savepoint_test_table");
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM DB2INST1.savepoint_test_table");
         assertTrue(rs.next());
         assertEquals(3, rs.getInt(1));
         rs.close();
 
         // Rollback to second savepoint (should have 2 records)
         connection.rollback(sp2);
-        rs = stmt.executeQuery("SELECT COUNT(*) FROM savepoint_test_table");
+        rs = stmt.executeQuery("SELECT COUNT(*) FROM DB2INST1.savepoint_test_table");
         assertTrue(rs.next());
         assertEquals(2, rs.getInt(1));
         rs.close();
 
         // Insert another record
-        stmt.executeUpdate("INSERT INTO savepoint_test_table (id, name) VALUES (4, 'Record 4')");
+        stmt.executeUpdate("INSERT INTO DB2INST1.savepoint_test_table (id, name) VALUES (4, 'Record 4')");
 
         // Rollback to first savepoint (should have 1 record)
         connection.rollback(sp1);
-        rs = stmt.executeQuery("SELECT COUNT(*) FROM savepoint_test_table");
+        rs = stmt.executeQuery("SELECT COUNT(*) FROM DB2INST1.savepoint_test_table");
         assertTrue(rs.next());
         assertEquals(1, rs.getInt(1));
         rs.close();
@@ -161,13 +166,13 @@ public class Db2SavepointTests {
         Statement stmt = connection.createStatement();
 
         // Insert initial data
-        stmt.executeUpdate("INSERT INTO savepoint_test_table (id, name) VALUES (1, 'Record 1')");
+        stmt.executeUpdate("INSERT INTO DB2INST1.savepoint_test_table (id, name) VALUES (1, 'Record 1')");
 
         // Create savepoint
         Savepoint sp = connection.setSavepoint("ReleaseSP");
 
         // Insert more data
-        stmt.executeUpdate("INSERT INTO savepoint_test_table (id, name) VALUES (2, 'Record 2')");
+        stmt.executeUpdate("INSERT INTO DB2INST1.savepoint_test_table (id, name) VALUES (2, 'Record 2')");
 
         // Release the savepoint
         connection.releaseSavepoint(sp);
@@ -176,7 +181,7 @@ public class Db2SavepointTests {
         assertThrows(SQLException.class, () -> connection.rollback(sp));
 
         // Verify data is still there (since savepoint was released, not rolled back)
-        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM savepoint_test_table");
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM DB2INST1.savepoint_test_table");
         assertTrue(rs.next());
         assertEquals(2, rs.getInt(1));
         rs.close();
@@ -192,7 +197,7 @@ public class Db2SavepointTests {
         Statement stmt = connection.createStatement();
 
         // Insert initial data
-        stmt.executeUpdate("INSERT INTO savepoint_test_table (id, name) VALUES (1, 'Record 1')");
+        stmt.executeUpdate("INSERT INTO DB2INST1.savepoint_test_table (id, name) VALUES (1, 'Record 1')");
 
         // Create unnamed savepoint
         Savepoint unnamedSp = connection.setSavepoint();
@@ -200,13 +205,13 @@ public class Db2SavepointTests {
         assertTrue(unnamedSp.getSavepointId() > 0);
 
         // Insert more data
-        stmt.executeUpdate("INSERT INTO savepoint_test_table (id, name) VALUES (2, 'Record 2')");
+        stmt.executeUpdate("INSERT INTO DB2INST1.savepoint_test_table (id, name) VALUES (2, 'Record 2')");
 
         // Rollback to unnamed savepoint
         connection.rollback(unnamedSp);
 
         // Verify only initial record exists
-        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM savepoint_test_table");
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM DB2INST1.savepoint_test_table");
         assertTrue(rs.next());
         assertEquals(1, rs.getInt(1));
         rs.close();
@@ -222,13 +227,13 @@ public class Db2SavepointTests {
         Statement stmt = connection.createStatement();
 
         // Insert initial data
-        stmt.executeUpdate("INSERT INTO savepoint_test_table (id, name) VALUES (1, 'Record 1')");
+        stmt.executeUpdate("INSERT INTO DB2INST1.savepoint_test_table (id, name) VALUES (1, 'Record 1')");
 
         // Create savepoint
         Savepoint sp = connection.setSavepoint("CommitSP");
 
         // Insert more data
-        stmt.executeUpdate("INSERT INTO savepoint_test_table (id, name) VALUES (2, 'Record 2')");
+        stmt.executeUpdate("INSERT INTO DB2INST1.savepoint_test_table (id, name) VALUES (2, 'Record 2')");
 
         // Commit the transaction
         connection.commit();
@@ -237,7 +242,7 @@ public class Db2SavepointTests {
         assertThrows(SQLException.class, () -> connection.rollback(sp));
 
         // Verify data is committed
-        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM savepoint_test_table");
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM DB2INST1.savepoint_test_table");
         assertTrue(rs.next());
         assertEquals(2, rs.getInt(1));
         rs.close();

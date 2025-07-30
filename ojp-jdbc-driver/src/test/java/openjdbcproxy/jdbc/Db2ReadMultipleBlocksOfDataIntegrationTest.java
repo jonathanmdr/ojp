@@ -33,16 +33,21 @@ public class Db2ReadMultipleBlocksOfDataIntegrationTest {
         
         Connection conn = DriverManager.getConnection(url, user, pwd);
 
+        // Set schema explicitly to avoid "object not found" errors
+        try (java.sql.Statement schemaStmt = conn.createStatement()) {
+            schemaStmt.execute("SET SCHEMA DB2INST1");
+        }
+
         System.out.println("Testing DB2 retrieving " + totalRecords + " records from url -> " + url);
 
         try {
-            executeUpdate(conn, "drop table db2_read_blocks_test_multi");
+            executeUpdate(conn, "drop table DB2INST1.db2_read_blocks_test_multi");
         } catch (Exception e) {
             //Does not matter
         }
         
         // Create table with DB2-specific syntax
-        executeUpdate(conn, "create table db2_read_blocks_test_multi(" +
+        executeUpdate(conn, "create table DB2INST1.db2_read_blocks_test_multi(" +
                 "id INTEGER NOT NULL, " +
                 "title VARCHAR(50) NOT NULL)");
 
