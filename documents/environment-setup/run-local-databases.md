@@ -206,3 +206,56 @@ GO
 > # Alternative 2: Use bash to access sqlcmd
 > docker exec -it ojp-sqlserver bash -c "sqlcmd -S localhost -U sa -P TestPassword123!"
 > ```
+
+---
+
+## Run IBM DB2 on Docker
+
+### Preconditions
+Have Docker installed on your machine.
+
+### Run Command
+
+> docker run -it --name ojp-db2 --privileged=true -e LICENSE=accept -e DB2INSTANCE=db2inst1 -e DB2INST1_PASSWORD=testpassword -e DBNAME=defaultdb -d -p 50000:50000 ibmcom/db2:11.5.8.0
+
+#### docker run
+Tells Docker to run a new container.
+
+#### -it
+Allocates a pseudo-TTY and keeps STDIN open (required for IBM DB2 setup).
+
+#### --name ojp-db2
+Assigns the name `ojp-db2` to the container, making it easier to manage and reference.
+
+#### --privileged=true
+Grants extended privileges to the container (required by IBM DB2 for proper initialization).
+
+#### -e LICENSE=accept
+Accepts the IBM DB2 End-User License Agreement (required by IBM).
+
+#### -e DB2INSTANCE=db2inst1
+Sets the DB2 instance name to `db2inst1` (the default instance name).
+
+#### -e DB2INST1_PASSWORD=testpassword
+Sets the password for the DB2 instance user `db2inst1`.
+
+#### -e DBNAME=defaultdb
+Creates a default database named `defaultdb` on startup.
+
+#### -d
+Runs the container in detached mode (in the background).
+
+#### -p 50000:50000
+Maps port 50000 of your host to port 50000 of the container (DB2's default port), allowing local access.
+
+#### ibmcom/db2:11.5.8.0
+Specifies the Docker image to use (in this case, the official IBM DB2 Community Edition image version 11.5.8.0 from Docker Hub).
+
+### Database Startup
+DB2 takes several minutes to fully initialize. You can monitor the startup process with:
+
+```bash
+docker logs ojp-db2
+```
+
+Wait for the message indicating that DB2 is ready to accept connections before attempting to connect.
