@@ -216,13 +216,20 @@ Have Docker installed on your machine.
 
 ### Run Command
 
-> docker run -it --name ojp-db2 --privileged=true -e LICENSE=accept -e DB2INSTANCE=db2inst1 -e DB2INST1_PASSWORD=testpassword -e DBNAME=defaultdb -d -p 50000:50000 ibmcom/db2:11.5.8.0
+> docker run -d --name ojp-db2   --privileged   -p 50000:50000 -m 6g  -e LICENSE=accept   -e DB2INSTANCE=db2inst1   -e DB2INST1_PASSWORD=testpass   -e DBNAME=testdb   ibmcom/db2:11.5.0.0a
+
+NOTE: DB2 might take several minutes to start, you can follow the evolution in the logs running the command:
+
+> docker logs ojp-db2 -f
 
 #### docker run
 Tells Docker to run a new container.
 
-#### -it
-Allocates a pseudo-TTY and keeps STDIN open (required for IBM DB2 setup).
+#### -d
+Runs the container in detached mode (in the background).
+
+#### -m 
+Limits container memory to 6GB.
 
 #### --name ojp-db2
 Assigns the name `ojp-db2` to the container, making it easier to manage and reference.

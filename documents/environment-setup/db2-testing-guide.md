@@ -14,13 +14,7 @@ This document explains how to set up and run IBM DB2 Database tests with OJP.
 Use the official IBM DB2 image for testing:
 
 ```bash
-docker run -it --name db2 --privileged=true \
-  -p 50000:50000 \
-  -e LICENSE=accept \
-  -e DB2INSTANCE=db2inst1 \
-  -e DB2INST1_PASSWORD=testpassword \
-  -e DBNAME=defaultdb \
-  ibmcom/db2:11.5.8.0
+docker run -d --name ojp-db2   --privileged   -p 50000:50000 -m 6g  -e LICENSE=accept   -e DB2INSTANCE=db2inst1   -e DB2INST1_PASSWORD=testpass   -e DBNAME=testdb   ibmcom/db2:11.5.0.0a
 ```
 
 Wait for the database to fully start (may take several minutes). You can check the logs:
