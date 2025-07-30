@@ -14,6 +14,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import static openjdbcproxy.helpers.SqlHelper.executeUpdate;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
