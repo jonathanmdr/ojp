@@ -22,6 +22,7 @@ public class BasicCrudIntegrationTest {
     private static boolean isMariaDBTestDisabled;
     private static boolean isOracleTestEnabled;
     private static boolean isSqlServerTestEnabled;
+    private static boolean isDb2TestEnabled;
     private static String tablePrefix = "";
 
     @BeforeAll
@@ -31,6 +32,7 @@ public class BasicCrudIntegrationTest {
         isMariaDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableMariaDBTests", "false"));
         isOracleTestEnabled = Boolean.parseBoolean(System.getProperty("enableOracleTests", "false"));
         isSqlServerTestEnabled = Boolean.parseBoolean(System.getProperty("enableSqlServerTests", "false"));
+        isDb2TestEnabled = Boolean.parseBoolean(System.getProperty("enableDb2Tests", "false"));
     }
 
     @ParameterizedTest
@@ -64,6 +66,12 @@ public class BasicCrudIntegrationTest {
         if (url.toLowerCase().contains("sqlserver") && !isSqlServerTestEnabled) {
             Assumptions.assumeFalse(true, "Skipping SQL Server tests - not enabled");
             tablePrefix = "sqlserver_";
+        }
+
+        // Skip DB2 tests if not enabled
+        if (url.toLowerCase().contains("db2") && !isDb2TestEnabled) {
+            Assumptions.assumeFalse(true, "Skipping DB2 tests - not enabled");
+            tablePrefix = "db2_";
         }
 
         Connection conn = DriverManager.getConnection(url, user, pwd);

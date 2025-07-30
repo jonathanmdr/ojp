@@ -25,7 +25,8 @@ public class TestDBUtils {
         POSTGRES,
         MYSQL,
         ORACLE,
-        SQLSERVER
+        SQLSERVER,
+        DB2
     }
 
     /**
@@ -59,6 +60,8 @@ public class TestDBUtils {
                 createTableSql = "CREATE TABLE " + tableName + " (id NUMBER(10) PRIMARY KEY, name VARCHAR2(255))";
             } else if (sqlSyntax == SqlSyntax.SQLSERVER) {
                 createTableSql = "CREATE TABLE " + tableName + " (id INT PRIMARY KEY, name NVARCHAR(255))";
+            } else if (sqlSyntax == SqlSyntax.DB2) {
+                createTableSql = "CREATE TABLE " + tableName + " (id INTEGER PRIMARY KEY NOT NULL, name VARCHAR(255))";
             } else {
                 createTableSql = "CREATE TABLE " + tableName + " (id INT PRIMARY KEY, name VARCHAR(255))";
             }

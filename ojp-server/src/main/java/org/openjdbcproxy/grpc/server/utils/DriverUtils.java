@@ -9,6 +9,7 @@ import static org.openjdbcproxy.grpc.server.Constants.MYSQL_DRIVER_CLASS;
 import static org.openjdbcproxy.grpc.server.Constants.ORACLE_DRIVER_CLASS;
 import static org.openjdbcproxy.grpc.server.Constants.POSTGRES_DRIVER_CLASS;
 import static org.openjdbcproxy.grpc.server.Constants.SQLSERVER_DRIVER_CLASS;
+import static org.openjdbcproxy.grpc.server.Constants.DB2_DRIVER_CLASS;
 
 @Slf4j
 @UtilityClass
@@ -48,6 +49,11 @@ public class DriverUtils {
             Class.forName(SQLSERVER_DRIVER_CLASS);
         } catch (ClassNotFoundException e) {
             log.info("Failed to register SQL Server JDBC driver.", e);
+        }
+        try {
+            Class.forName(DB2_DRIVER_CLASS);
+        } catch (ClassNotFoundException e) {
+            log.info("Failed to register DB2 JDBC driver.", e);
         }
     }
 }
