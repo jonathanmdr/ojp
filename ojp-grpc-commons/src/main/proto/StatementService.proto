@@ -45,7 +45,6 @@ message SessionInfo {
     string sessionUUID = 3;
     TransactionInfo transactionInfo = 4;
     SessionStatus sessionStatus = 5;
-    DbName dbName = 6;
 }
 
 message ResultSetId {

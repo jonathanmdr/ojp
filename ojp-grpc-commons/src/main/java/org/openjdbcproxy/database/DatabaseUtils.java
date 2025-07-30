@@ -1,12 +1,15 @@
-package org.openjdbcproxy.grpc.server.utils;
+package org.openjdbcproxy.database;
 
 import com.openjdbcproxy.grpc.DbName;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+
 @Slf4j
 @UtilityClass
-public class DbUrlUtils {
+public class DatabaseUtils {
+
+
     public DbName resolveDbName(String url) {
         DbName dbName = DbName.UNMAPPED;
         if (url.toUpperCase().contains("H2:")) {

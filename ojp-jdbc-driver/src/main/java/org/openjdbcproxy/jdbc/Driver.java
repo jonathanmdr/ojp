@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import com.openjdbcproxy.grpc.ConnectionDetails;
 import com.openjdbcproxy.grpc.SessionInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.openjdbcproxy.database.DatabaseUtils;
 import org.openjdbcproxy.grpc.SerializationHandler;
 import org.openjdbcproxy.grpc.client.StatementService;
 import org.openjdbcproxy.grpc.client.StatementServiceGrpcClient;
@@ -67,7 +68,7 @@ public class Driver implements java.sql.Driver {
                         .build()
                 );
         log.debug("Returning new Connection with sessionInfo: {}", sessionInfo);
-        return new Connection(sessionInfo, statementService, sessionInfo.getDbName());
+        return new Connection(sessionInfo, statementService, DatabaseUtils.resolveDbName(url));
     }
     
     private Properties loadOjpProperties() {

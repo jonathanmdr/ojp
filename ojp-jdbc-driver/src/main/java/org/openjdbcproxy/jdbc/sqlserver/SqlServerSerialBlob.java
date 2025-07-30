@@ -7,7 +7,7 @@ import java.sql.SQLException;
 
 /**
  * Handle SqlServer BLOB in memory.
- * TODO open an issue on SqlServer LOB objects and link here.
+ * Issue open: https://github.com/Open-JDBC-Proxy/ojp/issues/19.
  */
 public class SqlServerSerialBlob extends SerialBlob {
     public SqlServerSerialBlob(byte[] b) throws SerialException, SQLException {

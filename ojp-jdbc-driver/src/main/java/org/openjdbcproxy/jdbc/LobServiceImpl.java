@@ -56,7 +56,6 @@ public class LobServiceImpl implements LobService {
             @SneakyThrows
             @Override
             public synchronized boolean hasNext() {
-                //TODO remove if not needed
                 if (DbName.H2.equals(connection.getDbName())) {
                     startBlockSent = true; //H2 does not support partial binary streams
                 }
@@ -71,7 +70,6 @@ public class LobServiceImpl implements LobService {
             @SneakyThrows
             @Override
             public synchronized LobDataBlock next() {
-                //TODO remove if not needed
                 if (DbName.H2.equals(connection.getDbName())) {
                     startBlockSent = true; //H2 does not support partial binary streams
                 }

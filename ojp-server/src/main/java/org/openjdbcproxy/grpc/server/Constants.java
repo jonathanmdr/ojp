@@ -17,4 +17,6 @@ public class Constants {
     public static final String POSTGRES_DRIVER_CLASS = "org.postgresql.Driver";
     public static final String MYSQL_DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
     public static final String MARIADB_DRIVER_CLASS = "org.mariadb.jdbc.Driver";
+    public static final String ORACLE_DRIVER_CLASS = "oracle.jdbc.OracleDriver";
+    public static final String SQLSERVER_DRIVER_CLASS = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 }

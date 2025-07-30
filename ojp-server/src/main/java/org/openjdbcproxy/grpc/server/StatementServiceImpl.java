@@ -36,7 +36,8 @@ import org.openjdbcproxy.constants.CommonConstants;
 import org.openjdbcproxy.grpc.dto.OpQueryResult;
 import org.openjdbcproxy.grpc.dto.Parameter;
 import org.openjdbcproxy.grpc.server.utils.DateTimeUtils;
-import org.openjdbcproxy.grpc.server.utils.DbUrlUtils;
+import org.openjdbcproxy.database.DatabaseUtils;
+import org.openjdbcproxy.grpc.server.utils.DriverUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -81,37 +82,21 @@ import static org.openjdbcproxy.grpc.SerializationHandler.serialize;
 import static org.openjdbcproxy.grpc.server.Constants.EMPTY_LIST;
 import static org.openjdbcproxy.grpc.server.Constants.EMPTY_MAP;
 import static org.openjdbcproxy.grpc.server.Constants.EMPTY_STRING;
-import static org.openjdbcproxy.grpc.server.Constants.H2_DRIVER_CLASS;
-import static org.openjdbcproxy.grpc.server.Constants.MARIADB_DRIVER_CLASS;
-import static org.openjdbcproxy.grpc.server.Constants.MYSQL_DRIVER_CLASS;
-import static org.openjdbcproxy.grpc.server.Constants.POSTGRES_DRIVER_CLASS;
 import static org.openjdbcproxy.grpc.server.Constants.SHA_256;
 import static org.openjdbcproxy.grpc.server.GrpcExceptionHandler.sendSQLExceptionMetadata;
 
 @Slf4j
 @RequiredArgsConstructor
-//TODO this became a GOD class, need to try to delegate some work to specialized other classes where possible, it is challenging because many GRPC callbacks rely on attributes present here to work.
+//TODO this became a GOD class, need to try to rdelegate some work to specialized other classes where possible, it is challenging because many GRPC callbacks rely on attributes present here to work.
 public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceImplBase {
 
-    //TODO put the datasource at database level not user + database so if more than one user agaist the DB still maintain the max pool size
     private final Map<String, HikariDataSource> datasourceMap = new ConcurrentHashMap<>();
     private final SessionManager sessionManager;
     private final CircuitBreaker circuitBreaker;
     private static final List<String> INPUT_STREAM_TYPES = Arrays.asList("RAW", "BINARY VARYING", "BYTEA");
 
     static {
-        //Register all JDBC drivers supported here.
-        try {
-            Class.forName(H2_DRIVER_CLASS);
-            Class.forName(POSTGRES_DRIVER_CLASS);
-            Class.forName(MYSQL_DRIVER_CLASS);
-            Class.forName(MARIADB_DRIVER_CLASS);
-            //TODO remove below before merging to master
-            //Class.forName("oracle.jdbc.OracleDriver");
-            //Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        DriverUtils.registerDrivers();
     }
 
     @Override
@@ -138,7 +123,6 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         responseObserver.onNext(SessionInfo.newBuilder()
                 .setConnHash(connHash)
                 .setClientUUID(connectionDetails.getClientUUID())
-                .setDbName(DbUrlUtils.resolveDbName(connectionDetails.getUrl()))
                 .build()
         );
         responseObserver.onCompleted();
@@ -175,9 +159,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         Integer parameterIndex = (Integer) metadata.get(CommonConstants.PREPARED_STATEMENT_BINARY_STREAM_INDEX);
                         ps.setBinaryStream(parameterIndex, lobIS);
                     }
-                    DbName dbName = returnSessionInfo.getDbName();
-                    //TODO check why sql server arriving here as H2
-                    if (!DbName.H2.equals(dbName)) {
+                    if (!DbName.SQL_SERVER.equals(dto.getDbName())) {//SQL server treats binary streams differently
                         sessionManager.waitLobStreamsConsumption(dto.getSession());
                     }
                     if (ps != null) {
@@ -1218,6 +1200,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             if (conn == null) {
                 throw new SQLException("Connection not found for this sessionInfo");
             }
+            dtoBuilder.dbName(DatabaseUtils.resolveDbName(conn.getMetaData().getURL()));
             if (conn.isClosed()) {
                 throw new SQLException("Connection is closed");
             }
