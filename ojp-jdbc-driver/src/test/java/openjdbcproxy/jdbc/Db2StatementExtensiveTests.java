@@ -39,9 +39,15 @@ public class Db2StatementExtensiveTests {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
         
         connection = DriverManager.getConnection(url, user, password);
+        
+        // Set schema explicitly to avoid "object not found" errors
+        try (java.sql.Statement schemaStmt = connection.createStatement()) {
+            schemaStmt.execute("SET SCHEMA DB2INST1");
+        }
+        
         statement = connection.createStatement();
 
-        TestDBUtils.createBasicTestTable(connection, "db2_statement_test", TestDBUtils.SqlSyntax.DB2, true);
+        TestDBUtils.createBasicTestTable(connection, "DB2INST1.db2_statement_test", TestDBUtils.SqlSyntax.DB2, true);
     }
 
     @AfterEach
@@ -53,7 +59,7 @@ public class Db2StatementExtensiveTests {
     @CsvFileSource(resources = "/db2_connection.csv")
     public void testExecuteQuery(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        ResultSet rs = statement.executeQuery("SELECT * FROM db2_statement_test");
+        ResultSet rs = statement.executeQuery("SELECT * FROM DB2INST1.db2_statement_test");
         assertNotNull(rs);
         assertTrue(rs.next());
         rs.close();
@@ -63,10 +69,10 @@ public class Db2StatementExtensiveTests {
     @CsvFileSource(resources = "/db2_connection.csv")
     public void testExecuteUpdate(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        int rows = statement.executeUpdate("UPDATE db2_statement_test SET name = 'Updated Alice' WHERE id = 1");
+        int rows = statement.executeUpdate("UPDATE DB2INST1.db2_statement_test SET name = 'Updated Alice' WHERE id = 1");
         assertEquals(1, rows);
 
-        ResultSet rs = statement.executeQuery("SELECT name FROM db2_statement_test WHERE id = 1");
+        ResultSet rs = statement.executeQuery("SELECT name FROM DB2INST1.db2_statement_test WHERE id = 1");
         assertTrue(rs.next());
         assertEquals("Updated Alice", rs.getString("name"));
         rs.close();
@@ -97,9 +103,9 @@ public class Db2StatementExtensiveTests {
     public void testExecuteAfterCloseThrows(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         statement.close();
-        assertThrows(SQLException.class, () -> statement.executeQuery("SELECT * FROM db2_statement_test"));
-        assertThrows(SQLException.class, () -> statement.executeUpdate("UPDATE db2_statement_test SET name = 'fail' WHERE id = 1"));
-        assertThrows(SQLException.class, () -> statement.addBatch("INSERT INTO db2_statement_test (id, name) VALUES (99, 'ShouldFail')"));
+        assertThrows(SQLException.class, () -> statement.executeQuery("SELECT * FROM DB2INST1.db2_statement_test"));
+        assertThrows(SQLException.class, () -> statement.executeUpdate("UPDATE DB2INST1.db2_statement_test SET name = 'fail' WHERE id = 1"));
+        assertThrows(SQLException.class, () -> statement.addBatch("INSERT INTO DB2INST1.db2_statement_test (id, name) VALUES (99, 'ShouldFail')"));
     }
 
     @ParameterizedTest
@@ -108,7 +114,7 @@ public class Db2StatementExtensiveTests {
         this.setUp(driverClass, url, user, password);
         statement.setMaxRows(1);
         assertEquals(1, statement.getMaxRows());
-        ResultSet rs = statement.executeQuery("SELECT * FROM db2_statement_test");
+        ResultSet rs = statement.executeQuery("SELECT * FROM DB2INST1.db2_statement_test");
         assertTrue(rs.next());
         assertFalse(rs.next());
         rs.close();
@@ -159,14 +165,14 @@ public class Db2StatementExtensiveTests {
     @CsvFileSource(resources = "/db2_connection.csv")
     public void testExecute(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        boolean isResultSet = statement.execute("SELECT * FROM db2_statement_test");
+        boolean isResultSet = statement.execute("SELECT * FROM DB2INST1.db2_statement_test");
         assertTrue(isResultSet);
         ResultSet rs = statement.getResultSet();
         assertNotNull(rs);
         rs.close();
         assertEquals(-1, statement.getUpdateCount());
 
-        isResultSet = statement.execute("UPDATE db2_statement_test SET name = 'Updated Bob' WHERE id = 2");
+        isResultSet = statement.execute("UPDATE DB2INST1.db2_statement_test SET name = 'Updated Bob' WHERE id = 2");
         assertFalse(isResultSet);
         assertEquals(1, statement.getUpdateCount());
     }
@@ -175,7 +181,7 @@ public class Db2StatementExtensiveTests {
     @CsvFileSource(resources = "/db2_connection.csv")
     public void testGetMoreResults(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        statement.execute("SELECT * FROM db2_statement_test");
+        statement.execute("SELECT * FROM DB2INST1.db2_statement_test");
         assertFalse(statement.getMoreResults());
         assertEquals(-1, statement.getUpdateCount());
     }
@@ -214,12 +220,12 @@ public class Db2StatementExtensiveTests {
     @CsvFileSource(resources = "/db2_connection.csv")
     public void testBatchExecution(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        statement.addBatch("INSERT INTO db2_statement_test (id, name) VALUES (3, 'Charlie')");
-        statement.addBatch("INSERT INTO db2_statement_test (id, name) VALUES (4, 'David')");
+        statement.addBatch("INSERT INTO DB2INST1.db2_statement_test (id, name) VALUES (3, 'Charlie')");
+        statement.addBatch("INSERT INTO DB2INST1.db2_statement_test (id, name) VALUES (4, 'David')");
         int[] results = statement.executeBatch();
         assertEquals(2, results.length);
 
-        ResultSet rs = statement.executeQuery("SELECT COUNT(*) AS total FROM db2_statement_test");
+        ResultSet rs = statement.executeQuery("SELECT COUNT(*) AS total FROM DB2INST1.db2_statement_test");
         assertTrue(rs.next());
         assertEquals(4, rs.getLong("total"));
         rs.close();
@@ -229,7 +235,7 @@ public class Db2StatementExtensiveTests {
     @CsvFileSource(resources = "/db2_connection.csv")
     public void testClearBatch(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        statement.addBatch("INSERT INTO db2_statement_test (id, name) VALUES (5, 'Eve')");
+        statement.addBatch("INSERT INTO DB2INST1.db2_statement_test (id, name) VALUES (5, 'Eve')");
         statement.clearBatch();
         int[] results = statement.executeBatch();
         assertEquals(0, results.length);
@@ -246,7 +252,7 @@ public class Db2StatementExtensiveTests {
     @CsvFileSource(resources = "/db2_connection.csv")
     public void testGetMoreResultsWithCurrent(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
-        statement.execute("SELECT * FROM db2_statement_test");
+        statement.execute("SELECT * FROM DB2INST1.db2_statement_test");
         assertFalse(statement.getMoreResults(Statement.CLOSE_CURRENT_RESULT));
     }
 
@@ -338,15 +344,15 @@ public class Db2StatementExtensiveTests {
     public void testLargeMethodsDefault(String driverClass, String url, String user, String password) throws Exception {
         this.setUp(driverClass, url, user, password);
         statement.getFetchDirection();
-        statement.execute("INSERT INTO db2_statement_test (id, name) VALUES (3, 'Juca Bala')");
+        statement.execute("INSERT INTO DB2INST1.db2_statement_test (id, name) VALUES (3, 'Juca Bala')");
         // DB2 drivers support large methods
         assertEquals(1, statement.getLargeUpdateCount());
 
         assertDoesNotThrow(() -> statement.executeLargeBatch());
-        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE db2_statement_test SET name = 'x' WHERE id = 1"));
-        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE db2_statement_test SET name = 'x' WHERE id = 1", Statement.RETURN_GENERATED_KEYS));
-        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE db2_statement_test SET name = 'x' WHERE id = 1", new String[]{"id"}));
-        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE db2_statement_test SET name = 'x' WHERE id = 1", new int[]{1}));
+        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE DB2INST1.db2_statement_test SET name = 'x' WHERE id = 1"));
+        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE DB2INST1.db2_statement_test SET name = 'x' WHERE id = 1", Statement.RETURN_GENERATED_KEYS));
+        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE DB2INST1.db2_statement_test SET name = 'x' WHERE id = 1", new String[]{"id"}));
+        assertDoesNotThrow(() -> statement.executeLargeUpdate("UPDATE DB2INST1.db2_statement_test SET name = 'x' WHERE id = 1", new int[]{1}));
 
         // DB2 JDBC driver implements large methods
         assertDoesNotThrow(() -> statement.getLargeMaxRows());
@@ -399,7 +405,7 @@ public class Db2StatementExtensiveTests {
         this.setUp(driverClass, url, user, password);
         
         // Test DB2-specific SQL features
-        statement.execute("CREATE VIEW db2_test_view AS SELECT * FROM db2_statement_test");
+        statement.execute("CREATE VIEW db2_test_view AS SELECT * FROM DB2INST1.db2_statement_test");
         
         ResultSet rs = statement.executeQuery("SELECT * FROM db2_test_view");
         assertTrue(rs.next());
