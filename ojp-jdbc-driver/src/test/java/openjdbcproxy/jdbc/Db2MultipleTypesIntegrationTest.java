@@ -90,7 +90,7 @@ public class Db2MultipleTypesIntegrationTest {
         Assert.assertEquals(1, byteValue.length);
         Assert.assertEquals(1, byteValue[0]);
         // DB2 VARBINARY column
-        Assert.assertEquals("AAAA", new String(resultSet.getBytes(11)));
+        Assert.assertEquals("AAAA", new String(resultSet.getBytes(11), StandardCharsets.UTF_8));
         Assert.assertEquals("29/03/2025", sdf.format(resultSet.getDate(12)));
         Assert.assertEquals("11:12:13", sdfTime.format(resultSet.getTime(13)));
         Assert.assertEquals("30/03/2025 21:22:23", sdfTimestamp.format(resultSet.getTimestamp(14)));

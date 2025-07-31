@@ -16,6 +16,7 @@ public class Db2ResultSetMetaDataExtensiveTests {
 
     private static boolean isTestDisabled;
     private Connection connection;
+    private Statement statement;
     private ResultSet resultSet;
     private ResultSetMetaData metaData;
 
@@ -35,7 +36,7 @@ public class Db2ResultSetMetaDataExtensiveTests {
             schemaStmt.execute("SET SCHEMA DB2INST1");
         }
         
-        Statement statement = connection.createStatement();
+        statement = connection.createStatement();
 
         try {
             statement.execute("DROP TABLE DB2INST1.TEST_TABLE_METADATA");
@@ -61,8 +62,28 @@ public class Db2ResultSetMetaDataExtensiveTests {
 
     @AfterEach
     public void tearDown() throws Exception {
-        // Don't close resultSet here as metaData needs it
-        if (connection != null) connection.close();
+        // Close in reverse order: resultSet, statement, then connection
+        try {
+            if (resultSet != null && !resultSet.isClosed()) {
+                resultSet.close();
+            }
+        } catch (SQLException e) {
+            // Ignore - might already be closed
+        }
+        try {
+            if (statement != null && !statement.isClosed()) {
+                statement.close();
+            }
+        } catch (SQLException e) {
+            // Ignore - might already be closed
+        }
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            // Ignore - might already be closed
+        }
     }
 
     @ParameterizedTest
