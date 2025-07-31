@@ -11,6 +11,7 @@ import com.openjdbcproxy.grpc.LobReference;
 import com.openjdbcproxy.grpc.LobType;
 import com.openjdbcproxy.grpc.OpResult;
 import com.openjdbcproxy.grpc.ReadLobRequest;
+import com.openjdbcproxy.grpc.ResultSetFetchRequest;
 import com.openjdbcproxy.grpc.ResultType;
 import com.openjdbcproxy.grpc.SessionInfo;
 import com.openjdbcproxy.grpc.SessionTerminationStatus;
@@ -333,9 +334,6 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
     @Override
     public void executeQuery(StatementRequest request, StreamObserver<OpResult> responseObserver) {
         log.info("Executing query for {}", request.getSql());
-        if (request.getSql().contains("select oi1_0.id,oi1_0.order_id,oi1_0.product_id,oi1_0.quantity from order_items oi1_0")) {
-            int stop = 0;
-        }
         String stmtHash = SqlStatementXXHash.hashSqlQuery(request.getSql());
         try {
             circuitBreaker.preCheck(stmtHash);
@@ -356,6 +354,18 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         } catch (SQLException e) {
             circuitBreaker.onFailure(stmtHash, e);
             log.error("Failure during query execution: " + e.getMessage(), e);
+            sendSQLExceptionMetadata(e, responseObserver);
+        }
+    }
+
+    @Override
+    public void fetchNextRows(ResultSetFetchRequest request, StreamObserver<OpResult> responseObserver) {
+        log.debug("Executing fetch next rows for result set  {}", request.getResultSetUUID());
+        try {
+            ConnectionSessionDTO dto = this.sessionConnection(request.getSession(), false);
+            this.handleResultSet(dto.getSession(), request.getResultSetUUID(), responseObserver);
+        } catch (SQLException e) {
+            log.error("Failure fetch next rows for result set: " + e.getMessage(), e);
             sendSQLExceptionMetadata(e, responseObserver);
         }
     }
@@ -561,7 +571,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             //If the lob length is known the exact size of the next block is also known.
             boolean exactSizeKnown = readLobContext.getLobLength().isPresent() && readLobContext.getAvailableLength().isPresent();
             int nextByte = inputStream.read();
-            int nextBlockSize = this.nextBlockSize(readLobContext, request.getPosition());
+            int nextBlockSize = nextByte == -1? 1 : this.nextBlockSize(readLobContext, request.getPosition());
             byte[] nextBlock = new byte[nextBlockSize];
             int idx = -1;
             int currentPos = (int) request.getPosition();
@@ -596,6 +606,10 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
 
                 byte[] adjustedSizeArray = (idx % MAX_LOB_DATA_BLOCK_SIZE != 0 && !exactSizeKnown) ?
                         trim(nextBlock) : nextBlock;
+                if (nextByte == -1 && adjustedSizeArray.length == 1 && adjustedSizeArray[0] != nextByte) {
+                    // For cases where the amount of bytes is a multiple of the block size and last read only reads the end of the stream.
+                    adjustedSizeArray = new byte[0];
+                }
                 currentPos = (int) request.getPosition() + idx;
                 log.info("Sending leftover bytes size {} pos {}", idx, currentPos);
                 responseObserver.onNext(LobDataBlock.newBuilder()
@@ -1233,17 +1247,25 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         List<Object[]> results = new ArrayList<>();
         int row = 0;
         boolean justSent = false;
+        String resultSetMode = ""; //Flag to indicate if result set contains LOBs
+        DbName dbName = DatabaseUtils.resolveDbName(rs.getStatement().getConnection().getMetaData().getURL());
+        boolean isDB2OrSqlServer = DbName.SQL_SERVER.equals(dbName) || DbName.DB2.equals(dbName);
+
+        forEachRow:
         while (rs.next()) {
             justSent = false;
             row++;
             Object[] rowValues = new Object[columnCount];
-            for (int i = 0; i < columnCount; i++) {
+           for (int i = 0; i < columnCount; i++) {
                 int colType = rs.getMetaData().getColumnType(i + 1);
                 String colTypeName = rs.getMetaData().getColumnTypeName(i + 1);
                 Object currentValue = null;
                 //Postgres uses type BYTEA which translates to type VARBINARY
                 switch (colType) {
                     case Types.VARBINARY: {
+                        if (isDB2OrSqlServer) {
+                            resultSetMode = CommonConstants.RESULT_SET_ROW_BY_ROW_MODE;
+                        }
                         if ("BLOB".equalsIgnoreCase(colTypeName)) {
                             currentValue = this.treatAsBlob(session, rs, i);
                         } else {
@@ -1252,10 +1274,16 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         break;
                     }
                     case Types.BLOB, Types.LONGVARBINARY: {
+                        if (isDB2OrSqlServer) {
+                            resultSetMode = CommonConstants.RESULT_SET_ROW_BY_ROW_MODE;
+                        }
                         currentValue = this.treatAsBlob(session, rs, i);
                         break;
                     }
                     case Types.CLOB: {
+                        if (isDB2OrSqlServer) {
+                            resultSetMode = CommonConstants.RESULT_SET_ROW_BY_ROW_MODE;
+                        }
                         Clob clob = rs.getClob(i + 1);
                         if (clob == null) {
                             currentValue = null;
@@ -1268,6 +1296,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         break;
                     }
                     case Types.BINARY: {
+                        if (isDB2OrSqlServer) {
+                            resultSetMode = CommonConstants.RESULT_SET_ROW_BY_ROW_MODE;
+                        }
                         currentValue = treatAsBinary(session, rs, i);
                         break;
                     }
@@ -1294,13 +1325,18 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                     }
                 }
                 rowValues[i] = currentValue;
+
             }
             results.add(rowValues);
+
+            if (isDB2OrSqlServer && CommonConstants.RESULT_SET_ROW_BY_ROW_MODE.equalsIgnoreCase(resultSetMode)) {
+                break forEachRow;
+            }
 
             if (row % CommonConstants.ROWS_PER_RESULT_SET_DATA_BLOCK == 0) {
                 justSent = true;
                 //Send a block of records
-                responseObserver.onNext(this.wrapResults(session, results, queryResultBuilder, resultSetUUID));
+                responseObserver.onNext(this.wrapResults(session, results, queryResultBuilder, resultSetUUID, resultSetMode));
                 queryResultBuilder = OpQueryResult.builder();// Recreate the builder to not send labels in every block.
                 results = new ArrayList<>();
             }
@@ -1308,7 +1344,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
 
         if (!justSent) {
             //Send a block of remaining records
-            responseObserver.onNext(this.wrapResults(session, results, queryResultBuilder, resultSetUUID));
+            responseObserver.onNext(this.wrapResults(session, results, queryResultBuilder, resultSetUUID, resultSetMode));
         }
 
         responseObserver.onCompleted();
@@ -1357,7 +1393,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
     private OpResult wrapResults(SessionInfo sessionInfo,
                                  List<Object[]> results,
                                  OpQueryResult.OpQueryResultBuilder queryResultBuilder,
-                                 String resultSetUUID) {
+                                 String resultSetUUID, String resultSetMode) {
 
         OpResult.Builder resultsBuilder = OpResult.newBuilder();
         resultsBuilder.setSession(sessionInfo);
@@ -1365,6 +1401,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         queryResultBuilder.resultSetUUID(resultSetUUID);
         queryResultBuilder.rows(results);
         resultsBuilder.setValue(ByteString.copyFrom(serialize(queryResultBuilder.build())));
+        resultsBuilder.setFlag(resultSetMode);
 
         return resultsBuilder.build();
     }

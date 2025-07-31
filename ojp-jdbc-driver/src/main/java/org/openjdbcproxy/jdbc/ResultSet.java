@@ -56,6 +56,7 @@ public class ResultSet extends RemoteProxyResultSet {
     private boolean inProxyMode;
     private boolean closed;
     private AtomicInteger currentIdx = new AtomicInteger(0);
+    private boolean inRowByRowMode;
 
     private Object lastValueRead;
 
@@ -67,7 +68,7 @@ public class ResultSet extends RemoteProxyResultSet {
             this.statement = statement;
             OpResult result = nextWithSessionUpdate(itOpResult.next());
             OpQueryResult opQueryResult = deserialize(result.getValue().toByteArray(), OpQueryResult.class);
-
+            this.inRowByRowMode = CommonConstants.RESULT_SET_ROW_BY_ROW_MODE.equalsIgnoreCase(result.getFlag());
             this.setStatementService(statementService);
             this.setResultSetUUID(opQueryResult.getResultSetUUID());
             this.currentDataBlock = opQueryResult.getRows();
@@ -89,18 +90,33 @@ public class ResultSet extends RemoteProxyResultSet {
         }
         this.currentIdx.incrementAndGet();
         blockIdx.incrementAndGet();
-        if (blockIdx.get() >= currentDataBlock.size() && itResults.hasNext()) {
+        if (this.inRowByRowMode && blockIdx.get() > 0) {
             try {
-                OpResult result = this.nextWithSessionUpdate(itResults.next());
-                OpQueryResult opQueryResult = deserialize(result.getValue().toByteArray(), OpQueryResult.class);
-                this.currentDataBlock = opQueryResult.getRows();
-                this.blockCount.incrementAndGet();
-                this.blockIdx.set(0);
+                // Row by row mode is used in SQL Server and DB2 only when working with LOBs as per moving the cursor earlier
+                // would invalidate the LOB object(s) and therefore the read is only done when asked by the client.
+                OpResult result = this.nextWithSessionUpdate(
+                        this.getStatementService().fetchNextRows(((Connection) this.statement.getConnection()).getSession(),
+                        this.getResultSetUUID(), 1));
+                this.setNextOpResult(result);
+            } catch (StatusRuntimeException e) {
+                throw handle(e);
+            }
+        }
+        if (!this.inRowByRowMode && blockIdx.get() >= currentDataBlock.size() && itResults.hasNext()) {
+            try {
+                this.setNextOpResult(this.nextWithSessionUpdate(itResults.next()));
             } catch (StatusRuntimeException e) {
                 throw handle(e);
             }
         }
         return blockIdx.get() < currentDataBlock.size();
+    }
+
+    private void setNextOpResult(OpResult result) {
+        OpQueryResult opQueryResult = deserialize(result.getValue().toByteArray(), OpQueryResult.class);
+        this.currentDataBlock = opQueryResult.getRows();
+        this.blockCount.incrementAndGet();
+        this.blockIdx.set(0);
     }
 
     private OpResult nextWithSessionUpdate(OpResult next) throws SQLException {

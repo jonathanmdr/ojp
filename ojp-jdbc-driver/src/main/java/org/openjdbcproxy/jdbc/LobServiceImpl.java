@@ -138,9 +138,6 @@ public class LobServiceImpl implements LobService {
 
             @Override
             public int read() throws IOException {
-                if (currentPos == 2048) {
-                    int i = 0;
-                }
                 if (currentPos >= (currentBlock.length - 1)) {
                     if (!itBlocks.hasNext()) {
                         return -1;// -1 means end of the stream.

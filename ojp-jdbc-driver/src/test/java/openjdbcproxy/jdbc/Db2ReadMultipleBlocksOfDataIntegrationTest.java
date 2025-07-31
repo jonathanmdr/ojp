@@ -95,7 +95,7 @@ public class Db2ReadMultipleBlocksOfDataIntegrationTest {
         
         // Create table with DB2-specific data types
         executeUpdate(conn, "create table db2_pagination_test(" +
-                "id INTEGER PRIMARY KEY, " +
+                "id INTEGER NOT NULL PRIMARY KEY, " +
                 "name VARCHAR(100) NOT NULL, " +
                 "value DECIMAL(19,2), " +
                 "description CLOB(1M))");
@@ -160,7 +160,7 @@ public class Db2ReadMultipleBlocksOfDataIntegrationTest {
         
         // Create table with DB2 INTEGER and VARCHAR types
         executeUpdate(conn, "create table db2_scroll_test(" +
-                "id INTEGER PRIMARY KEY, " +
+                "id INTEGER NOT NULL PRIMARY KEY, " +
                 "data VARCHAR(100))");
 
         // Insert test data
@@ -223,7 +223,7 @@ public class Db2ReadMultipleBlocksOfDataIntegrationTest {
         
         // Create table with various DB2 data types
         executeUpdate(conn, "create table db2_multi_types_test(" +
-                "id INTEGER PRIMARY KEY, " +
+                "id INTEGER  NOT NULL PRIMARY KEY, " +
                 "int_col INTEGER, " +
                 "decimal_col DECIMAL(19,2), " +
                 "varchar_col VARCHAR(100), " +
