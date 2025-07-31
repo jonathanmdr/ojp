@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -54,12 +55,13 @@ public class Db2ResultSetMetaDataExtensiveTests {
         statement.execute("INSERT INTO DB2INST1.TEST_TABLE_METADATA (name, age, salary) VALUES ('Alice', 30, 50000.00)");
 
         resultSet = statement.executeQuery("SELECT * FROM DB2INST1.TEST_TABLE_METADATA");
+        resultSet.next(); // Move to first row for metadata access
         metaData = resultSet.getMetaData();
     }
 
     @AfterEach
     public void tearDown() throws Exception {
-        if (resultSet != null) resultSet.close();
+        // Don't close resultSet here as metaData needs it
         if (connection != null) connection.close();
     }
 
@@ -247,13 +249,26 @@ public class Db2ResultSetMetaDataExtensiveTests {
                         "boolean_col BOOLEAN" +
                         ")"
         );
-        statement.execute("INSERT INTO DB2INST1.TEST_DB2_TYPES (bigint_col, smallint_col, real_col, double_col, char_col, varchar_col, clob_col, blob_col, date_col, time_col, timestamp_col, boolean_col) " +
-                         "VALUES (9223372036854775807, 32767, 123.45, 123456.789, 'CHAR_TEST', 'VARCHAR_TEST', 'CLOB_TEST', 'BLOB_TEST', CURRENT_DATE, CURRENT_TIME, CURRENT_TIMESTAMP, true)");
+        // Insert data with proper BLOB handling
+        PreparedStatement pst = connection.prepareStatement(
+            "INSERT INTO DB2INST1.TEST_DB2_TYPES (bigint_col, smallint_col, real_col, double_col, char_col, varchar_col, clob_col, blob_col, date_col, time_col, timestamp_col, boolean_col) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_DATE, CURRENT_TIME, CURRENT_TIMESTAMP, ?)"
+        );
+        pst.setLong(1, 9223372036854775807L);
+        pst.setInt(2, 32767);
+        pst.setFloat(3, 123.45f);
+        pst.setDouble(4, 123456.789);
+        pst.setString(5, "CHAR_TEST");
+        pst.setString(6, "VARCHAR_TEST");
+        pst.setString(7, "CLOB_TEST");
+        pst.setBytes(8, "BLOB_TEST".getBytes(StandardCharsets.UTF_8)); // Proper BLOB handling
+        pst.setBoolean(9, true);
+        pst.executeUpdate();
 
         ResultSet resultSet = statement.executeQuery("SELECT * FROM DB2INST1.TEST_DB2_TYPES");
         ResultSetMetaData md = resultSet.getMetaData();
 
-        // Test column count
+        // Test column count (13 with blob_col)
         assertEquals(13, md.getColumnCount());
 
         // Test specific DB2 data types

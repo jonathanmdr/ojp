@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
@@ -61,7 +62,7 @@ public class Db2MultipleTypesIntegrationTest {
         psInsert.setBigDecimal(8, new BigDecimal(10));
         psInsert.setFloat(9, 20.20f);
         psInsert.setBytes(10, new byte[]{(byte) 1}); // DB2 VARBINARY expects byte array
-        psInsert.setBytes(11, "AAAA".getBytes()); // DB2 VARBINARY
+        psInsert.setBytes(11, "AAAA".getBytes(StandardCharsets.UTF_8)); // DB2 VARBINARY with UTF-8
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         psInsert.setDate(12, new Date(sdf.parse("29/03/2025").getTime()));
         SimpleDateFormat sdfTime = new SimpleDateFormat("hh:mm:ss");
