@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
@@ -13,6 +14,7 @@ import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.ParseException;
@@ -31,9 +33,9 @@ public class Db2MultipleTypesIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, ParseException {
+    public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, ParseException, UnsupportedEncodingException {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
-        
+
         Connection conn = DriverManager.getConnection(url, user, pwd);
 
         // Set schema explicitly to avoid "object not found" errors
@@ -45,6 +47,8 @@ public class Db2MultipleTypesIntegrationTest {
 
         TestDBUtils.createMultiTypeTestTable(conn, "DB2INST1.db2_multi_types_test", TestDBUtils.SqlSyntax.DB2);
 
+        String dbEncoding = "ISO-8859-1"; // default fallback
+
         java.sql.PreparedStatement psInsert = conn.prepareStatement(
                 "insert into DB2INST1.db2_multi_types_test (val_int, val_varchar, val_double_precision, val_bigint, val_tinyint, " +
                         "val_smallint, val_boolean, val_decimal, val_float, val_byte, val_binary, val_date, val_time, " +
@@ -53,7 +57,7 @@ public class Db2MultipleTypesIntegrationTest {
         );
 
         psInsert.setInt(1, 1);
-        psInsert.setString(2, "TITLE_1");
+        psInsert.setString(2, new String("TITLE_1".getBytes(), dbEncoding));
         psInsert.setDouble(3, 2.2222d);
         psInsert.setLong(4, 33333333333333l);
         psInsert.setInt(5, 127); // DB2 SMALLINT can handle this
@@ -82,7 +86,7 @@ public class Db2MultipleTypesIntegrationTest {
         Assert.assertEquals(127, resultSet.getInt(5)); // SMALLINT in DB2
         Assert.assertEquals(32767, resultSet.getInt(6));
         Assert.assertEquals(true, resultSet.getBoolean(7)); // DB2 native boolean
-        Assert.assertEquals(new BigDecimal(10), resultSet.getBigDecimal(8));
+        Assert.assertEquals(new BigDecimal("10.00"), resultSet.getBigDecimal(8));
         Assert.assertEquals(20.20f+"", ""+resultSet.getFloat(9));
         // DB2 VARBINARY column
         byte[] byteValue = resultSet.getBytes(10);
@@ -102,7 +106,7 @@ public class Db2MultipleTypesIntegrationTest {
         Assert.assertEquals(33333333333333L, resultSet.getLong("val_bigint"));
         Assert.assertEquals(127, resultSet.getInt("val_tinyint"));
         Assert.assertEquals(32767, resultSet.getInt("val_smallint"));
-        Assert.assertEquals(new BigDecimal(10), resultSet.getBigDecimal("val_decimal"));
+        Assert.assertEquals(new BigDecimal("10.00"), resultSet.getBigDecimal("val_decimal"));
         Assert.assertEquals(20.20f+"", ""+resultSet.getFloat("val_float"));
         Assert.assertEquals(true, resultSet.getBoolean("val_boolean")); // DB2 native boolean
         // DB2 VARBINARY column

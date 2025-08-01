@@ -1247,7 +1247,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         List<Object[]> results = new ArrayList<>();
         int row = 0;
         boolean justSent = false;
-        String resultSetMode = ""; //Flag to indicate if result set contains LOBs
+        String resultSetMode = ""; //Only used if result set contains LOBs in SQL Server and DB2 so cursor is not read in advance.
         DbName dbName = DatabaseUtils.resolveDbName(rs.getStatement().getConnection().getMetaData().getURL());
         boolean isDB2OrSqlServer = DbName.SQL_SERVER.equals(dbName) || DbName.DB2.equals(dbName);
 
@@ -1269,7 +1269,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         if ("BLOB".equalsIgnoreCase(colTypeName)) {
                             currentValue = this.treatAsBlob(session, rs, i);
                         } else {
-                            currentValue = this.treatAsBinary(session, rs, i);
+                            currentValue = this.treatAsBinary(session, dbName, rs, i);
                         }
                         break;
                     }
@@ -1299,7 +1299,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         if (isDB2OrSqlServer) {
                             resultSetMode = CommonConstants.RESULT_SET_ROW_BY_ROW_MODE;
                         }
-                        currentValue = treatAsBinary(session, rs, i);
+                        currentValue = treatAsBinary(session, dbName, rs, i);
                         break;
                     }
                     case Types.DATE: {
@@ -1362,7 +1362,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
     }
 
     @SneakyThrows
-    private Object treatAsBinary(SessionInfo session, ResultSet rs, int i) throws SQLException {
+    private Object treatAsBinary(SessionInfo session, DbName dbName, ResultSet rs, int i) throws SQLException {
         int precision = rs.getMetaData().getPrecision(i + 1);
         String catalogName = rs.getMetaData().getCatalogName(i + 1);
         String colClassName = rs.getMetaData().getColumnClassName(i + 1);
@@ -1370,9 +1370,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         colTypeName = colTypeName != null ? colTypeName : "";
         Object binaryValue = null;
         boolean sqlServerVarbinary = "VARBINARY".equalsIgnoreCase(colTypeName); //TODO add dbName check here
-        if (precision == 1 && !"[B".equalsIgnoreCase(colClassName)) { //it is a single byte and is not of class byte array([B)
+        if (precision == 1 && !"[B".equalsIgnoreCase(colClassName) && !"byte[]".equalsIgnoreCase(colClassName)) { //it is a single byte and is not of class byte array([B)
             binaryValue = rs.getByte(i + 1);
-        } else if ((StringUtils.isNotEmpty(catalogName) || "[B".equalsIgnoreCase(colClassName)) &&
+        } else if ((StringUtils.isNotEmpty(catalogName) || "[B".equalsIgnoreCase(colClassName) || "byte[]".equalsIgnoreCase(colClassName)) &&
                 !INPUT_STREAM_TYPES.contains(colTypeName.toUpperCase())) {
             binaryValue = rs.getBytes(i + 1);
         } else {
@@ -1380,9 +1380,11 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             if (inputStream == null) {
                 return null;
             }
-            //TODO do it only for sql server as per sql server cannot move the cursor or read binary streams in multiple threads
-            byte[] allBytes = inputStream.readAllBytes();
-            inputStream = new ByteArrayInputStream(allBytes);
+
+            if (DbName.SQL_SERVER.equals(dbName)) {
+                byte[] allBytes = inputStream.readAllBytes();
+                inputStream = new ByteArrayInputStream(allBytes);
+            }
 
             binaryValue = UUID.randomUUID().toString();
             this.sessionManager.registerLob(session, inputStream, binaryValue.toString());

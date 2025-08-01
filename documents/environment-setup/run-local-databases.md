@@ -216,7 +216,7 @@ Have Docker installed on your machine.
 
 ### Run Command
 
-> docker run -d --name ojp-db2   --privileged   -p 50000:50000 -m 6g  -e LICENSE=accept   -e DB2INSTANCE=db2inst1   -e DB2INST1_PASSWORD=testpass   -e DBNAME=testdb   ibmcom/db2:11.5.0.0a
+> docker run -d --name ojp-db2   --privileged   -p 50000:50000 -m 6g  -e LICENSE=accept   -e DB2INSTANCE=db2inst1   -e DB2INST1_PASSWORD=testpass   -e DBNAME=testdb   ibmcom/db2:11.5.8.0
 
 NOTE: DB2 might take several minutes to start, you can follow the evolution in the logs running the command:
 
