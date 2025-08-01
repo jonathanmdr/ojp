@@ -83,34 +83,42 @@ public class BlobIntegrationTest {
             binaryData[i] = (byte) (i % 256);
         }
 
-        Blob blob = conn.createBlob(); //WHEN this happens a connection in the server is set to a session and I need to replicate that in the
-        //prepared statement created previously
-        blob.setBytes(1, binaryData);
-        psInsert.setBlob(1, blob);
         String testString2 = "BLOB VIA INPUT STREAM";
-        InputStream inputStream = new ByteArrayInputStream(testString2.getBytes());
-        psInsert.setBlob(2 , inputStream);
-        InputStream inputStream2 = new ByteArrayInputStream(testString2.getBytes());
-        psInsert.setBlob(3, inputStream2, 5);
-        psInsert.executeUpdate();
+
+        for (int i = 0; i < 5; i++) {
+            Blob blob = conn.createBlob(); //WHEN this happens a connection in the server is set to a session and I need to replicate that in the
+            //prepared statement created previously
+            blob.setBytes(1, binaryData);
+            psInsert.setBlob(1, blob);
+            InputStream inputStream = new ByteArrayInputStream(testString2.getBytes());
+            psInsert.setBlob(2, inputStream);
+            InputStream inputStream2 = new ByteArrayInputStream(testString2.getBytes());
+            psInsert.setBlob(3, inputStream2, 5);
+            psInsert.executeUpdate();
+        }
 
         java.sql.PreparedStatement psSelect = conn.prepareStatement("select val_blob, val_blob2, val_blob3 from " + tableName);
         ResultSet resultSet = psSelect.executeQuery();
-        resultSet.next();
-        Blob blobResult =  resultSet.getBlob(1);
 
-        Assert.assertEquals(binaryData.length, blobResult.getBinaryStream().readAllBytes().length);
+        int countReads = 0;
+        while(resultSet.next()) {
+            countReads++;
+            Blob blobResult = resultSet.getBlob(1);
 
-        Blob blobResultByName =  resultSet.getBlob("val_blob");
-        Assert.assertEquals(binaryData.length, blobResultByName.getBinaryStream().readAllBytes().length);
+            Assert.assertEquals(binaryData.length, blobResult.getBinaryStream().readAllBytes().length);
 
-        Blob blobResult2 =  resultSet.getBlob(2);
-        String fromBlobByIdx2 = new String(blobResult2.getBinaryStream().readAllBytes());
-        Assert.assertEquals(testString2, fromBlobByIdx2);
+            Blob blobResultByName = resultSet.getBlob("val_blob");
+            Assert.assertEquals(binaryData.length, blobResultByName.getBinaryStream().readAllBytes().length);
 
-        Blob blobResult3 =  resultSet.getBlob(3);
-        String fromBlobByIdx3 = new String(blobResult3.getBinaryStream().readAllBytes());
-        Assert.assertEquals(testString2.substring(0, 5), fromBlobByIdx3);
+            Blob blobResult2 = resultSet.getBlob(2);
+            String fromBlobByIdx2 = new String(blobResult2.getBinaryStream().readAllBytes());
+            Assert.assertEquals(testString2, fromBlobByIdx2);
+
+            Blob blobResult3 = resultSet.getBlob(3);
+            String fromBlobByIdx3 = new String(blobResult3.getBinaryStream().readAllBytes());
+            Assert.assertEquals(testString2.substring(0, 5), fromBlobByIdx3);
+        }
+        Assert.assertEquals(5, countReads);
 
         executeUpdate(conn, "delete from " + tableName);
 
