@@ -11,7 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.openjdbcproxy.constants.CommonConstants;
 import org.openjdbcproxy.grpc.client.StatementService;
 import org.openjdbcproxy.grpc.dto.OpQueryResult;
-import org.openjdbcproxy.jdbc.sqlserver.SqlServerSerialBlob;
+import org.openjdbcproxy.jdbc.sqlserver.HydratedBlob;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -1344,7 +1344,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (lastValueRead == null) {
             return null;
         } else if (lastValueRead instanceof byte[]) { //Only for SQL server
-            return new SqlServerSerialBlob((byte[]) lastValueRead);
+            return new HydratedBlob((byte[]) lastValueRead);
         }
         Object objUUID = lastValueRead;
         String blobRefUUID = String.valueOf(objUUID);
@@ -1426,6 +1426,10 @@ public class ResultSet extends RemoteProxyResultSet {
             return super.getBlob(columnLabel);
         }
         lastValueRead = currentDataBlock.get(blockIdx.get())[this.labelsMap.get(columnLabel.toUpperCase())];
+        //For databases where LOBs get invalidated once cursor moves (SQL Server and DB2) must eagerly hydrate LOBs.
+        if (lastValueRead instanceof byte[]){
+            return new HydratedBlob((byte[]) lastValueRead);
+        }
         String blobRefUUID = (String) lastValueRead;
         return new org.openjdbcproxy.jdbc.Blob((Connection) this.statement.getConnection(),
                 new LobServiceImpl((Connection) this.statement.getConnection(), this.getStatementService()),

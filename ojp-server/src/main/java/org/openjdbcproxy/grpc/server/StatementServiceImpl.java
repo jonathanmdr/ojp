@@ -40,6 +40,7 @@ import org.openjdbcproxy.grpc.server.utils.DateTimeUtils;
 import org.openjdbcproxy.database.DatabaseUtils;
 import org.openjdbcproxy.grpc.server.utils.DriverUtils;
 
+import javax.sql.rowset.serial.SerialBlob;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Reader;
@@ -95,6 +96,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
     private final SessionManager sessionManager;
     private final CircuitBreaker circuitBreaker;
     private static final List<String> INPUT_STREAM_TYPES = Arrays.asList("RAW", "BINARY VARYING", "BYTEA");
+    private final Map<String, DbName> dbNameMap = new ConcurrentHashMap<>();
 
     static {
         DriverUtils.registerDrivers();
@@ -126,6 +128,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 .setClientUUID(connectionDetails.getClientUUID())
                 .build()
         );
+
+        this.dbNameMap.put(connHash, DatabaseUtils.resolveDbName(connectionDetails.getUrl()));
+
         responseObserver.onCompleted();
     }
 
@@ -571,7 +576,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             //If the lob length is known the exact size of the next block is also known.
             boolean exactSizeKnown = readLobContext.getLobLength().isPresent() && readLobContext.getAvailableLength().isPresent();
             int nextByte = inputStream.read();
-            int nextBlockSize = nextByte == -1? 1 : this.nextBlockSize(readLobContext, request.getPosition());
+            int nextBlockSize = nextByte == -1 ? 1 : this.nextBlockSize(readLobContext, request.getPosition());
             byte[] nextBlock = new byte[nextBlockSize];
             int idx = -1;
             int currentPos = (int) request.getPosition();
@@ -709,10 +714,10 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 .getInputStream();
     }
 
+    @SneakyThrows
     private InputStream inputStreamFromBlob(SessionManager sessionManager, LobReference lobReference,
                                             ReadLobRequest request,
-                                            ReadLobContext.ReadLobContextBuilder readLobContextBuilder)
-            throws SQLException {
+                                            ReadLobContext.ReadLobContextBuilder readLobContextBuilder) {
         Blob blob = sessionManager.getLob(lobReference.getSession(), lobReference.getUuid());
         long lobLength = blob.length();
         readLobContextBuilder.lobLength(Optional.of(lobLength));
@@ -1253,10 +1258,12 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
 
         forEachRow:
         while (rs.next()) {
+            //TODO remove
+            System.out.println("Next called in the server.");
             justSent = false;
             row++;
             Object[] rowValues = new Object[columnCount];
-           for (int i = 0; i < columnCount; i++) {
+            for (int i = 0; i < columnCount; i++) {
                 int colType = rs.getMetaData().getColumnType(i + 1);
                 String colTypeName = rs.getMetaData().getColumnTypeName(i + 1);
                 Object currentValue = null;
@@ -1351,10 +1358,16 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
 
     }
 
+    @SneakyThrows
     private Object treatAsBlob(SessionInfo session, ResultSet rs, int i) throws SQLException {
         Blob blob = rs.getBlob(i + 1);
         if (blob == null) {
             return null;
+        }
+        DbName dbName = this.dbNameMap.get(session.getConnHash());
+        //SQL Server and DB2 must eagerly hydrate LOBs as per LOBs get invalidated once cursor moves.
+        if (DbName.SQL_SERVER.equals(dbName) || DbName.DB2.equals(dbName)) {
+            return blob.getBinaryStream().readAllBytes();
         }
         Object logUUID = UUID.randomUUID().toString();
         this.sessionManager.registerLob(session, blob, logUUID.toString());
@@ -1369,7 +1382,6 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         String colTypeName = rs.getMetaData().getColumnTypeName(i + 1);
         colTypeName = colTypeName != null ? colTypeName : "";
         Object binaryValue = null;
-        boolean sqlServerVarbinary = "VARBINARY".equalsIgnoreCase(colTypeName); //TODO add dbName check here
         if (precision == 1 && !"[B".equalsIgnoreCase(colClassName) && !"byte[]".equalsIgnoreCase(colClassName)) { //it is a single byte and is not of class byte array([B)
             binaryValue = rs.getByte(i + 1);
         } else if ((StringUtils.isNotEmpty(catalogName) || "[B".equalsIgnoreCase(colClassName) || "byte[]".equalsIgnoreCase(colClassName)) &&
@@ -1381,7 +1393,8 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 return null;
             }
 
-            if (DbName.SQL_SERVER.equals(dbName)) {
+            //SQL Server and DB2 must eagerly hydrate LOBs as per LOBs get invalidated once cursor moves.
+            if (DbName.SQL_SERVER.equals(dbName) || DbName.DB2.equals(dbName)) {
                 byte[] allBytes = inputStream.readAllBytes();
                 inputStream = new ByteArrayInputStream(allBytes);
             }

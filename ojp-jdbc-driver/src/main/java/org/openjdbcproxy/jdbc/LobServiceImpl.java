@@ -140,6 +140,8 @@ public class LobServiceImpl implements LobService {
             public int read() throws IOException {
                 if (currentPos >= (currentBlock.length - 1)) {
                     if (!itBlocks.hasNext()) {
+                        //TODO remove
+                        System.out.println("LobServiceImpl read Returning end of stream -> !itBlocks.hasNext()");
                         return -1;// -1 means end of the stream.
                     }
                     currentBlock = itBlocks.next().getData().toByteArray();
