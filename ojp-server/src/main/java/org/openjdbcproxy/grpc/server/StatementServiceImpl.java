@@ -1484,6 +1484,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 Object inputStreamValue = param.getValues().get(0);
                 if (inputStreamValue == null) {
                     ps.setBinaryStream(idx, null);
+                } else if (inputStreamValue instanceof byte[]) {
+                    //DB2 require the full binary stream to be sent at once.
+                    ps.setBinaryStream(idx, new ByteArrayInputStream((byte[])inputStreamValue));
                 } else {
                     InputStream is = (InputStream) inputStreamValue;
                     if (param.getValues().size() > 1) {
