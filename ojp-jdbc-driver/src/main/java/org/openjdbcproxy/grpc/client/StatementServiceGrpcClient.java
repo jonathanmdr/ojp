@@ -9,6 +9,7 @@ import com.openjdbcproxy.grpc.LobDataBlock;
 import com.openjdbcproxy.grpc.LobReference;
 import com.openjdbcproxy.grpc.OpResult;
 import com.openjdbcproxy.grpc.ReadLobRequest;
+import com.openjdbcproxy.grpc.ResultSetFetchRequest;
 import com.openjdbcproxy.grpc.SessionInfo;
 import com.openjdbcproxy.grpc.SessionTerminationStatus;
 import com.openjdbcproxy.grpc.StatementRequest;
@@ -137,6 +138,21 @@ public class StatementServiceGrpcClient implements StatementService {
     }
 
     @Override
+    public OpResult fetchNextRows(SessionInfo sessionInfo, String resultSetUUID, int size) throws SQLException {
+        try {
+            return this.statemetServiceBlockingStub.fetchNextRows(
+                    ResultSetFetchRequest.newBuilder()
+                            .setSession(sessionInfo)
+                            .setResultSetUUID(resultSetUUID)
+                            .setSize(size)
+                            .build()
+            );
+        } catch (StatusRuntimeException e) {
+            throw handle(e);
+        }
+    }
+
+    @Override
     public LobReference createLob(Connection connection, Iterator<LobDataBlock> lobDataBlock) throws SQLException {
         try {
             log.info("Creating new lob");
@@ -192,10 +208,10 @@ public class StatementServiceGrpcClient implements StatementService {
 
                         @Override
                         public void onNext(LobReference lobReference) {
-                            log.info("Lob reference received");
+                            log.debug("Lob reference received");
                             if (this.abFirstResponseReceived.get()) {
                                 sfFirstLobReference.set(lobReference);
-                                log.info("First lob reference trigger");
+                                log.debug("First lob reference trigger");
                             }
                             this.lobReference = lobReference;
                             //Update connection session on first confirmation to get the session id if session is new.
@@ -222,9 +238,9 @@ public class StatementServiceGrpcClient implements StatementService {
 
                         @Override
                         public void onCompleted() {
-                            log.info("Final lob reference received");
+                            log.debug("Final lob reference received");
                             sfFinalLobReference.set(this.lobReference);
-                            log.info("Final lob reference notified");
+                            log.debug("Final lob reference notified");
                         }
                     }
             );
@@ -235,17 +251,17 @@ public class StatementServiceGrpcClient implements StatementService {
                 lobDataBlockStream.onNext(lobDataBlock.next());
                 if (!firstBlockProcessedSuccessfully) {
                     //Wait first block to be processed by the server to avoid sending more data before the server actually acquired a connection and wrote the first block.
-                    log.info("Waiting first lob reference arrival");
+                    log.debug("Waiting first lob reference arrival");
                     sfFirstLobReference.get();
-                    log.info("First lob reference arrived");
+                    log.debug("First lob reference arrived");
                     firstBlockProcessedSuccessfully = true;
                 }
             }
             lobDataBlockStream.onCompleted();
 
-            log.info("Waiting for final lob ref");
+            log.debug("Waiting for final lob ref");
             LobReference finalLobRef = sfFinalLobReference.get();
-            log.info("Final lob ref received");
+            log.debug("Final lob ref received");
             return finalLobRef;
         } catch (StatusRuntimeException e) {
             throw handle(e);

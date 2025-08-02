@@ -47,12 +47,12 @@ public class LobDataBlocksInputStream extends InputStream {
     public int read() {
         log.debug("Reading lob {}", this.uuid);
         if (this.currentIdx >= this.currentBlock.length - 1) {
-            log.info("Current block has no bytes to read.");
+            log.debug("Current block has no bytes to read.");
             if (this.blocksReceived.isEmpty()) {
-                log.info("No new blocks received, will wait for block to arrive if stream not finished");
+                log.debug("No new blocks received, will wait for block to arrive if stream not finished");
                 Thread.sleep(10);//TODO review if possible to remove, here because it was reading the flag before blocks feeder thread had a chance to mark it as finished.
                 if (this.atomicFinished.get()) {
-                    log.info("All blocks exhausted, finishing byte stream. lob {}", this.uuid);
+                    log.debug("All blocks exhausted, finishing byte stream. lob {}", this.uuid);
                     this.fullyConsumed.set(true);
                     return -1;//End of stream.
                 }
@@ -60,12 +60,12 @@ public class LobDataBlocksInputStream extends InputStream {
                     this.blockArrived.get(5, TimeUnit.SECONDS); //Wait for next block to arrive
                 } catch (TimeoutException e) {
                     if (this.atomicFinished.get()) {
-                        log.info("All blocks exhausted, timed out waiting for new block, finishing byte stream. lob {}", this.uuid);
+                        log.debug("All blocks exhausted, timed out waiting for new block, finishing byte stream. lob {}", this.uuid);
                         this.fullyConsumed.set(true);
                         return -1;//End of stream.
                     }
                 }
-                log.info("New block arrived");
+                log.debug("New block arrived");
                 synchronized (this) {
                     this.blockArrived = SettableFuture.create();
                 }
@@ -75,7 +75,7 @@ public class LobDataBlocksInputStream extends InputStream {
                 this.currentBlock = nextBlock.getData().toByteArray();
             }
             this.currentIdx = -1;
-            log.info("Nex block positioned for reading");
+            log.debug("Nex block positioned for reading");
         }
 
         int ret = this.currentBlock[++currentIdx];
@@ -95,7 +95,7 @@ public class LobDataBlocksInputStream extends InputStream {
      * @param finished
      */
     public void finish(boolean finished) {
-        log.info("Finished receiving blocks");
+        log.debug("Finished receiving blocks");
         atomicFinished.set(finished);
     }
 }
