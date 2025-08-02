@@ -25,7 +25,7 @@ docker logs db2
 
 ### 2. IBM DB2 JDBC Driver
 
-The IBM DB2 JDBC driver is automatically included in the ojp-server dependencies:
+The IBM DB2 JDBC driver is not automatically included in the ojp-server dependencies due to licence requirement:
 
 ```xml
 <dependency>
@@ -56,7 +56,7 @@ To run DB2 tests alongside other databases:
 
 ```bash
 cd ojp-jdbc-driver
-mvn test -DenableDb2Tests -DenableOracleTests
+mvn test -DenableDb2Tests -DenableOracleTests -DenableSqlServerTests
 ```
 
 To run specific DB2 test classes:

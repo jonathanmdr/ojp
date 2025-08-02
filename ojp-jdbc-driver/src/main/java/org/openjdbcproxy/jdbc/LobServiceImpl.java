@@ -98,7 +98,7 @@ public class LobServiceImpl implements LobService {
                 }
                 transferredBytes.set(transferredBytes.get() + (MAX_LOB_DATA_BLOCK_SIZE));
                 long updatedPosition = (transferredBytes.get() + pos) - MAX_LOB_DATA_BLOCK_SIZE;
-                log.info("Sending the next block of bytes updatedPosition: {}", updatedPosition);
+                log.debug("Sending the next block of bytes updatedPosition: {}", updatedPosition);
 
                 bytesRead = this.maxLengthTrim(bytesRead, length, (updatedPosition + bytesRead.length - 1));
 

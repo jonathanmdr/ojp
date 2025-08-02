@@ -51,7 +51,7 @@ public class Session {
     }
 
     public SessionInfo getSessionInfo() {
-        log.info("get session info -> " + this.connectionHash);
+        log.debug("get session info -> " + this.connectionHash);
         return SessionInfo.newBuilder()
                 .setConnHash(this.connectionHash)
                 .setClientUUID(this.clientUUID)

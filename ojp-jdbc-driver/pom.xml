@@ -23,13 +23,6 @@
     </properties>
 
     <dependencies>
-        <!-- TODO remove -->
-        <!-- https://mvnrepository.com/artifact/com.ibm.db2/jcc -->
-        <dependency>
-            <groupId>com.ibm.db2</groupId>
-            <artifactId>jcc</artifactId>
-            <version>12.1.2.0</version>
-        </dependency>
 
         <dependency>
             <groupId>org.openjdbcproxy</groupId>
