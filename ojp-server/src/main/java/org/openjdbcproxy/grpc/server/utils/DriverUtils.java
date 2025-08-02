@@ -43,17 +43,17 @@ public class DriverUtils {
         try {
             Class.forName(ORACLE_DRIVER_CLASS);
         } catch (ClassNotFoundException e) {
-            log.info("Failed to register Oracle JDBC driver.", e);
+            log.info("No Oracle JDBC driver found...");
         }
         try {
             Class.forName(SQLSERVER_DRIVER_CLASS);
         } catch (ClassNotFoundException e) {
-            log.info("Failed to register SQL Server JDBC driver.", e);
+            log.info("No SQL Server JDBC driver found...");
         }
         try {
             Class.forName(DB2_DRIVER_CLASS);
         } catch (ClassNotFoundException e) {
-            log.info("Failed to register DB2 JDBC driver.", e);
+            log.info("No DB2 JDBC driver found...");
         }
     }
 }

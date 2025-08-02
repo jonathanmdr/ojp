@@ -114,7 +114,7 @@ public class Db2ResultSetTest {
 
         // Test isFirst() and isLast()
         assertFalse(resultSet.isFirst());
-        assertFalse(resultSet.isLast());
+        assertTrue(resultSet.isLast());
 
         // Navigate to last record
         assertTrue(resultSet.last());

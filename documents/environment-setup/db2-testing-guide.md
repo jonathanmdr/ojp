@@ -104,17 +104,6 @@ Also can explicitly disable DB2 tests as in:
 mvn test -DenableDb2Tests=false
 ```
 
-## DB2-Specific Test Features
+## LOBs and ResultSetMetadata special treatment
 
-The DB2 test suite includes:
-
-- **Connection & Basic Operations**: DB2-specific connection handling, data types, and CRUD operations
-- **BLOB Integration**: Binary large object operations and performance testing
-- **PreparedStatement Operations**: Parameter binding, batch processing, and NULL handling
-- **ResultSet Functionality**: Navigation, scrolling, data type retrieval, and metadata
-- **Transaction Management**: Savepoint operations, rollback, and transaction isolation
-- **Database Metadata**: Schema information, table/column metadata, and capability detection
-- **Boolean Type Handling**: DB2's boolean data type mapping and edge cases
-- **NULL vs Empty String**: Validation of DB2's distinct treatment of NULL and empty string values
-
-To build a Docker image of ojp-server follow the above steps and then follow the [Build ojp-server docker image](/ojp-server/README.md) - OpenTelemetry integration and monitoring setup.
+In DB2 JDBC driver, both LOBs and ResultSetMetaData become invalid once the cursor advances or the ResultSet is accessed from another thread. To handle this, OJP reads rows one at a time instead of batching multiple rows and eagerly caches LOB data and metadata immediately upon row access to ensure consistency and prevent driver exceptions.

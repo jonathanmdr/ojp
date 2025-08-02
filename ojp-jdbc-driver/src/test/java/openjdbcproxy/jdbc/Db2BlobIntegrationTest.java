@@ -139,8 +139,6 @@ public class Db2BlobIntegrationTest {
         
         int count = 0;
         while (rs.next()) {
-            //TODO remove
-            System.out.println("Next called in the client.");
             Blob blob = rs.getBlob("data_blob");
             InputStream blobStream = blob.getBinaryStream();
             byte[] retrievedBytes = blobStream.readAllBytes();

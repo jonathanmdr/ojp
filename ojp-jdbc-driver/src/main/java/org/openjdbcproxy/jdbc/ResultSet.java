@@ -93,7 +93,8 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inRowByRowMode && blockIdx.get() > 0) {
             try {
                 // Row by row mode is used in SQL Server and DB2 only when working with LOBs as per moving the cursor earlier
-                // would invalidate the LOB object(s) and therefore the read is only done when asked by the client.
+                // would invalidate the LOB object(s) and therefore for SQL Server and DB2 the read is only done when asked
+                // by the client.
                 OpResult result = this.nextWithSessionUpdate(
                         this.getStatementService().fetchNextRows(((Connection) this.statement.getConnection()).getSession(),
                         this.getResultSetUUID(), 1));

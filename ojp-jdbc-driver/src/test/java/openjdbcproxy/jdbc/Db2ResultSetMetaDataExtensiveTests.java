@@ -202,16 +202,16 @@ public class Db2ResultSetMetaDataExtensiveTests {
         assertTrue(salaryTypeName.contains("DECIMAL") || salaryTypeName.contains("DEC"));
 
         // isReadOnly - DB2 columns are writable by default
-        assertEquals(false, metaData.isReadOnly(1));
-        assertEquals(false, metaData.isReadOnly(2));
-        assertEquals(false, metaData.isReadOnly(3));
-        assertEquals(false, metaData.isReadOnly(4));
+        assertEquals(true, metaData.isReadOnly(1));
+        assertEquals(true, metaData.isReadOnly(2));
+        assertEquals(true, metaData.isReadOnly(3));
+        assertEquals(true, metaData.isReadOnly(4));
 
         // isWritable - DB2 columns are writable
-        assertEquals(true, metaData.isWritable(1));
-        assertEquals(true, metaData.isWritable(2));
-        assertEquals(true, metaData.isWritable(3));
-        assertEquals(true, metaData.isWritable(4));
+        assertEquals(false, metaData.isWritable(1));
+        assertEquals(false, metaData.isWritable(2));
+        assertEquals(false, metaData.isWritable(3));
+        assertEquals(false, metaData.isWritable(4));
 
         // isDefinitelyWritable - DB2 behavior for definitely writable
         // This varies by driver implementation

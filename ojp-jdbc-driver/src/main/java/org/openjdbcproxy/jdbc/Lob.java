@@ -150,8 +150,6 @@ public class Lob {
                             dataBlocks = statementService.readLob(lobReference.get(), currentPos + 1, TWO_BLOCKS_SIZE);
                             this.currentBlockInputStream = lobService.parseReceivedBlocks(dataBlocks);
                             if (currentBlockInputStream == null) {
-                                //TODO remove
-                                System.out.println("BinaryStream read Returning end of stream -> currentBlockInputStream == null");
                                 return -1;
                             }
                             currentByte = this.currentBlockInputStream.read();
@@ -173,8 +171,6 @@ public class Lob {
                     }
 
                     if (currentPos >= length) {
-                        //TODO remove
-                        System.out.println("BinaryStream read Returning end of stream by lenth");
                         return -1;//Finish stream if reached the length required
                     }
 
