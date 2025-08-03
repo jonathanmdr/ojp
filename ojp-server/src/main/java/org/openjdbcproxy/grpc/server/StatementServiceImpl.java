@@ -102,7 +102,6 @@ import static org.openjdbcproxy.grpc.server.GrpcExceptionHandler.sendSQLExceptio
 
 @Slf4j
 @RequiredArgsConstructor
-//TODO this became a GOD class, need to try to rdelegate some work to specialized other classes where possible, it is challenging because many GRPC callbacks rely on attributes present here to work.
 public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceImplBase {
 
     private final Map<String, HikariDataSource> datasourceMap = new ConcurrentHashMap<>();
@@ -1112,18 +1111,6 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
     private void collectResultSetMetadata(SessionInfo session, String resultSetUUID, ResultSet rs) {
         this.sessionManager.registerAttr(session, RESULT_SET_METADATA_ATTR_PREFIX +
                 resultSetUUID, new HydratedResultSetMetadata(rs.getMetaData()));
-    }
-
-    /**
-     * Configures a HikariCP connection pool with connection details.
-     * This method maintains backward compatibility for tests while delegating
-     * to the extracted ConnectionPoolConfigurer class.
-     *
-     * @param config            The HikariConfig to configure
-     * @param connectionDetails The connection details containing properties
-     */
-    private void configureHikariPool(HikariConfig config, ConnectionDetails connectionDetails) {
-        ConnectionPoolConfigurer.configureHikariPool(config, connectionDetails);
     }
 
 }
