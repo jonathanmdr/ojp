@@ -127,10 +127,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 21 for ojp-server
+      - name: Set up JDK 22 for ojp-server
         uses: actions/setup-java@v4
         with:
-          java-version: 21
+          java-version: 22
           distribution: 'temurin'
           cache: maven
 

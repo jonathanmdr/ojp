@@ -119,7 +119,7 @@ The ojp-grpc-commons module contains the shared gRPC contracts used between the 
 Welcome to OJP! We appreciate your interest in contributing. This guide will help you get started with development.
 
 ### Prerequisites
-- Java 17 or higher
+- Java 22 or higher
 - Maven 3.9+
 - Docker (for running databases and OJP server)
 
