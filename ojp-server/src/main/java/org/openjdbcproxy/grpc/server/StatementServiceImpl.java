@@ -1114,4 +1114,16 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 resultSetUUID, new HydratedResultSetMetadata(rs.getMetaData()));
     }
 
+    /**
+     * Configures a HikariCP connection pool with connection details.
+     * This method maintains backward compatibility for tests while delegating
+     * to the extracted ConnectionPoolConfigurer class.
+     *
+     * @param config            The HikariConfig to configure
+     * @param connectionDetails The connection details containing properties
+     */
+    private void configureHikariPool(HikariConfig config, ConnectionDetails connectionDetails) {
+        ConnectionPoolConfigurer.configureHikariPool(config, connectionDetails);
+    }
+
 }
