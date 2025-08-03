@@ -1113,4 +1113,15 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 resultSetUUID, new HydratedResultSetMetadata(rs.getMetaData()));
     }
 
+    /**
+     * Backward compatibility wrapper for configureHikariPool method.
+     * This method was moved to ConnectionPoolConfigurer but tests still access it via reflection.
+     * 
+     * @param config The HikariConfig to configure
+     * @param connectionDetails The connection details containing properties
+     */
+    private void configureHikariPool(HikariConfig config, ConnectionDetails connectionDetails) {
+        ConnectionPoolConfigurer.configureHikariPool(config, connectionDetails);
+    }
+
 }
