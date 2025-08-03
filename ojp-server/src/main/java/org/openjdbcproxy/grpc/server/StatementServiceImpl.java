@@ -40,6 +40,13 @@ import org.openjdbcproxy.grpc.dto.Parameter;
 import org.openjdbcproxy.grpc.server.utils.DateTimeUtils;
 import org.openjdbcproxy.database.DatabaseUtils;
 import org.openjdbcproxy.grpc.server.utils.DriverUtils;
+import org.openjdbcproxy.grpc.server.pool.ConnectionPoolConfigurer;
+import org.openjdbcproxy.grpc.server.utils.ConnectionHashGenerator;
+import org.openjdbcproxy.grpc.server.utils.UrlParser;
+import org.openjdbcproxy.grpc.server.utils.MethodReflectionUtils;
+import org.openjdbcproxy.grpc.server.utils.MethodNameGenerator;
+import org.openjdbcproxy.grpc.server.utils.SessionInfoUtils;
+import org.openjdbcproxy.grpc.server.statement.ParameterHandler;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -108,18 +115,18 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
 
     @Override
     public void connect(ConnectionDetails connectionDetails, StreamObserver<SessionInfo> responseObserver) {
-        String connHash = hashConnectionDetails(connectionDetails);
+        String connHash = ConnectionHashGenerator.hashConnectionDetails(connectionDetails);
         log.info("connect connHash = " + connHash);
 
         HikariDataSource ds = this.datasourceMap.get(connHash);
         if (ds == null) {
             HikariConfig config = new HikariConfig();
-            config.setJdbcUrl(this.parseUrl(connectionDetails.getUrl()));
+            config.setJdbcUrl(UrlParser.parseUrl(connectionDetails.getUrl()));
             config.setUsername(connectionDetails.getUser());
             config.setPassword(connectionDetails.getPassword());
 
             // Configure HikariCP using client properties or defaults
-            configureHikariPool(config, connectionDetails);
+            ConnectionPoolConfigurer.configureHikariPool(config, connectionDetails);
 
             ds = new HikariDataSource(config);
             this.datasourceMap.put(connHash, ds);
@@ -173,7 +180,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         sessionManager.waitLobStreamsConsumption(dto.getSession());
                     }
                     if (ps != null) {
-                        this.addParametersPreparedStatement(dto, ps, params);
+                        ParameterHandler.addParametersPreparedStatement(sessionManager, dto.getSession(), ps, params);
                     }
                 } else {
                     ps = this.createPreparedStatement(dto, request.getSql(), params, request);
@@ -327,16 +334,8 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             throw new SQLException("Incorrect number of properties for creating a new prepared statement.");
         }
 
-        this.addParametersPreparedStatement(dto, ps, params);
+        ParameterHandler.addParametersPreparedStatement(sessionManager, dto.getSession(), ps, params);
         return ps;
-    }
-
-    private void addParametersPreparedStatement(ConnectionSessionDTO dto, PreparedStatement ps, List<Parameter> params)
-            throws SQLException {
-        for (int i = 0; i < params.size(); i++) {
-            Parameter parameter = params.get(i);
-            this.addParam(dto.getSession(), parameter.getIndex(), ps, params.get(i));
-        }
     }
 
     @Override
@@ -789,7 +788,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                     .setTransactionUUID(UUID.randomUUID().toString())
                     .build();
 
-            SessionInfo.Builder sessionInfoBuilder = this.newBuilderFrom(activeSessionInfo);
+            SessionInfo.Builder sessionInfoBuilder = SessionInfoUtils.newBuilderFrom(activeSessionInfo);
             sessionInfoBuilder.setTransactionInfo(transactionInfo);
 
             responseObserver.onNext(sessionInfoBuilder.build());
@@ -813,7 +812,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                     .setTransactionUUID(sessionInfo.getTransactionInfo().getTransactionUUID())
                     .build();
 
-            SessionInfo.Builder sessionInfoBuilder = this.newBuilderFrom(sessionInfo);
+            SessionInfo.Builder sessionInfoBuilder = SessionInfoUtils.newBuilderFrom(sessionInfo);
             sessionInfoBuilder.setTransactionInfo(transactionInfo);
 
             responseObserver.onNext(sessionInfoBuilder.build());
@@ -837,7 +836,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                     .setTransactionUUID(sessionInfo.getTransactionInfo().getTransactionUUID())
                     .build();
 
-            SessionInfo.Builder sessionInfoBuilder = this.newBuilderFrom(sessionInfo);
+            SessionInfo.Builder sessionInfoBuilder = SessionInfoUtils.newBuilderFrom(sessionInfo);
             sessionInfoBuilder.setTransactionInfo(transactionInfo);
 
             responseObserver.onNext(sessionInfoBuilder.build());
@@ -935,8 +934,8 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         (String) paramsReceived.get(0));
                 paramsReceived.set(0, savepoint);
             }
-            Method method = this.findMethodByName(JavaSqlInterfacesConverter.interfaceClass(clazz),
-                    methodName(request.getTarget()), paramsReceived);
+            Method method = MethodReflectionUtils.findMethodByName(JavaSqlInterfacesConverter.interfaceClass(clazz),
+                    MethodNameGenerator.methodName(request.getTarget()), paramsReceived);
             java.lang.reflect.Parameter[] params = method.getParameters();
             Object resultFirstLevel = null;
             if (params != null && params.length > 0) {
@@ -969,8 +968,8 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 List<Object> paramsReceived2 = (request.getTarget().getNextCall().getParams().size() > 0) ?
                         deserialize(request.getTarget().getNextCall().getParams().toByteArray(), List.class) :
                         EMPTY_LIST;
-                Method methodNext = this.findMethodByName(JavaSqlInterfacesConverter.interfaceClass(clazzNext),
-                        methodName(request.getTarget().getNextCall()),
+                Method methodNext = MethodReflectionUtils.findMethodByName(JavaSqlInterfacesConverter.interfaceClass(clazzNext),
+                        MethodNameGenerator.methodName(request.getTarget().getNextCall()),
                         paramsReceived2);
                 params = methodNext.getParameters();
                 Object resultSecondLevel = null;
@@ -1025,8 +1024,8 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             List<Object> paramsReceived = (request.getTarget().getNextCall().getParams().size() > 0) ?
                     deserialize(request.getTarget().getNextCall().getParams().toByteArray(), List.class) :
                     EMPTY_LIST;
-            Method methodNext = this.findMethodByName(ResultSetMetaData.class,
-                    methodName(request.getTarget().getNextCall()),
+            Method methodNext = MethodReflectionUtils.findMethodByName(ResultSetMetaData.class,
+                    MethodNameGenerator.methodName(request.getTarget().getNextCall()),
                     paramsReceived);
             Object metadataResult = methodNext.invoke(resultSetMetaData, paramsReceived.toArray());
             responseObserver.onNext(CallResourceResponse.newBuilder()
@@ -1039,213 +1038,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         return false;
     }
 
-    private Method findMethodByName(Class<?> clazz, String methodName, List<Object> params) {
-        Method[] methods = clazz.getMethods();
-        for (Method method : methods) {
-            if (methodName.equalsIgnoreCase(method.getName())) {
-                if (method.getParameters().length == params.size()) {
-                    boolean paramTypesMatch = true;
-                    for (int i = 0; i < params.size(); i++) {
-                        java.lang.reflect.Parameter reflectParam = method.getParameters()[i];
-                        Object receivedParam = params.get(i);
-                        //TODO there is a potential issue here, if parameters are received null and more than one method recives the same amount of parameters there is no way to distinguish. Maybe send a Null object with the class type as an attribute and parse it back to null in server is a solution.
-                        Class reflectType = this.getWrapperType(reflectParam.getType());
-                        if (receivedParam != null && (!reflectType.equals(receivedParam.getClass()) &&
-                                !reflectType.isAssignableFrom(receivedParam.getClass()))) {
-                            paramTypesMatch = false;
-                            break;
-                        }
-                    }
-                    if (paramTypesMatch) {
-                        return method;
-                    }
-                }
-            }
-        }
-        throw new RuntimeException("Method " + methodName + " not found in class " + clazz.getName());
-    }
-
-    // Helper method to get the wrapper class for a primitive type
-    private Class<?> getWrapperType(Class<?> primitiveType) {
-        if (primitiveType == int.class) return Integer.class;
-        if (primitiveType == boolean.class) return Boolean.class;
-        if (primitiveType == byte.class) return Byte.class;
-        if (primitiveType == char.class) return Character.class;
-        if (primitiveType == double.class) return Double.class;
-        if (primitiveType == float.class) return Float.class;
-        if (primitiveType == long.class) return Long.class;
-        if (primitiveType == short.class) return Short.class;
-        return primitiveType; // for non-primitives
-    }
-
-    private String methodName(TargetCall target) throws SQLException {
-        String prefix;
-        switch (target.getCallType()) {
-            case CALL_IS:
-                prefix = "is";
-                break;
-            case CALL_GET:
-                prefix = "get";
-                break;
-            case CALL_SET:
-                prefix = "set";
-                break;
-            case CALL_ALL:
-                prefix = "all";
-                break;
-            case CALL_NULLS:
-                prefix = "nulls";
-                break;
-            case CALL_USES:
-                prefix = "uses";
-                break;
-            case CALL_SUPPORTS:
-                prefix = "supports";
-                break;
-            case CALL_STORES:
-                prefix = "stores";
-                break;
-            case CALL_NULL:
-                prefix = "null";
-                break;
-            case CALL_DOES:
-                prefix = "does";
-                break;
-            case CALL_DATA:
-                prefix = "data";
-                break;
-            case CALL_NEXT:
-                prefix = "next";
-                break;
-            case CALL_CLOSE:
-                prefix = "close";
-                break;
-            case CALL_WAS:
-                prefix = "was";
-                break;
-            case CALL_CLEAR:
-                prefix = "clear";
-                break;
-            case CALL_FIND:
-                prefix = "find";
-                break;
-            case CALL_BEFORE:
-                prefix = "before";
-                break;
-            case CALL_AFTER:
-                prefix = "after";
-                break;
-            case CALL_FIRST:
-                prefix = "first";
-                break;
-            case CALL_LAST:
-                prefix = "last";
-                break;
-            case CALL_ABSOLUTE:
-                prefix = "absolute";
-                break;
-            case CALL_RELATIVE:
-                prefix = "relative";
-                break;
-            case CALL_PREVIOUS:
-                prefix = "previous";
-                break;
-            case CALL_ROW:
-                prefix = "row";
-                break;
-            case CALL_UPDATE:
-                prefix = "update";
-                break;
-            case CALL_INSERT:
-                prefix = "insert";
-                break;
-            case CALL_DELETE:
-                prefix = "delete";
-                break;
-            case CALL_REFRESH:
-                prefix = "refresh";
-                break;
-            case CALL_CANCEL:
-                prefix = "cancel";
-                break;
-            case CALL_MOVE:
-                prefix = "move";
-                break;
-            case CALL_OWN:
-                prefix = "own";
-                break;
-            case CALL_OTHERS:
-                prefix = "others";
-                break;
-            case CALL_UPDATES:
-                prefix = "updates";
-                break;
-            case CALL_DELETES:
-                prefix = "deletes";
-                break;
-            case CALL_INSERTS:
-                prefix = "inserts";
-                break;
-            case CALL_LOCATORS:
-                prefix = "locators";
-                break;
-            case CALL_AUTO:
-                prefix = "auto";
-                break;
-            case CALL_GENERATED:
-                prefix = "generated";
-                break;
-            case CALL_RELEASE:
-                prefix = "release";
-                break;
-            case CALL_NATIVE:
-                prefix = "native";
-                break;
-            case CALL_PREPARE:
-                prefix = "prepare";
-                break;
-            case CALL_ROLLBACK:
-                prefix = "rollback";
-                break;
-            case CALL_ABORT:
-                prefix = "abort";
-                break;
-            case CALL_EXECUTE:
-                prefix = "execute";
-                break;
-            case CALL_ADD:
-                prefix = "add";
-                break;
-            case CALL_ENQUOTE:
-                prefix = "enquote";
-                break;
-            case CALL_REGISTER:
-                prefix = "register";
-                break;
-            case CALL_LENGTH:
-                prefix = "length";
-                break;
-            case UNRECOGNIZED:
-                throw new SQLException("CALL type not supported.");
-            default:
-                throw new SQLException("CALL type not supported.");
-        }
-        return prefix + target.getResourceName();
-    }
-
-
-    private SessionInfo.Builder newBuilderFrom(SessionInfo activeSessionInfo) {
-        return SessionInfo.newBuilder()
-                .setConnHash(activeSessionInfo.getConnHash())
-                .setClientUUID(activeSessionInfo.getClientUUID())
-                .setSessionUUID(activeSessionInfo.getSessionUUID())
-                .setSessionStatus(activeSessionInfo.getSessionStatus())
-                .setTransactionInfo(activeSessionInfo.getTransactionInfo());
-    }
-
     /**
      * Finds a suitable connection for the current sessionInfo.
-     * If there is a connection already in the sessionInfo reuse it, if not ge a fresh one from the data source.
+     * If there is a connection already in the sessionInfo reuse it, if not get a fresh one from the data source.
      *
      * @param sessionInfo        - current sessionInfo object.
      * @param startSessionIfNone - if true will start a new sessionInfo if none exists.
@@ -1470,165 +1265,6 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         resultsBuilder.setFlag(resultSetMode);
 
         return resultsBuilder.build();
-    }
-
-    private void addParam(SessionInfo session, int idx, PreparedStatement ps, Parameter param) throws SQLException {
-        log.info("Adding parameter idx {} type {}", idx, param.getType().toString());
-        switch (param.getType()) {
-            case INT:
-                ps.setInt(idx, (int) param.getValues().get(0));
-                break;
-            case DOUBLE:
-                ps.setDouble(idx, (double) param.getValues().get(0));
-                break;
-            case STRING:
-                ps.setString(idx, (String) param.getValues().get(0));
-                break;
-            case LONG:
-                ps.setLong(idx, (long) param.getValues().get(0));
-                break;
-            case BOOLEAN:
-                ps.setBoolean(idx, (boolean) param.getValues().get(0));
-                break;
-            case BIG_DECIMAL:
-                ps.setBigDecimal(idx, (BigDecimal) param.getValues().get(0));
-                break;
-            case FLOAT:
-                ps.setFloat(idx, (float) param.getValues().get(0));
-                break;
-            case BYTES:
-                ps.setBytes(idx, (byte[]) param.getValues().get(0));
-                break;
-            case BYTE:
-                ps.setByte(idx, ((byte[]) param.getValues().get(0))[0]);//Comes as an array of bytes with one element.
-                break;
-            case DATE:
-                ps.setDate(idx, (Date) param.getValues().get(0));
-                break;
-            case TIME:
-                ps.setTime(idx, (Time) param.getValues().get(0));
-                break;
-            case TIMESTAMP:
-                ps.setTimestamp(idx, (Timestamp) param.getValues().get(0));
-                break;
-            //LOB types
-            case BLOB:
-                Object blobUUID = param.getValues().get(0);
-                if (blobUUID == null) {
-                    ps.setBlob(idx, (Blob) null);
-                } else {
-                    ps.setBlob(idx, this.sessionManager.<Blob>getLob(session, (String) blobUUID));
-                }
-                break;
-            case CLOB: {
-                Object clobUUID = param.getValues().get(0);
-                if (clobUUID == null) {
-                    ps.setBlob(idx, (Blob) null);
-                } else {
-                    ps.setBlob(idx, this.sessionManager.<Blob>getLob(session, (String) clobUUID));
-                }
-                Clob clob = this.sessionManager.getLob(session, (String) param.getValues().get(0));
-                ps.setClob(idx, clob.getCharacterStream());
-                break;
-            }
-            case BINARY_STREAM: {
-                Object inputStreamValue = param.getValues().get(0);
-                if (inputStreamValue == null) {
-                    ps.setBinaryStream(idx, null);
-                } else if (inputStreamValue instanceof byte[]) {
-                    //DB2 require the full binary stream to be sent at once.
-                    ps.setBinaryStream(idx, new ByteArrayInputStream((byte[]) inputStreamValue));
-                } else {
-                    InputStream is = (InputStream) inputStreamValue;
-                    if (param.getValues().size() > 1) {
-                        Long size = (Long) param.getValues().get(1);
-                        ps.setBinaryStream(idx, is, size);
-                    } else {
-                        ps.setBinaryStream(idx, is);
-                    }
-                }
-                break;
-            }
-            case NULL: {
-                int sqlType = (int) param.getValues().get(0);
-                ps.setNull(idx, sqlType);
-                break;
-            }
-            default:
-                ps.setObject(idx, param.getValues().get(0));
-                break;
-        }
-    }
-
-    private String parseUrl(String url) {
-        if (url == null) {
-            return url;
-        }
-        return url.replaceAll(CommonConstants.OJP_REGEX_PATTERN + "_", EMPTY_STRING);
-    }
-
-    private String hashConnectionDetails(ConnectionDetails connectionDetails) {
-        try {
-            MessageDigest messageDigest = MessageDigest.getInstance(SHA_256);
-            messageDigest.update((connectionDetails.getUrl() + connectionDetails.getUser() + connectionDetails.getPassword())
-                    .getBytes());
-            return new String(messageDigest.digest());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void configureHikariPool(HikariConfig config, ConnectionDetails connectionDetails) {
-        Properties clientProperties = null;
-
-        // Try to deserialize properties from client if provided
-        if (!connectionDetails.getProperties().isEmpty()) {
-            try {
-                clientProperties = deserialize(connectionDetails.getProperties().toByteArray(), Properties.class);
-                log.info("Received {} properties from client for connection pool configuration", clientProperties.size());
-            } catch (Exception e) {
-                log.warn("Failed to deserialize client properties, using defaults: {}", e.getMessage());
-            }
-        }
-
-        // Configure basic connection pool settings first
-        config.addDataSourceProperty("cachePrepStmts", "true");
-        config.addDataSourceProperty("prepStmtCacheSize", "250");
-        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-
-        // Configure HikariCP pool settings using client properties or defaults
-        config.setMaximumPoolSize(getIntProperty(clientProperties, "ojp.connection.pool.maximumPoolSize", CommonConstants.DEFAULT_MAXIMUM_POOL_SIZE));
-        config.setMinimumIdle(getIntProperty(clientProperties, "ojp.connection.pool.minimumIdle", CommonConstants.DEFAULT_MINIMUM_IDLE));
-        config.setIdleTimeout(getLongProperty(clientProperties, "ojp.connection.pool.idleTimeout", CommonConstants.DEFAULT_IDLE_TIMEOUT));
-        config.setMaxLifetime(getLongProperty(clientProperties, "ojp.connection.pool.maxLifetime", CommonConstants.DEFAULT_MAX_LIFETIME));
-        config.setConnectionTimeout(getLongProperty(clientProperties, "ojp.connection.pool.connectionTimeout", CommonConstants.DEFAULT_CONNECTION_TIMEOUT));
-
-        log.info("HikariCP configured with maximumPoolSize={}, minimumIdle={}, poolName={}",
-                config.getMaximumPoolSize(), config.getMinimumIdle(), config.getPoolName());
-    }
-
-    private int getIntProperty(Properties properties, String key, int defaultValue) {
-        if (properties == null || !properties.containsKey(key)) {
-            return defaultValue;
-        }
-        try {
-            return Integer.parseInt(properties.getProperty(key));
-        } catch (NumberFormatException e) {
-            log.warn("Invalid integer value for property '{}': {}, using default: {}", key, properties.getProperty(key), defaultValue);
-            return defaultValue;
-        }
-    }
-
-    private long getLongProperty(Properties properties, String key, long defaultValue) {
-        if (properties == null || !properties.containsKey(key)) {
-            return defaultValue;
-        }
-        try {
-            return Long.parseLong(properties.getProperty(key));
-        } catch (NumberFormatException e) {
-            log.warn("Invalid long value for property '{}': {}, using default: {}", key, properties.getProperty(key), defaultValue);
-            return defaultValue;
-        }
     }
 
 }
