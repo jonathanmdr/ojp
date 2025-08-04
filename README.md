@@ -23,7 +23,7 @@ Get OJP running in under 5 minutes:
 
 ### 1. Start OJP Server
 ```bash
-docker run --rm -d -p 1059:1059 rrobetti/ojp:0.0.4-alpha
+docker run --rm -d -p 1059:1059 rrobetti/ojp:0.0.6-alpha
 ```
 
 ### 2. Add OJP JDBC Driver to your project
@@ -31,7 +31,7 @@ docker run --rm -d -p 1059:1059 rrobetti/ojp:0.0.4-alpha
 <dependency>
     <groupId>org.openjdbcproxy</groupId>
     <artifactId>ojp-jdbc-driver</artifactId>
-    <version>0.0.4-alpha</version>
+    <version>0.0.6-alpha</version>
 </dependency>
 ```
 
@@ -68,7 +68,7 @@ That's it! Your application now uses intelligent connection pooling through OJP.
 <img src="documents/designs/ojp_high_level_design.gif" alt="OJP High Level Design" />
 
 
-* The OJP JDBC driver is used as a replacement for the native JDBC driver(s) previously used with minimal change, the only change required being prefixing the connection URL with `ojp_`. For example:
+* The OJP JDBC driver is used as a replacement for the native JDBC driver(s) previously used with minimal change, the only change required being prefixing the connection URL with `ojp_`. 
 * **Open Source**: OJP is an open-source project that is free to use, modify, and distribute.
 * The OJP server is deployed as an independent service that serves as a smart proxy between the application(s) and their respective relational database(s), controlling the number of connections open against each database.
 * **Smart Connection Management**: The proxy ensures that database connections are allocated only when needed, improving scalability and resource utilization.
@@ -101,7 +101,7 @@ Latest version:
          <dependency>
              <groupId>org.openjdbcproxy</groupId>
              <artifactId>ojp-jdbc-driver</artifactId>
-             <version>0.0.4-alpha</version>
+             <version>0.0.6-alpha</version>
          </dependency>
 
 
