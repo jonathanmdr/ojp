@@ -95,12 +95,27 @@ public class SessionManagerImpl implements SessionManager {
 
     @Override
     public void registerLob(SessionInfo sessionInfo, Object lob, String lobUuid) {
-        this.sessionMap.get(sessionInfo.getSessionUUID()).addLob(lobUuid, lob);
+        log.debug("Registering LOB with UUID {} for session {}", lobUuid, sessionInfo.getSessionUUID());
+        Session session = this.sessionMap.get(sessionInfo.getSessionUUID());
+        if (session == null) {
+            log.error("Attempting to register LOB {} on null session {}", lobUuid, sessionInfo.getSessionUUID());
+            throw new RuntimeException("Session not found: " + sessionInfo.getSessionUUID());
+        }
+        session.addLob(lobUuid, lob);
     }
 
     @Override
     public <T> T getLob(SessionInfo sessionInfo, String uuid) {
-        return (T) this.sessionMap.get(sessionInfo.getSessionUUID()).getLob(uuid);
+        Session session = this.sessionMap.get(sessionInfo.getSessionUUID());
+        if (session == null) {
+            log.error("Attempting to get LOB {} from null session {}", uuid, sessionInfo.getSessionUUID());
+            return null;
+        }
+        T lob = (T) session.getLob(uuid);
+        if (lob == null) {
+            log.warn("LOB with UUID {} not found in session {}", uuid, sessionInfo.getSessionUUID());
+        }
+        return lob;
     }
 
     @Override
