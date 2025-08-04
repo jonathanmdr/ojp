@@ -75,6 +75,13 @@ public class Lob {
                     this.lobReference.set(this.lobService.sendBytes(lobType, pos, in));
                 } catch (SQLException e) {
                     log.error("SQLException in setBinaryStream async - sendBytes", e);
+                    // Set the exception on the future to ensure it's propagated
+                    this.lobReference.setException(e);
+                    throw new RuntimeException(e);
+                } catch (Exception e) {
+                    log.error("Unexpected exception in setBinaryStream async - sendBytes", e);
+                    // Set the exception on the future to ensure it's propagated
+                    this.lobReference.setException(e);
                     throw new RuntimeException(e);
                 }
                 //Refresh Session object.
@@ -82,9 +89,15 @@ public class Lob {
                     this.connection.setSession(this.lobReference.get().getSession());
                 } catch (InterruptedException e) {
                     log.error("InterruptedException in setBinaryStream async - setSession", e);
+                    this.lobReference.setException(e);
                     throw new RuntimeException(e);
                 } catch (ExecutionException e) {
                     log.error("ExecutionException in setBinaryStream async - setSession", e);
+                    this.lobReference.setException(e);
+                    throw new RuntimeException(e);
+                } catch (Exception e) {
+                    log.error("Unexpected exception in setBinaryStream async - setSession", e);
+                    this.lobReference.setException(e);
                     throw new RuntimeException(e);
                 }
                 return null;
