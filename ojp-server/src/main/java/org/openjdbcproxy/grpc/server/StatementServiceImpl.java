@@ -362,7 +362,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         case LT_BLOB: {
                             Blob blob = sessionManager.getLob(dto.getSession(), this.lobUUID);
                             if (blob == null) {
-                                throw new SQLException("Unable to write LOB: Blob object is null for UUID " + this.lobUUID + 
+                                throw new SQLException("Unable to write LOB of type " + this.lobType + ": Blob object is null for UUID " + this.lobUUID + 
                                     ". This may indicate a race condition or session management issue.");
                             }
                             byte[] byteArrayData = lobDataBlock.getData().toByteArray();
@@ -372,7 +372,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         case LT_CLOB: {
                             Clob clob = sessionManager.getLob(dto.getSession(), this.lobUUID);
                             if (clob == null) {
-                                throw new SQLException("Unable to write LOB: Clob object is null for UUID " + this.lobUUID + 
+                                throw new SQLException("Unable to write LOB of type " + this.lobType + ": Clob object is null for UUID " + this.lobUUID + 
                                     ". This may indicate a race condition or session management issue.");
                             }
                             byte[] byteArrayData = lobDataBlock.getData().toByteArray();
