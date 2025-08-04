@@ -23,7 +23,7 @@ Get OJP running in under 5 minutes:
 
 ### 1. Start OJP Server
 ```bash
-docker run --rm -d -p 1059:1059 rrobetti/ojp:0.0.6-alpha
+docker run --rm -d -p 1059:1059 rrobetti/ojp:0.0.7-alpha
 ```
 
 ### 2. Add OJP JDBC Driver to your project
@@ -31,7 +31,7 @@ docker run --rm -d -p 1059:1059 rrobetti/ojp:0.0.6-alpha
 <dependency>
     <groupId>org.openjdbcproxy</groupId>
     <artifactId>ojp-jdbc-driver</artifactId>
-    <version>0.0.6-alpha</version>
+    <version>0.0.7-alpha</version>
 </dependency>
 ```
 
@@ -101,7 +101,7 @@ Latest version:
          <dependency>
              <groupId>org.openjdbcproxy</groupId>
              <artifactId>ojp-jdbc-driver</artifactId>
-             <version>0.0.6-alpha</version>
+             <version>0.0.7-alpha</version>
          </dependency>
 
 
