@@ -998,9 +998,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         int row = 0;
         boolean justSent = false;
         DbName dbName = DatabaseUtils.resolveDbName(rs.getStatement().getConnection().getMetaData().getURL());
-        //Only used if result set contains LOBs in SQL Server (if LOB's present) and DB2 (all scenarios due to aggressive
-        // ResultSet closure), so cursor is not read in advance, every row has to be requested by the jdbc client.
-        String resultSetMode = DbName.DB2.equals(dbName) ? CommonConstants.RESULT_SET_ROW_BY_ROW_MODE : "";
+        //Only used if result set contains LOBs in SQL Server and DB2 (if LOB's present), so cursor is not read in advance,
+        // every row has to be requested by the jdbc client.
+        String resultSetMode = "";
         boolean resultSetMetadataCollected = false;
 
         forEachRow:
@@ -1018,7 +1018,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 //Postgres uses type BYTEA which translates to type VARBINARY
                 switch (colType) {
                     case Types.VARBINARY: {
-                        if (DbName.SQL_SERVER.equals(dbName)) {
+                        if (DbName.SQL_SERVER.equals(dbName) || DbName.DB2.equals(dbName)) {
                             resultSetMode = CommonConstants.RESULT_SET_ROW_BY_ROW_MODE;
                         }
                         if ("BLOB".equalsIgnoreCase(colTypeName)) {
@@ -1029,14 +1029,14 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         break;
                     }
                     case Types.BLOB, Types.LONGVARBINARY: {
-                        if (DbName.SQL_SERVER.equals(dbName)) {
+                        if (DbName.SQL_SERVER.equals(dbName) || DbName.DB2.equals(dbName)) {
                             resultSetMode = CommonConstants.RESULT_SET_ROW_BY_ROW_MODE;
                         }
                         currentValue = LobProcessor.treatAsBlob(sessionManager, session, rs, i, dbNameMap);
                         break;
                     }
                     case Types.CLOB: {
-                        if (DbName.SQL_SERVER.equals(dbName)) {
+                        if (DbName.SQL_SERVER.equals(dbName) || DbName.DB2.equals(dbName)) {
                             resultSetMode = CommonConstants.RESULT_SET_ROW_BY_ROW_MODE;
                         }
                         Clob clob = rs.getClob(i + 1);
@@ -1051,7 +1051,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         break;
                     }
                     case Types.BINARY: {
-                        if (DbName.SQL_SERVER.equals(dbName)) {
+                        if (DbName.SQL_SERVER.equals(dbName) || DbName.DB2.equals(dbName)) {
                             resultSetMode = CommonConstants.RESULT_SET_ROW_BY_ROW_MODE;
                         }
                         currentValue = LobProcessor.treatAsBinary(sessionManager, session, dbName, rs, i, INPUT_STREAM_TYPES);

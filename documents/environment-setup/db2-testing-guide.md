@@ -106,4 +106,4 @@ mvn test -DenableDb2Tests=false
 
 ## LOBs and ResultSetMetadata special treatment
 
-In DB2 JDBC driver, both LOBs and ResultSetMetaData become invalid once the cursor advances or the ResultSet is accessed from another thread. To handle this, OJP reads rows one at a time instead of batching multiple rows and eagerly caches LOB data and metadata immediately upon row access to ensure consistency and prevent driver exceptions.
+In DB2 JDBC driver, both LOBs and ResultSetMetaData become invalid once the cursor advances or the ResultSet is accessed from another thread. To handle this, OJP reads rows one at a time when LOBs are present instead of batching multiple rows and eagerly caches LOB data and metadata immediately upon row access to ensure consistency and prevent driver exceptions.

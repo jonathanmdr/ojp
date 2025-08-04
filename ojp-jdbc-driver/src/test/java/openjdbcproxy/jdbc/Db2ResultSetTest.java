@@ -112,6 +112,18 @@ public class Db2ResultSetTest {
         assertEquals(2, resultSet.getInt("id"));
         assertEquals("Bob", resultSet.getString("name"));
 
+        assertTrue(resultSet.next());
+        assertEquals(3, resultSet.getInt("id"));
+        assertEquals("Charlie", resultSet.getString("name"));
+
+        assertTrue(resultSet.next());
+        assertEquals(4, resultSet.getInt("id"));
+        assertEquals("Diana", resultSet.getString("name"));
+
+        assertTrue(resultSet.next());
+        assertEquals(5, resultSet.getInt("id"));
+        assertEquals("Eve", resultSet.getString("name"));
+
         // Test isFirst() and isLast()
         assertFalse(resultSet.isFirst());
         assertTrue(resultSet.isLast());
