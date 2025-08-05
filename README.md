@@ -63,7 +63,7 @@ If Docker is not available in your environment, you can build and run OJP Server
 
 ## Documentation
 
-- [Fat JAR Setup Guide](documents/fat-jar/README.md) - Build and run OJP Server as a standalone JAR (alternative to Docker).
+
 - [Architectural decision records (ADRs)](documents/ADRs) - Technical decisions and rationale behind OJP's architecture.
 - [Get started: Spring Boot, Quarkus and Micronaut](documents/java-frameworks) - Framework-specific integration guides and examples.
 - [Connection Pool Configuration](documents/configuration/CONNECTION_POOL_CONFIG.md) - OJP connection pool settings and tuning parameters.

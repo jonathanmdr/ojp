@@ -212,7 +212,7 @@ java -Xmx2g -jar ojp-server/target/ojp-server-0.0.8-alpha-shaded.jar
 
 **Problem**: Missing database drivers
 
-**Solution**: The fat JAR includes drivers for H2, PostgreSQL, MySQL, and MariaDB. For Oracle or SQL Server, you need to add the respective JDBC drivers to the classpath:
+**Solution**: The fat JAR includes drivers for H2, PostgreSQL, MySQL, and MariaDB. For Oracle, DB2, SQL Server or other proprietary database, you need to add the respective JDBC drivers to the classpath:
 
 ```bash
 java -cp "oracle-driver.jar:ojp-server-0.0.8-alpha-shaded.jar" \
@@ -252,7 +252,7 @@ After successfully running the OJP Server:
 1. **Configure your application** to use the [OJP JDBC Driver](../../README.md#2-add-ojp-jdbc-driver-to-your-project)
 2. **Update connection URLs** to use the `ojp[host:port]_` prefix
 3. **Disable application-level connection pooling** as OJP handles pooling
-4. **Set up monitoring** using the Prometheus metrics endpoint
+4. **Set up monitoring** (optional) using the Prometheus metrics endpoint
 5. **Review** [OJP Server Configuration](../configuration/ojp-server-configuration.md) for advanced options
 
 For framework-specific integration guides, see:
