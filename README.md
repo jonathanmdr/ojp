@@ -55,7 +55,14 @@ Use the ojp driver: `org.openjdbcproxy.jdbc.Driver`
 
 That's it! Your application now uses intelligent connection pooling through OJP.
 
+## Alternative Setup: Fat JAR (No Docker)
+
+If Docker is not available in your environment, you can build and run OJP Server as a standalone JAR file:
+
+📖 **[Fat JAR Setup Guide](documents/fat-jar/README.md)** - Complete instructions for building and running OJP Server as a standalone executable JAR with all dependencies included.
+
 ## Documentation
+
 
 - [Architectural decision records (ADRs)](documents/ADRs) - Technical decisions and rationale behind OJP's architecture.
 - [Get started: Spring Boot, Quarkus and Micronaut](documents/java-frameworks) - Framework-specific integration guides and examples.
