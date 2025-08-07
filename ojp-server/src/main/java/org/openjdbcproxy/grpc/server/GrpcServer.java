@@ -5,6 +5,7 @@ import io.grpc.ServerBuilder;
 import io.grpc.health.v1.HealthCheckResponse;
 import io.grpc.netty.NettyServerBuilder;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
+import org.openjdbcproxy.constants.CommonConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +45,24 @@ public class GrpcServer {
             grpcTelemetry = ojpServerTelemetry.createNoOpGrpcTelemetry();
         }
 
+        // Create slow query segregation manager
+        SlowQuerySegregationManager slowQuerySegregationManager;
+        if (config.isSlowQuerySegregationEnabled()) {
+            // Use default HikariCP max pool size since we don't have access to the actual datasource here
+            // The actual pool size will be determined when connections are created
+            int defaultPoolSize = CommonConstants.DEFAULT_MAXIMUM_POOL_SIZE;
+            slowQuerySegregationManager = new SlowQuerySegregationManager(
+                defaultPoolSize,
+                config.getSlowQuerySlotPercentage(),
+                config.getSlowQueryIdleTimeout(),
+                true
+            );
+        } else {
+            slowQuerySegregationManager = new SlowQuerySegregationManager(
+                1, 0, 0, false
+            );
+        }
+
         // Build server with configuration
         ServerBuilder<?> serverBuilder = NettyServerBuilder
                 .forPort(config.getServerPort())
@@ -52,7 +71,8 @@ public class GrpcServer {
                 .keepAliveTime(config.getConnectionIdleTimeout(), TimeUnit.MILLISECONDS)
                 .addService(new StatementServiceImpl(
                         new SessionManagerImpl(),
-                        new CircuitBreaker(config.getCircuitBreakerTimeout(), config.getCircuitBreakerThreshold())
+                        new CircuitBreaker(config.getCircuitBreakerTimeout(), config.getCircuitBreakerThreshold()),
+                        slowQuerySegregationManager
                 ))
                 .addService(OjpHealthManager.getHealthStatusManager().getHealthService())
                 .intercept(grpcTelemetry.newServerInterceptor());
