@@ -146,7 +146,6 @@ public class MySQLPreparedStatementExtensiveTests {
         rs.close();
     }
 
-    @Disabled //TODO fix it
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
     public void testBinaryParameterSetters(String driverClass, String url, String user, String password) throws Exception {
@@ -204,7 +203,6 @@ public class MySQLPreparedStatementExtensiveTests {
         rs.close();
     }
 
-    @Disabled //TODO fix it
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
     public void testNullParameterSetters(String driverClass, String url, String user, String password) throws Exception {

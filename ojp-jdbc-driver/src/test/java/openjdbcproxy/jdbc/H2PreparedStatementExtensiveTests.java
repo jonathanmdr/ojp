@@ -1,8 +1,6 @@
 package openjdbcproxy.jdbc;
 
-import openjdbcproxy.jdbc.testutil.TestDBUtils;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
@@ -30,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Disabled
 public class H2PreparedStatementExtensiveTests {
 
     private Connection connection;

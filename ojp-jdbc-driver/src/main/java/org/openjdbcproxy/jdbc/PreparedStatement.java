@@ -825,6 +825,46 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
     }
 
     /**
+     * Has to override the Statement implementation because PreparedStatement has to send extra properties like the SQL
+     * being executed, which Statement does not.
+     *
+     * @throws SQLException
+     */
+    @Override
+    public void clearWarnings() throws SQLException {
+        log.debug("clearWarnings called");
+        checkClosed();
+        this.callProxy(CallType.CALL_CLEAR, "Warnings", Void.class);
+    }
+
+    /**
+     * Has to override the Statement implementation because PreparedStatement has to send extra properties like the SQL
+     * being executed, which Statement does not.
+     *
+     * @throws SQLException
+     */
+    @Override
+    public void clearBatch() throws SQLException {
+        log.debug("clearBatch called");
+        checkClosed();
+        this.callProxy(CallType.CALL_CLEAR, "Batch", Void.class);
+    }
+
+    /**
+     * Has to override the Statement implementation because PreparedStatement has to send extra properties like the SQL
+     * being executed, which Statement does not.
+     *
+     * @return int max field size
+     * @throws SQLException
+     */
+    @Override
+    public int getMaxFieldSize() throws SQLException {
+        log.debug("getMaxFieldSize called");
+        checkClosed();
+        return this.callProxy(CallType.CALL_GET, "MaxFieldSize", Integer.class);
+    }
+
+    /**
      * Guarantees that the properties map has the sql statement set in this prepared statement.
      */
     private void propertiesHaveSqlStatement() {

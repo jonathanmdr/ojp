@@ -179,7 +179,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         Integer parameterIndex = (Integer) metadata.get(CommonConstants.PREPARED_STATEMENT_BINARY_STREAM_INDEX);
                         ps.setBinaryStream(parameterIndex, lobIS);
                     }
-                    if (!DbName.SQL_SERVER.equals(dto.getDbName())) {//SQL server treats binary streams differently
+                    if (DbName.POSTGRES.equals(dto.getDbName())) {//Postgres requires check if the lob streams are fully consumed.
                         sessionManager.waitLobStreamsConsumption(dto.getSession());
                     }
                     if (ps != null) {

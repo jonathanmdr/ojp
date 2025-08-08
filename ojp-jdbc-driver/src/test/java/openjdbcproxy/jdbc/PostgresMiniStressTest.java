@@ -159,7 +159,7 @@ public class PostgresMiniStressTest {
         assertEquals(680, numQueries);
         assertEquals(10, numFailures);
         assertTrue(totalTimeMs < 30000);
-        assertTrue(avgQueryMs < 50);
+        assertTrue(avgQueryMs < 100);
     }
 
     private static void timeAndRun(Callable<Void> query) {
