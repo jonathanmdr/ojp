@@ -14,6 +14,13 @@ import java.util.concurrent.TimeoutException;
  * Manages connection acquisition with enhanced timeout and monitoring capabilities.
  * This class wraps HikariCP connection acquisition to add additional safeguards
  * against blocking indefinitely under high load.
+ * 
+ * ISSUE #29 FIX: This class was created to resolve the problem where OJP would
+ * block indefinitely under high concurrent load (200+ threads) when the HikariCP
+ * connection pool was exhausted. The solution uses CompletableFuture with timeout
+ * to ensure connections are acquired within a reasonable time or fail gracefully.
+ * 
+ * @see <a href="https://github.com/Open-JDBC-Proxy/ojp/issues/29">Issue #29</a>
  */
 @Slf4j
 public class ConnectionAcquisitionManager {

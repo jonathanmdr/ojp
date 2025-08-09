@@ -25,6 +25,7 @@ public class CommonConstants {
     public static final String OJP_CLOB_PREFIX = "OJP_CLOB_PREFIX:";
 
     // HikariCP default connection pool settings - optimized for high concurrency
+    // ISSUE #29 FIX: Updated these values to prevent indefinite blocking under high load
     public static final int DEFAULT_MAXIMUM_POOL_SIZE = 20;  // Increased from 10 to handle more concurrent requests
     public static final int DEFAULT_MINIMUM_IDLE = 5;        // Reduced from 10 to allow pool to scale down
     public static final long DEFAULT_IDLE_TIMEOUT = 600000;  // 10 minutes
