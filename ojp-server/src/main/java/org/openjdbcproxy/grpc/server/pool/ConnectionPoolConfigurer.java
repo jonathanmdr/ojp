@@ -36,9 +36,21 @@ public class ConnectionPoolConfigurer {
         config.setIdleTimeout(getLongProperty(clientProperties, "ojp.connection.pool.idleTimeout", CommonConstants.DEFAULT_IDLE_TIMEOUT));
         config.setMaxLifetime(getLongProperty(clientProperties, "ojp.connection.pool.maxLifetime", CommonConstants.DEFAULT_MAX_LIFETIME));
         config.setConnectionTimeout(getLongProperty(clientProperties, "ojp.connection.pool.connectionTimeout", CommonConstants.DEFAULT_CONNECTION_TIMEOUT));
+        
+        // Additional settings for high concurrency scenarios
+        config.setLeakDetectionThreshold(60000); // 60 seconds - detect connection leaks
+        config.setValidationTimeout(5000);       // 5 seconds - faster validation timeout
+        config.setInitializationFailTimeout(10000); // 10 seconds - fail fast on initialization issues
+        
+        // Set pool name for better monitoring
+        String poolName = "OJP-Pool-" + System.currentTimeMillis();
+        config.setPoolName(poolName);
+        
+        // Enable JMX for monitoring if not explicitly disabled
+        config.setRegisterMbeans(true);
 
-        log.info("HikariCP configured with maximumPoolSize={}, minimumIdle={}, poolName={}",
-                config.getMaximumPoolSize(), config.getMinimumIdle(), config.getPoolName());
+        log.info("HikariCP configured with maximumPoolSize={}, minimumIdle={}, connectionTimeout={}ms, poolName={}",
+                config.getMaximumPoolSize(), config.getMinimumIdle(), config.getConnectionTimeout(), poolName);
     }
 
     /**
