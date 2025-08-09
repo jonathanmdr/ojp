@@ -5,32 +5,26 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
- * Manages connection acquisition with enhanced timeout and monitoring capabilities.
- * This class wraps HikariCP connection acquisition to add additional safeguards
- * against blocking indefinitely under high load.
+ * Manages connection acquisition with enhanced monitoring capabilities.
+ * This class wraps HikariCP connection acquisition to provide better error messages
+ * and pool state information when connection acquisition fails.
  * 
  * ISSUE #29 FIX: This class was created to resolve the problem where OJP would
  * block indefinitely under high concurrent load (200+ threads) when the HikariCP
- * connection pool was exhausted. The solution uses CompletableFuture with timeout
- * to ensure connections are acquired within a reasonable time or fail gracefully.
+ * connection pool was exhausted. The solution relies on HikariCP's built-in timeout
+ * mechanisms while providing enhanced error reporting with pool statistics.
  * 
  * @see <a href="https://github.com/Open-JDBC-Proxy/ojp/issues/29">Issue #29</a>
  */
 @Slf4j
 public class ConnectionAcquisitionManager {
     
-    private static final long ACQUISITION_TIMEOUT_MS = 15000; // 15 seconds max wait
-    
     /**
-     * Acquires a connection from the given datasource with enhanced timeout handling.
-     * This method provides additional protection against indefinite blocking by using
-     * CompletableFuture with a timeout.
+     * Acquires a connection from the given datasource with enhanced error reporting.
+     * This method relies on HikariCP's built-in connection timeout mechanism to prevent
+     * indefinite blocking, while providing detailed error messages with pool statistics.
      * 
      * @param dataSource the HikariCP datasource
      * @param connectionHash the connection hash for logging purposes
@@ -54,62 +48,35 @@ public class ConnectionAcquisitionManager {
             log.debug("Could not retrieve pool statistics for hash: {}", connectionHash);
         }
         
-        // Use CompletableFuture to add our own timeout layer on top of HikariCP's timeout
-        CompletableFuture<Connection> connectionFuture = CompletableFuture.supplyAsync(() -> {
-            try {
-                return dataSource.getConnection();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        
         try {
-            Connection connection = connectionFuture.get(ACQUISITION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            // Use HikariCP's built-in connection timeout - this prevents indefinite blocking
+            // The timeout is configured via ConnectionPoolConfigurer (default: 10 seconds)
+            Connection connection = dataSource.getConnection();
             log.debug("Successfully acquired connection for hash: {} in thread: {}", 
                 connectionHash, Thread.currentThread().getName());
             return connection;
             
-        } catch (TimeoutException e) {
-            // Cancel the future to prevent resource leaks
-            connectionFuture.cancel(true);
-            
-            // Log detailed information about the timeout
-            String errorMsg = String.format(
-                "Connection acquisition timeout (%dms) for hash: %s. Pool state - Active: %d, Max: %d, Waiting threads: %d",
-                ACQUISITION_TIMEOUT_MS, 
-                connectionHash,
-                dataSource.getHikariPoolMXBean().getActiveConnections(),
-                dataSource.getMaximumPoolSize(),
-                dataSource.getHikariPoolMXBean().getThreadsAwaitingConnection()
-            );
-            log.error(errorMsg);
-            throw new SQLException(errorMsg, "08001"); // Connection exception SQL state
-            
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            connectionFuture.cancel(true);
-            throw new SQLException("Connection acquisition interrupted for hash: " + connectionHash, e);
-            
-        } catch (ExecutionException e) {
-            connectionFuture.cancel(true);
-            Throwable cause = e.getCause();
-            if (cause instanceof RuntimeException && cause.getCause() instanceof SQLException) {
-                SQLException sqlException = (SQLException) cause.getCause();
-                
-                // Enhanced error message with pool statistics
-                String enhancedMessage = String.format(
-                    "Connection acquisition failed for hash: %s. Pool state - Active: %d, Max: %d. Original error: %s",
+        } catch (SQLException e) {
+            // Enhanced error message with pool statistics
+            String enhancedMessage;
+            try {
+                enhancedMessage = String.format(
+                    "Connection acquisition failed for hash: %s. Pool state - Active: %d, Max: %d, Waiting threads: %d. Original error: %s",
                     connectionHash,
                     dataSource.getHikariPoolMXBean().getActiveConnections(),
                     dataSource.getMaximumPoolSize(),
-                    sqlException.getMessage()
+                    dataSource.getHikariPoolMXBean().getThreadsAwaitingConnection(),
+                    e.getMessage()
                 );
-                
-                log.error(enhancedMessage);
-                throw new SQLException(enhancedMessage, sqlException.getSQLState(), sqlException);
-            } else {
-                throw new SQLException("Unexpected error during connection acquisition for hash: " + connectionHash, cause);
+            } catch (Exception poolStatsException) {
+                enhancedMessage = String.format(
+                    "Connection acquisition failed for hash: %s. Could not retrieve pool statistics. Original error: %s",
+                    connectionHash, e.getMessage()
+                );
             }
+            
+            log.error(enhancedMessage);
+            throw new SQLException(enhancedMessage, e.getSQLState(), e);
         }
     }
 }

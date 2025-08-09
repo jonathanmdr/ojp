@@ -54,7 +54,7 @@ public class ConcurrencyTimeoutTest {
             executor.submit(() -> {
                 for (int i = 0; i < OPERATIONS_PER_THREAD; i++) {
                     try (Connection conn = getConnection(driverClass, url, user, password)) {
-                        try (PreparedStatement pst = conn.prepareStatement("INSERT INTO concurrency_test (id, value) VALUES (?, ?)")) {
+                        try (PreparedStatement pst = conn.prepareStatement("INSERT INTO concurrency_test (id, test_value) VALUES (?, ?)")) {
                             pst.setInt(1, threadNum * OPERATIONS_PER_THREAD + i);
                             pst.setString(2, "thread_" + threadNum + "_op_" + i);
                             pst.execute();
