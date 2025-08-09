@@ -23,21 +23,14 @@ public class ConcurrencyTimeoutTest {
     private static final int THREADS = 50; // Smaller number for quick testing
     private static final int OPERATIONS_PER_THREAD = 5;
 
-    private static boolean isTestDisabled;
     private static AtomicInteger successfulOperations = new AtomicInteger(0);
     private static AtomicInteger failedOperations = new AtomicInteger(0);
-
-    @BeforeAll
-    public static void checkTestConfiguration() {
-        isTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
-    }
 
     @SneakyThrows
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_connection.csv")
     public void testConcurrencyWithTimeout(String driverClass, String url, String user, String password) throws SQLException {
-        assumeFalse(isTestDisabled, "Postgres tests are disabled");
-        
+
         successfulOperations.set(0);
         failedOperations.set(0);
         
