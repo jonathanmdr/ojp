@@ -39,6 +39,12 @@ ojp.server.slowQuerySegregation.slowSlotPercentage=20
 
 # Idle timeout for slot borrowing (milliseconds)
 ojp.server.slowQuerySegregation.idleTimeout=10000
+
+# Timeout for acquiring slow operation slots (milliseconds)
+ojp.server.slowQuerySegregation.slowSlotTimeout=120000
+
+# Timeout for acquiring fast operation slots (milliseconds)
+ojp.server.slowQuerySegregation.fastSlotTimeout=60000
 ```
 
 ## Benefits

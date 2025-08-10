@@ -55,11 +55,13 @@ public class GrpcServer {
                 defaultPoolSize,
                 config.getSlowQuerySlotPercentage(),
                 config.getSlowQueryIdleTimeout(),
+                config.getSlowQuerySlowSlotTimeout(),
+                config.getSlowQueryFastSlotTimeout(),
                 true
             );
         } else {
             slowQuerySegregationManager = new SlowQuerySegregationManager(
-                1, 0, 0, false
+                1, 0, 0, 0, 0, false
             );
         }
 
