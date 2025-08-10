@@ -12,11 +12,11 @@ OJP now supports configurable connection pool settings via an `ojp.properties` f
 
 | Property                              | Type | Default | Description |
 |---------------------------------------|------|---------|-------------|
-| `ojp.connection.pool.maximumPoolSize` | int | 10 | Maximum number of connections in the pool |
-| `ojp.connection.pool.minimumIdle`                         | int | 10 | Minimum number of idle connections maintained |
-| `ojp.connection.pool.idleTimeout`                         | long | 600000 | Maximum time (ms) a connection can sit idle (10 minutes) |
+| `ojp.connection.pool.maximumPoolSize` | int | 20      | Maximum number of connections in the pool |
+| `ojp.connection.pool.minimumIdle`                         | int | 10      | Minimum number of idle connections maintained |
+| `ojp.connection.pool.idleTimeout`                         | long | 600000  | Maximum time (ms) a connection can sit idle (10 minutes) |
 | `ojp.connection.pool.maxLifetime`                         | long | 1800000 | Maximum lifetime (ms) of a connection (30 minutes) |
-| `ojp.connection.pool.connectionTimeout`                   | long | 30000 | Maximum time (ms) to wait for a connection (30 seconds) |
+| `ojp.connection.pool.connectionTimeout`                   | long | 30000   | Maximum time (ms) to wait for a connection (30 seconds) |
 
 ## Example Configuration
 

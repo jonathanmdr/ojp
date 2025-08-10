@@ -16,7 +16,7 @@ public class SlowQuerySegregationManager {
     private final boolean enabled;
     private final long slowSlotTimeoutMs;
     private final long fastSlotTimeoutMs;
-    
+
     /**
      * Creates a new SlowQuerySegregationManager.
      * 
@@ -27,7 +27,7 @@ public class SlowQuerySegregationManager {
      * @param fastSlotTimeoutMs The timeout in milliseconds for acquiring fast operation slots
      * @param enabled Whether the slow query segregation feature is enabled
      */
-    public SlowQuerySegregationManager(int totalSlots, int slowSlotPercentage, long idleTimeoutMs, 
+    public SlowQuerySegregationManager(int totalSlots, int slowSlotPercentage, long idleTimeoutMs,
                                      long slowSlotTimeoutMs, long fastSlotTimeoutMs, boolean enabled) {
         this.enabled = enabled;
         this.slowSlotTimeoutMs = slowSlotTimeoutMs;
@@ -36,7 +36,7 @@ public class SlowQuerySegregationManager {
         
         if (enabled) {
             this.slotManager = new SlotManager(totalSlots, slowSlotPercentage, idleTimeoutMs);
-            log.info("SlowQuerySegregationManager initialized: enabled={}, totalSlots={}, slowSlotPercentage={}%, idleTimeout={}ms, slowSlotTimeout={}ms, fastSlotTimeout={}ms", 
+            log.info("SlowQuerySegregationManager initialized: enabled={}, totalSlots={}, slowSlotPercentage={}%, idleTimeout={}ms, slowSlotTimeout={}ms, fastSlotTimeout={}ms",
                     enabled, totalSlots, slowSlotPercentage, idleTimeoutMs, slowSlotTimeoutMs, fastSlotTimeoutMs);
         } else {
             this.slotManager = null;

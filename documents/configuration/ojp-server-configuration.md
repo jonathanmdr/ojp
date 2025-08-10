@@ -184,6 +184,28 @@ The circuit breaker protects against cascading failures by tracking SQL statemen
 -Dojp.server.circuitBreakerTimeout=180000  # 3 minutes
 ```
 
+
+### Slow Query Segregation Configuration
+
+```bash
+# Enable or disable the slow query segregation feature
+ojp.server.slowQuerySegregation.enabled=true
+# Percentage of execution slots allocated to slow operations (0-100)
+# Default: 20% for slow, 80% for fast operations
+ojp.server.slowQuerySegregation.slowSlotPercentage=20
+# Idle timeout before slots can be borrowed between pools (milliseconds)
+# Default: 10 seconds
+ojp.server.slowQuerySegregation.idleTimeout=10000
+
+# Timeout for acquiring slow operation slots (milliseconds)
+# Default: 120 seconds
+ojp.server.slowQuerySegregation.slowSlotTimeout=120000
+
+# Timeout for acquiring fast operation slots (milliseconds)
+# Default: 60 seconds
+ojp.server.slowQuerySegregation.fastSlotTimeout=60000
+```
+
 ## Configuration Examples
 
 ### Development Environment

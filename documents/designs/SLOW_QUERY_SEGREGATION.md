@@ -77,20 +77,20 @@ The feature is designed to be non-intrusive:
 ## Example Scenarios
 
 ### Scenario 1: Mixed Workload
-- Fast queries: `SELECT * FROM users WHERE id = ?` (avg: 10ms)
+- Fast queries: `SELECT * FROM users WHERE id = ?` (avg: 100ms)
 - Slow queries: `SELECT * FROM large_table ORDER BY date` (avg: 500ms)
-- Overall average: ~255ms
-- Slow threshold: 510ms
+- Overall average: ~300ms
+- Slow threshold: 600ms
 - Result: Only the complex query is classified as slow
 
 ### Scenario 2: Resource Protection
-- 10 total connection slots
-- 2 slow slots, 8 fast slots
-- If 2 slow operations are running, additional slow operations must wait
-- Fast operations can still use their 8 slots unimpeded
+- 20 total connection slots
+- 4 slow slots, 8 fast slots
+- If 4 slow operations are running, additional slow operations must wait
+- Fast operations can still use their 16 slots unimpeded
 
 ### Scenario 3: Slot Borrowing
 - No slow operations for 10+ seconds (idle)
-- Fast pool is at capacity (8/8 used)
+- Fast pool is at capacity (16/16 used)
 - New fast operation can borrow from slow pool
 - System maintains high throughput
