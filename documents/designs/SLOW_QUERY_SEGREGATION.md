@@ -77,10 +77,10 @@ The feature is designed to be non-intrusive:
 ## Example Scenarios
 
 ### Scenario 1: Mixed Workload
-- Fast queries: `SELECT * FROM users WHERE id = ?` (avg: 100ms)
+- Fast queries: `SELECT * FROM users WHERE id = ?` (avg: 10ms) and `SELECT * FROM orders WHERE id = ?` (avg: 20ms)
 - Slow queries: `SELECT * FROM large_table ORDER BY date` (avg: 500ms)
-- Overall average: ~300ms
-- Slow threshold: 600ms
+- Overall average: ~177ms
+- Slow threshold: 353ms
 - Result: Only the complex query is classified as slow
 
 ### Scenario 2: Resource Protection
