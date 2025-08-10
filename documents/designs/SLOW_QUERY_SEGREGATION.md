@@ -94,3 +94,8 @@ The feature is designed to be non-intrusive:
 - Fast pool is at capacity (16/16 used)
 - New fast operation can borrow from slow pool
 - System maintains high throughput
+
+## Related Documentation
+
+For complete configuration details including all server settings, see:
+- **[Complete OJP Server Configuration Guide](../configuration/ojp-server-configuration.md)** - Comprehensive configuration reference with all available options

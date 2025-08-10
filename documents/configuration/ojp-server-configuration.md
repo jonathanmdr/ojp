@@ -1,24 +1,96 @@
-# OJP Server Configuration
+# OJP Server Complete Configuration Guide
 
-The OJP Server supports comprehensive configuration through both JVM system properties and environment variables. JVM system properties take precedence over environment variables when both are specified.
+The OJP Server supports comprehensive configuration through both JVM system properties and environment variables. This document covers all available configuration options including server settings, connection pools, slow query segregation, and client-side configuration.
 
-## Configuration Options
+## Server Configuration
+
+The server supports configuration through both JVM system properties and environment variables. JVM system properties take precedence over environment variables when both are specified.
+
+### Core Server Settings
 
 | Property                             | Environment Variable                 | Type    | Default   | Description                                            |
 |--------------------------------------|--------------------------------------|---------|-----------|--------------------------------------------------------|
 | `ojp.server.port`                    | `OJP_SERVER_PORT`                    | int     | 1059      | gRPC server port                                       |
 | `ojp.prometheus.port`                | `OJP_PROMETHEUS_PORT`                | int     | 9090      | Prometheus metrics HTTP server port                    |
-| `ojp.opentelemetry.enabled`          | `OJP_OPENTELEMETRY_ENABLED`          | boolean | true      | Enable/disable OpenTelemetry instrumentation           |
-| `ojp.opentelemetry.endpoint`         | `OJP_OPENTELEMETRY_ENDPOINT`         | string  | ""        | OpenTelemetry exporter endpoint (empty = default)      |
 | `ojp.server.threadPoolSize`          | `OJP_SERVER_THREADPOOLSIZE`          | int     | 200       | gRPC server thread pool size                           |
 | `ojp.server.maxRequestSize`          | `OJP_SERVER_MAXREQUESTSIZE`          | int     | 4194304   | Maximum request size in bytes (4MB)                    |
-| `ojp.server.logLevel`                | `OJP_SERVER_LOGLEVEL`                | string  | INFO      | Log verbosity level                                    |
-| `ojp.server.accessLogging`           | `OJP_SERVER_ACCESSLOGGING`           | boolean | false     | Enable/disable access logging                          |
-| `ojp.server.allowedIps`              | `OJP_SERVER_ALLOWEDIPS`              | string  | 0.0.0.0/0 | IP whitelist for gRPC server (comma-separated)         |
 | `ojp.server.connectionIdleTimeout`   | `OJP_SERVER_CONNECTIONIDLETIMEOUT`   | long    | 30000     | Connection idle timeout in milliseconds                |
-| `ojp.server.circuitBreakerTimeout`   | `OJP_SERVER_CIRCUITBREAKERTIMEOUT`   | long    | 60000     | Circuit breaker timeout in milliseconds                |
-| `ojp.server.circuitBreakerThreshold` | `OJP_SERVER_CIRCUITBREAKERTHRESHOLD` | int     | 3         | Circuit breaker failure threshold      |
-| `ojp.prometheus.allowedIps`          | `OJP_PROMETHEUS_ALLOWEDIPS`          | string  | 0.0.0.0/0 | IP whitelist for Prometheus endpoint (comma-separated) |
+
+### Logging Settings
+
+| Property                      | Environment Variable          | Type    | Default | Description                               |
+|-------------------------------|-------------------------------|---------|---------|-------------------------------------------|
+| `ojp.server.logLevel`         | `OJP_SERVER_LOGLEVEL`         | string  | INFO    | Log verbosity level (TRACE, DEBUG, INFO, WARN, ERROR) |
+| `ojp.server.accessLogging`    | `OJP_SERVER_ACCESSLOGGING`    | boolean | false   | Enable/disable access logging            |
+
+### Security Settings
+
+| Property                      | Environment Variable          | Type    | Default   | Description                                              |
+|-------------------------------|-------------------------------|---------|-----------|----------------------------------------------------------|
+| `ojp.server.allowedIps`       | `OJP_SERVER_ALLOWEDIPS`       | string  | 0.0.0.0/0 | IP whitelist for gRPC server (comma-separated)          |
+| `ojp.prometheus.allowedIps`   | `OJP_PROMETHEUS_ALLOWEDIPS`   | string  | 0.0.0.0/0 | IP whitelist for Prometheus endpoint (comma-separated)  |
+
+### OpenTelemetry Settings
+
+| Property                      | Environment Variable          | Type    | Default | Description                                    |
+|-------------------------------|-------------------------------|---------|---------|------------------------------------------------|
+| `ojp.opentelemetry.enabled`   | `OJP_OPENTELEMETRY_ENABLED`   | boolean | true    | Enable/disable OpenTelemetry instrumentation  |
+| `ojp.opentelemetry.endpoint`  | `OJP_OPENTELEMETRY_ENDPOINT`  | string  | ""      | OpenTelemetry exporter endpoint (empty = default) |
+
+### Circuit Breaker Settings
+
+| Property                             | Environment Variable                 | Type | Default | Description                                   |
+|--------------------------------------|--------------------------------------|------|---------|-----------------------------------------------|
+| `ojp.server.circuitBreakerTimeout`   | `OJP_SERVER_CIRCUITBREAKERTIMEOUT`   | long | 60000   | Circuit breaker timeout in milliseconds      |
+| `ojp.server.circuitBreakerThreshold` | `OJP_SERVER_CIRCUITBREAKERTHRESHOLD` | int  | 3       | Circuit breaker failure threshold            |
+
+### Slow Query Segregation Settings
+
+| Property                                           | Environment Variable                               | Type    | Default  | Description                                      |
+|----------------------------------------------------|----------------------------------------------------|---------|----------|--------------------------------------------------|
+| `ojp.server.slowQuerySegregation.enabled`         | `OJP_SERVER_SLOWQUERYSEGREGATION_ENABLED`         | boolean | true     | Enable/disable slow query segregation feature   |
+| `ojp.server.slowQuerySegregation.slowSlotPercentage` | `OJP_SERVER_SLOWQUERYSEGREGATION_SLOWSLOTPERCENTAGE` | int     | 20       | Percentage of slots for slow operations (0-100) |
+| `ojp.server.slowQuerySegregation.idleTimeout`     | `OJP_SERVER_SLOWQUERYSEGREGATION_IDLETIMEOUT`     | long    | 10000    | Idle timeout for slot borrowing (milliseconds)  |
+| `ojp.server.slowQuerySegregation.slowSlotTimeout` | `OJP_SERVER_SLOWQUERYSEGREGATION_SLOWSLOTTIMEOUT` | long    | 120000   | Timeout for acquiring slow operation slots (ms) |
+| `ojp.server.slowQuerySegregation.fastSlotTimeout` | `OJP_SERVER_SLOWQUERYSEGREGATION_FASTSLOTTIMEOUT` | long    | 60000    | Timeout for acquiring fast operation slots (ms) |
+
+## Client-Side Connection Pool Configuration
+
+The OJP JDBC driver supports configurable connection pool settings via an `ojp.properties` file. This allows customization of HikariCP connection pool behavior on a per-client basis.
+
+### How to Configure
+
+1. Create an `ojp.properties` file in your application's classpath (either in the root or in the `resources` folder)
+2. Add any of the supported properties (all are optional)
+3. The driver will automatically load and send these properties to the server when establishing a connection
+
+### Connection Pool Properties
+
+| Property                              | Type | Default | Description |
+|---------------------------------------|------|---------|-------------|
+| `ojp.connection.pool.maximumPoolSize` | int  | 20      | Maximum number of connections in the pool |
+| `ojp.connection.pool.minimumIdle`     | int  | 10      | Minimum number of idle connections maintained |
+| `ojp.connection.pool.idleTimeout`     | long | 600000  | Maximum time (ms) a connection can sit idle (10 minutes) |
+| `ojp.connection.pool.maxLifetime`     | long | 1800000 | Maximum lifetime (ms) of a connection (30 minutes) |
+| `ojp.connection.pool.connectionTimeout` | long | 30000   | Maximum time (ms) to wait for a connection (30 seconds) |
+
+### Example ojp.properties File
+
+```properties
+# Connection pool configuration
+ojp.connection.pool.maximumPoolSize=25
+ojp.connection.pool.minimumIdle=5
+ojp.connection.pool.idleTimeout=300000
+ojp.connection.pool.maxLifetime=900000
+ojp.connection.pool.connectionTimeout=15000
+```
+
+### Connection Pool Fallback Behavior
+
+- If no `ojp.properties` file is found, all default values are used
+- If a property is missing from the file, its default value is used
+- If a property has an invalid value, the default is used and a warning is logged
+- All validation and configuration logic is handled on the server side
 
 ## Configuration Methods
 
@@ -33,6 +105,8 @@ java -Dojp.server.port=8080 \
      -Dojp.server.threadPoolSize=100 \
      -Dojp.server.circuitBreakerTimeout=120000 \
      -Dojp.server.circuitBreakerThreshold=3 \
+     -Dojp.server.slowQuerySegregation.enabled=true \
+     -Dojp.server.slowQuerySegregation.slowSlotPercentage=25 \
      -Dojp.server.allowedIps="192.168.1.0/24,10.0.0.1" \
      -jar ojp-server.jar
 ```
@@ -48,6 +122,8 @@ export OJP_OPENTELEMETRY_ENABLED=false
 export OJP_SERVER_THREADPOOLSIZE=100
 export OJP_SERVER_CIRCUITBREAKERTIMEOUT=120000
 export OJP_SERVER_CIRCUITBREAKERTHRESHOLD=3
+export OJP_SERVER_SLOWQUERYSEGREGATION_ENABLED=true
+export OJP_SERVER_SLOWQUERYSEGREGATION_SLOWSLOTPERCENTAGE=25
 export OJP_SERVER_ALLOWEDIPS="192.168.1.0/24,10.0.0.1"
 java -jar ojp-server.jar
 ```
@@ -59,6 +135,7 @@ docker run -e OJP_SERVER_PORT=8080 \
            -e OJP_PROMETHEUS_PORT=9091 \
            -e OJP_OPENTELEMETRY_ENABLED=false \
            -e OJP_SERVER_CIRCUITBREAKERTIMEOUT=120000 \
+           -e OJP_SERVER_SLOWQUERYSEGREGATION_ENABLED=true \
            -e OJP_SERVER_ALLOWEDIPS="192.168.1.0/24,10.0.0.1" \
            -p 8080:8080 \
            -p 9091:9091 \
@@ -67,7 +144,7 @@ docker run -e OJP_SERVER_PORT=8080 \
 
 ## IP Whitelist Configuration
 
-The server supports IP-based access control for both the gRPC server and Prometheus endpoints. IP whitelist rules support:
+The server supports IP-based access control for both the gRPC server and Prometheus endpoints.
 
 ### Supported Formats
 
@@ -102,109 +179,44 @@ You can configure different IP restrictions for the Prometheus metrics endpoint:
 -Dojp.prometheus.allowedIps="192.168.100.0/24"
 ```
 
-## Configuration Validation
+## Slow Query Segregation Feature
 
-- **Invalid values**: Fall back to defaults with warning logs
-- **Invalid IP rules**: Server startup fails with error
-- **Port conflicts**: Standard socket binding errors apply
-- **Type mismatches**: Automatic fallback to defaults
+The Slow Query Segregation feature monitors all database operations and classifies them as "slow" or "fast" based on their execution time, then manages the number of concurrently executing operations to prevent slow operations from blocking the system.
 
-## OpenTelemetry Configuration
+### How It Works
 
-### Enable/Disable Telemetry
+1. **Operation Monitoring**: Every SQL operation is tracked using a hash of the SQL statement
+2. **Execution Time Tracking**: Execution times are recorded and averaged using a weighted formula: `new_average = ((stored_average * 4) + new_measurement) / 5`
+3. **Classification**: An operation is classified as "slow" if its average execution time is **2x or greater** than the overall average execution time
+4. **Slot Management**: The total number of concurrent operations is limited by the HikariCP connection pool maximum size
+5. **Slot Borrowing**: If one pool (slow/fast) is idle for a configurable time, the other pool can borrow its slots
 
-```bash
-# Disable OpenTelemetry completely
--Dojp.opentelemetry.enabled=false
+### Configuration
 
-# Enable with custom Prometheus port
--Dojp.opentelemetry.enabled=true -Dojp.prometheus.port=9092
-```
-
-### Custom Endpoint (Future)
-
-The `ojp.opentelemetry.endpoint` property is reserved for future use with OTLP exporters:
-
-```bash
-# Future feature - custom OTLP endpoint
--Dojp.opentelemetry.endpoint="http://jaeger:14250"
-```
-
-## Logging Configuration
-
-### Log Levels
-
-Supported log levels: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`
-
-```bash
-# Enable debug logging
--Dojp.server.logLevel=DEBUG
-
-# Enable access logging
--Dojp.server.accessLogging=true
-```
-
-## Performance Tuning
-
-### Circuit Breaker Configuration
-
-The circuit breaker protects against cascading failures by tracking SQL statement failures and temporarily blocking requests when failure thresholds are exceeded:
-
-```bash
-# Default circuit breaker timeout (60 seconds)
--Dojp.server.circuitBreakerTimeout=60000
-
-# Extended timeout for environments with occasional slow queries
--Dojp.server.circuitBreakerTimeout=120000
-
-# Short timeout for fast-fail scenarios
--Dojp.server.circuitBreakerTimeout=30000
-```
-
-### Thread Pool Configuration
-
-```bash
-# High-throughput configuration
--Dojp.server.threadPoolSize=500 \
--Dojp.server.maxRequestSize=16777216 \
--Dojp.server.connectionIdleTimeout=60000 \
--Dojp.server.circuitBreakerTimeout=90000
-```
-
-### Memory and Request Limits
-
-```bash
-# Larger request size for big result sets
--Dojp.server.maxRequestSize=16777216  # 16MB
-
-# Longer connection timeouts for slow queries
--Dojp.server.connectionIdleTimeout=120000  # 2 minutes
-
-# Longer circuit breaker timeout for complex queries
--Dojp.server.circuitBreakerTimeout=180000  # 3 minutes
-```
-
-
-### Slow Query Segregation Configuration
-
-```bash
-# Enable or disable the slow query segregation feature
+```properties
+# Enable/disable the feature
 ojp.server.slowQuerySegregation.enabled=true
-# Percentage of execution slots allocated to slow operations (0-100)
-# Default: 20% for slow, 80% for fast operations
+
+# Percentage of slots for slow operations (0-100)
 ojp.server.slowQuerySegregation.slowSlotPercentage=20
-# Idle timeout before slots can be borrowed between pools (milliseconds)
-# Default: 10 seconds
+
+# Idle timeout for slot borrowing (milliseconds)
 ojp.server.slowQuerySegregation.idleTimeout=10000
 
 # Timeout for acquiring slow operation slots (milliseconds)
-# Default: 120 seconds
 ojp.server.slowQuerySegregation.slowSlotTimeout=120000
 
 # Timeout for acquiring fast operation slots (milliseconds)
-# Default: 60 seconds
 ojp.server.slowQuerySegregation.fastSlotTimeout=60000
 ```
+
+### Benefits
+
+- **Per-datasource isolation**: Each datasource maintains independent slow/fast lanes based on actual pool sizes
+- **Enhanced resource protection**: Smart borrowing preserves at least one slot per pool and requires prior activity
+- **Prevents resource starvation**: Fast operations aren't blocked by slow ones within each datasource
+- **Adaptive learning**: Automatically discovers and adapts to slow operations per datasource
+- **Efficient resource utilization**: Smart slot borrowing maximizes connection pool usage while maintaining safety
 
 ## Configuration Examples
 
@@ -216,6 +228,7 @@ java -Dojp.server.port=1059 \
      -Dojp.server.logLevel=DEBUG \
      -Dojp.server.accessLogging=true \
      -Dojp.server.allowedIps="0.0.0.0/0" \
+     -Dojp.server.slowQuerySegregation.enabled=true \
      -jar ojp-server.jar
 ```
 
@@ -228,8 +241,25 @@ java -Dojp.server.port=1059 \
      -Dojp.server.accessLogging=false \
      -Dojp.server.threadPoolSize=300 \
      -Dojp.server.circuitBreakerTimeout=60000 \
+     -Dojp.server.slowQuerySegregation.enabled=true \
+     -Dojp.server.slowQuerySegregation.slowSlotPercentage=25 \
+     -Dojp.server.slowQuerySegregation.slowSlotTimeout=180000 \
      -Dojp.server.allowedIps="10.0.0.0/8,172.16.0.0/12" \
      -Dojp.prometheus.allowedIps="192.168.100.0/24" \
+     -jar ojp-server.jar
+```
+
+### High-Throughput Environment
+
+```bash
+java -Dojp.server.port=1059 \
+     -Dojp.server.threadPoolSize=500 \
+     -Dojp.server.maxRequestSize=16777216 \
+     -Dojp.server.connectionIdleTimeout=60000 \
+     -Dojp.server.circuitBreakerTimeout=90000 \
+     -Dojp.server.slowQuerySegregation.enabled=true \
+     -Dojp.server.slowQuerySegregation.slowSlotPercentage=30 \
+     -Dojp.server.slowQuerySegregation.idleTimeout=5000 \
      -jar ojp-server.jar
 ```
 
@@ -245,11 +275,24 @@ data:
   OJP_PROMETHEUS_PORT: "9090"
   OJP_SERVER_THREADPOOLSIZE: "200"
   OJP_SERVER_CIRCUITBREAKERTIMEOUT: "60000"
+  OJP_SERVER_CIRCUITBREAKERTHRESHOLD: "3"
+  OJP_SERVER_SLOWQUERYSEGREGATION_ENABLED: "true"
+  OJP_SERVER_SLOWQUERYSEGREGATION_SLOWSLOTPERCENTAGE: "20"
+  OJP_SERVER_SLOWQUERYSEGREGATION_IDLETIMEOUT: "10000"
+  OJP_SERVER_SLOWQUERYSEGREGATION_SLOWSLOTTIMEOUT: "120000"
+  OJP_SERVER_SLOWQUERYSEGREGATION_FASTSLOTTIMEOUT: "60000"
   OJP_SERVER_ALLOWEDIPS: "10.244.0.0/16"
   OJP_PROMETHEUS_ALLOWEDIPS: "10.244.0.0/16"
   OJP_OPENTELEMETRY_ENABLED: "true"
   OJP_SERVER_LOGLEVEL: "INFO"
 ```
+
+## Configuration Validation
+
+- **Invalid values**: Fall back to defaults with warning logs
+- **Invalid IP rules**: Server startup fails with error
+- **Port conflicts**: Standard socket binding errors apply
+- **Type mismatches**: Automatic fallback to defaults
 
 ## Troubleshooting
 
@@ -258,7 +301,8 @@ data:
 1. **Server won't start**: Check IP whitelist configuration and port availability
 2. **Can't connect**: Verify client IP is in the allowed list
 3. **Metrics unavailable**: Check Prometheus port and IP whitelist
-4. **Performance issues**: Adjust thread pool size and connection timeouts
+4. **Performance issues**: Adjust thread pool size, connection timeouts, and slow query segregation settings
+5. **Slow queries blocking fast ones**: Enable slow query segregation and tune slot percentages
 
 ### Debugging Configuration
 
@@ -275,5 +319,23 @@ INFO org.openjdbcproxy.grpc.server.ServerConfiguration - OJP Server Configuratio
 INFO org.openjdbcproxy.grpc.server.ServerConfiguration -   Server Port: 1059
 INFO org.openjdbcproxy.grpc.server.ServerConfiguration -   Prometheus Port: 9090
 INFO org.openjdbcproxy.grpc.server.ServerConfiguration -   OpenTelemetry Enabled: true
+INFO org.openjdbcproxy.grpc.server.ServerConfiguration -   Slow Query Segregation Enabled: true
+INFO org.openjdbcproxy.grpc.server.ServerConfiguration -   Slow Query Slot Percentage: 20%
 ...
 ```
+
+### Performance Tuning Tips
+
+1. **Thread Pool**: Start with 200 threads, increase for high-concurrency environments
+2. **Circuit Breaker**: Adjust timeout based on your slowest acceptable query
+3. **Slow Query Segregation**: 
+   - Increase slow slot percentage if you have many legitimate slow queries
+   - Decrease idle timeout for more aggressive slot borrowing
+   - Increase timeouts in environments with occasional very slow queries
+4. **Connection Pools**: Configure client-side pool sizes based on application requirements
+5. **Request Size**: Increase for applications that handle large result sets
+
+## Related Documentation
+
+- **[Slow Query Segregation Documentation](../designs/SLOW_QUERY_SEGREGATION.md)** - Detailed guide to the slow query segregation feature
+- **[Example Configuration Properties](ojp-server-example.properties)** - Complete example configuration file with all settings

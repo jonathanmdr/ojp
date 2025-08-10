@@ -187,6 +187,9 @@ public class SlotManagerTest {
 
     @Test
     public void testConcurrentSlotAcquisition() throws InterruptedException {
+        // Create a SlotManager with very long idle timeout to prevent borrowing during test
+        SlotManager testSlotManager = new SlotManager(10, 20, 60000); // 60 second idle timeout
+        
         final int numThreads = 5;
         final boolean[] results = new boolean[numThreads];
         Thread[] threads = new Thread[numThreads];
@@ -196,7 +199,7 @@ public class SlotManagerTest {
             final int threadIndex = i;
             threads[i] = new Thread(() -> {
                 try {
-                    results[threadIndex] = slotManager.acquireSlowSlot(1000);
+                    results[threadIndex] = testSlotManager.acquireSlowSlot(1000);
                 } catch (InterruptedException e) {
                     results[threadIndex] = false;
                 }
@@ -221,10 +224,10 @@ public class SlotManagerTest {
 
         // Should only have 2 successful acquisitions (our slow slot limit)
         assertEquals(2, successCount);
-        assertEquals(2, slotManager.getActiveSlowOperations());
+        assertEquals(2, testSlotManager.getActiveSlowOperations());
 
         // Clean up
-        slotManager.releaseSlowSlot();
-        slotManager.releaseSlowSlot();
+        testSlotManager.releaseSlowSlot();
+        testSlotManager.releaseSlowSlot();
     }
 }

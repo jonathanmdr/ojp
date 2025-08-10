@@ -35,9 +35,9 @@ public class SlotManager {
     private final AtomicInteger slowSlotsBorrowedToFast = new AtomicInteger(0);
     private final AtomicInteger fastSlotsBorrowedToSlow = new AtomicInteger(0);
     
-    // Idle time tracking
-    private final AtomicLong lastSlowActivity = new AtomicLong(System.currentTimeMillis());
-    private final AtomicLong lastFastActivity = new AtomicLong(System.currentTimeMillis());
+    // Idle time tracking  
+    private final AtomicLong lastSlowActivity = new AtomicLong(0);
+    private final AtomicLong lastFastActivity = new AtomicLong(0);
     
     // Configuration
     private final AtomicBoolean enabled = new AtomicBoolean(true);
@@ -200,7 +200,14 @@ public class SlotManager {
      */
     private boolean canBorrowFromFastToSlow() {
         long currentTime = System.currentTimeMillis();
-        long fastIdleTime = currentTime - lastFastActivity.get();
+        long lastActivity = lastFastActivity.get();
+        
+        // Pool must have had activity to be considered for borrowing
+        if (lastActivity == 0) {
+            return false;
+        }
+        
+        long fastIdleTime = currentTime - lastActivity;
         boolean hasAvailableSlots = fastOperationSemaphore.availablePermits() > 0;
         boolean isIdle = fastIdleTime >= idleTimeoutMs;
         
@@ -212,7 +219,14 @@ public class SlotManager {
      */
     private boolean canBorrowFromSlowToFast() {
         long currentTime = System.currentTimeMillis();
-        long slowIdleTime = currentTime - lastSlowActivity.get();
+        long lastActivity = lastSlowActivity.get();
+        
+        // Pool must have had activity to be considered for borrowing  
+        if (lastActivity == 0) {
+            return false;
+        }
+        
+        long slowIdleTime = currentTime - lastActivity;
         boolean hasAvailableSlots = slowOperationSemaphore.availablePermits() > 0;
         boolean isIdle = slowIdleTime >= idleTimeoutMs;
         
