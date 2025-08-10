@@ -54,43 +54,11 @@ The server supports configuration through both JVM system properties and environ
 | `ojp.server.slowQuerySegregation.slowSlotTimeout` | `OJP_SERVER_SLOWQUERYSEGREGATION_SLOWSLOTTIMEOUT` | long    | 120000   | Timeout for acquiring slow operation slots (ms) |
 | `ojp.server.slowQuerySegregation.fastSlotTimeout` | `OJP_SERVER_SLOWQUERYSEGREGATION_FASTSLOTTIMEOUT` | long    | 60000    | Timeout for acquiring fast operation slots (ms) |
 
-## Client-Side Connection Pool Configuration
+## Client-Side Configuration
 
-The OJP JDBC driver supports configurable connection pool settings via an `ojp.properties` file. This allows customization of HikariCP connection pool behavior on a per-client basis.
+For JDBC driver and client-side connection pool configuration, see:
 
-### How to Configure
-
-1. Create an `ojp.properties` file in your application's classpath (either in the root or in the `resources` folder)
-2. Add any of the supported properties (all are optional)
-3. The driver will automatically load and send these properties to the server when establishing a connection
-
-### Connection Pool Properties
-
-| Property                              | Type | Default | Description |
-|---------------------------------------|------|---------|-------------|
-| `ojp.connection.pool.maximumPoolSize` | int  | 20      | Maximum number of connections in the pool |
-| `ojp.connection.pool.minimumIdle`     | int  | 10      | Minimum number of idle connections maintained |
-| `ojp.connection.pool.idleTimeout`     | long | 600000  | Maximum time (ms) a connection can sit idle (10 minutes) |
-| `ojp.connection.pool.maxLifetime`     | long | 1800000 | Maximum lifetime (ms) of a connection (30 minutes) |
-| `ojp.connection.pool.connectionTimeout` | long | 30000   | Maximum time (ms) to wait for a connection (30 seconds) |
-
-### Example ojp.properties File
-
-```properties
-# Connection pool configuration
-ojp.connection.pool.maximumPoolSize=25
-ojp.connection.pool.minimumIdle=5
-ojp.connection.pool.idleTimeout=300000
-ojp.connection.pool.maxLifetime=900000
-ojp.connection.pool.connectionTimeout=15000
-```
-
-### Connection Pool Fallback Behavior
-
-- If no `ojp.properties` file is found, all default values are used
-- If a property is missing from the file, its default value is used
-- If a property has an invalid value, the default is used and a warning is logged
-- All validation and configuration logic is handled on the server side
+- **[OJP JDBC Configuration](ojp-jdbc-configuration.md)** - JDBC driver setup and client connection pool settings
 
 ## Configuration Methods
 
@@ -337,5 +305,6 @@ INFO org.openjdbcproxy.grpc.server.ServerConfiguration -   Slow Query Slot Perce
 
 ## Related Documentation
 
+- **[OJP JDBC Configuration](ojp-jdbc-configuration.md)** - JDBC driver setup and client connection pool settings
 - **[Slow Query Segregation Documentation](../designs/SLOW_QUERY_SEGREGATION.md)** - Detailed guide to the slow query segregation feature
 - **[Example Configuration Properties](ojp-server-example.properties)** - Complete example configuration file with all settings
