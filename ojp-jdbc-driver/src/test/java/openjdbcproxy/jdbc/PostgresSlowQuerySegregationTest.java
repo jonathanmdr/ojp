@@ -1,8 +1,10 @@
 package openjdbcproxy.jdbc;
 
+import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.codehaus.plexus.util.ExceptionUtils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
@@ -21,19 +23,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 @Slf4j
-public class PostgresMiniStressTest {
-    private static final int THREADS = 10; // Number of worker threads
+public class PostgresSlowQuerySegregationTest {
+    private static final int THREADS = 100; // Number of worker threads
     private static final int RAMPUP_MS = 10 * 1000; // 10 seconds Ramp-up window in milliseconds
 
     private static boolean isTestDisabled;
     private static Queue<Long> queryDurations = new ConcurrentLinkedQueue<>();
     private static AtomicInteger totalQueries = new AtomicInteger(0);
     private static AtomicInteger failedQueries = new AtomicInteger(0);
+    private static HikariDataSource ds;
 
     @BeforeAll
     public static void checkTestConfiguration() {
@@ -156,10 +157,10 @@ public class PostgresMiniStressTest {
         System.out.println("Total test duration: " + totalTimeMs + " ms");
         System.out.printf("Average query duration: %.3f ms\n", avgQueryMs);
         System.out.println("Total query failures: " + numFailures);
-        assertEquals(680, numQueries);
-        assertEquals(10, numFailures);
-        assertTrue(totalTimeMs < 30000);
-        assertTrue(avgQueryMs < 100);
+        Assertions.assertEquals(7200, numQueries);
+        Assertions.assertEquals(500, numFailures);
+        Assertions.assertTrue(totalTimeMs < 90000);
+        Assertions.assertTrue(avgQueryMs < 1000);
     }
 
     private static void timeAndRun(Callable<Void> query) {
@@ -180,7 +181,21 @@ public class PostgresMiniStressTest {
      * Also demonstrates realistic transaction blocks.
      * All queries are coded individually and marked if part of a transaction.
      */
+    @SneakyThrows
     private static Connection getConnection(String driverClass, String url, String user, String password) throws SQLException {
+        Class.forName(driverClass);
+        //Commented code below is useful for comparison tests with using HikariCP directly, without OJP
+        /*if (ds == null) {
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl(url);
+            config.setUsername(user);
+            config.setPassword(password);
+            config.setMaximumPoolSize(10);
+            config.setMinimumIdle(10);
+            ds = new HikariDataSource(config);
+        }
+        return ds.getConnection();
+        */
         return DriverManager.getConnection(url, user, password);
     }
 
@@ -997,7 +1012,7 @@ public class PostgresMiniStressTest {
             return null;
         });
 
-        // Heavy query, will fail every time
+        // 5 heavy queries, will take longer than simpler queries and serve as an attack on the connection pool
         timeAndRun(() -> {
             try (Connection conn = getConnection(driverClass, url, user, password)) {
                 try (PreparedStatement pst = conn.prepareStatement(
@@ -1006,14 +1021,121 @@ public class PostgresMiniStressTest {
                         "  COUNT(o.id) AS num_orders," +
                         "  SUM(oi.quantity) AS total_quantity," +
                         "  AVG(p.price) AS avg_price," +
-                        "  (SELECT AVG(rating) FROM reviews WHERE product_id = p.id) AS avg_rating," +
-                        "  1 / 0 AS failHere" +
+                        "  (SELECT AVG(rating) FROM reviews WHERE product_id = p.id) AS avg_rating" +
                         "FROM users u" +
                         "JOIN orders o ON u.id = o.user_id" +
                         "JOIN order_items oi ON o.id = oi.order_id" +
                         "JOIN products p ON oi.product_id = p.id" +
                         "GROUP BY u.id, p.id"
                         )) {
+                    try (ResultSet rs = pst.executeQuery()) {
+                        while (rs.next()) {
+                            rs.getInt(1);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                failedQueries.incrementAndGet();
+                System.err.println("Query failed: " + e.getMessage());
+            }
+            return null;
+        });
+        timeAndRun(() -> {
+            try (Connection conn = getConnection(driverClass, url, user, password)) {
+                try (PreparedStatement pst = conn.prepareStatement(
+                        "SELECT" +
+                                "  u.id," +
+                                "  COUNT(o.id) AS num_orders," +
+                                "  SUM(oi.quantity) AS total_quantity," +
+                                "  AVG(p.price) AS avg_price," +
+                                "  (SELECT AVG(rating) FROM reviews WHERE product_id = p.id) AS avg_rating" +
+                                "FROM users u" +
+                                "JOIN orders o ON u.id = o.user_id" +
+                                "JOIN order_items oi ON o.id = oi.order_id" +
+                                "JOIN products p ON oi.product_id = p.id" +
+                                "GROUP BY u.id, p.id"
+                )) {
+                    try (ResultSet rs = pst.executeQuery()) {
+                        while (rs.next()) {
+                            rs.getInt(1);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                failedQueries.incrementAndGet();
+                System.err.println("Query failed: " + e.getMessage());
+            }
+            return null;
+        });
+        timeAndRun(() -> {
+            try (Connection conn = getConnection(driverClass, url, user, password)) {
+                try (PreparedStatement pst = conn.prepareStatement(
+                        "SELECT" +
+                                "  u.id," +
+                                "  COUNT(o.id) AS num_orders," +
+                                "  SUM(oi.quantity) AS total_quantity," +
+                                "  AVG(p.price) AS avg_price," +
+                                "  (SELECT AVG(rating) FROM reviews WHERE product_id = p.id) AS avg_rating" +
+                                "FROM users u" +
+                                "JOIN orders o ON u.id = o.user_id" +
+                                "JOIN order_items oi ON o.id = oi.order_id" +
+                                "JOIN products p ON oi.product_id = p.id" +
+                                "GROUP BY u.id, p.id"
+                )) {
+                    try (ResultSet rs = pst.executeQuery()) {
+                        while (rs.next()) {
+                            rs.getInt(1);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                failedQueries.incrementAndGet();
+                System.err.println("Query failed: " + e.getMessage());
+            }
+            return null;
+        });
+        timeAndRun(() -> {
+            try (Connection conn = getConnection(driverClass, url, user, password)) {
+                try (PreparedStatement pst = conn.prepareStatement(
+                        "SELECT" +
+                                "  u.id," +
+                                "  COUNT(o.id) AS num_orders," +
+                                "  SUM(oi.quantity) AS total_quantity," +
+                                "  AVG(p.price) AS avg_price," +
+                                "  (SELECT AVG(rating) FROM reviews WHERE product_id = p.id) AS avg_rating" +
+                                "FROM users u" +
+                                "JOIN orders o ON u.id = o.user_id" +
+                                "JOIN order_items oi ON o.id = oi.order_id" +
+                                "JOIN products p ON oi.product_id = p.id" +
+                                "GROUP BY u.id, p.id"
+                )) {
+                    try (ResultSet rs = pst.executeQuery()) {
+                        while (rs.next()) {
+                            rs.getInt(1);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                failedQueries.incrementAndGet();
+                System.err.println("Query failed: " + e.getMessage());
+            }
+            return null;
+        });
+        timeAndRun(() -> {
+            try (Connection conn = getConnection(driverClass, url, user, password)) {
+                try (PreparedStatement pst = conn.prepareStatement(
+                        "SELECT" +
+                                "  u.id," +
+                                "  COUNT(o.id) AS num_orders," +
+                                "  SUM(oi.quantity) AS total_quantity," +
+                                "  AVG(p.price) AS avg_price," +
+                                "  (SELECT AVG(rating) FROM reviews WHERE product_id = p.id) AS avg_rating" +
+                                "FROM users u" +
+                                "JOIN orders o ON u.id = o.user_id" +
+                                "JOIN order_items oi ON o.id = oi.order_id" +
+                                "JOIN products p ON oi.product_id = p.id" +
+                                "GROUP BY u.id, p.id"
+                )) {
                     try (ResultSet rs = pst.executeQuery()) {
                         while (rs.next()) {
                             rs.getInt(1);

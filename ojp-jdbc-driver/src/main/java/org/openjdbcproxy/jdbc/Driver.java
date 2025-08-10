@@ -28,8 +28,7 @@ public class Driver implements java.sql.Driver {
             log.debug("Registering OpenJDBCProxy Driver");
             DriverManager.registerDriver(new Driver());
         } catch (SQLException var1) {
-            log.error("Can't register driver!", var1);
-            throw new RuntimeException("Can't register driver!");
+            log.error("Can't register OJP driver!", var1);
         }
     }
 

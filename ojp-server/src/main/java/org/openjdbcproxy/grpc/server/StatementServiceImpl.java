@@ -220,7 +220,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                         Integer parameterIndex = (Integer) metadata.get(CommonConstants.PREPARED_STATEMENT_BINARY_STREAM_INDEX);
                         ps.setBinaryStream(parameterIndex, lobIS);
                     }
-                    if (!DbName.SQL_SERVER.equals(dto.getDbName())) {//SQL server treats binary streams differently
+                    if (DbName.POSTGRES.equals(dto.getDbName())) {//Postgres requires check if the lob streams are fully consumed.
                         sessionManager.waitLobStreamsConsumption(dto.getSession());
                     }
                     if (ps != null) {
@@ -1036,7 +1036,25 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         } else {
             //TODO check why reaches here and can't find the datasource sometimes, conn hash should never change for a single client
             //log.info("Lookup connection hash -> " + sessionInfo.getConnHash());
-            conn = this.datasourceMap.get(sessionInfo.getConnHash()).getConnection();
+            
+            // Get the datasource for this connection hash
+            HikariDataSource dataSource = this.datasourceMap.get(sessionInfo.getConnHash());
+            if (dataSource == null) {
+                throw new SQLException("No datasource found for connection hash: " + sessionInfo.getConnHash());
+            }
+            
+            try {
+                // Use enhanced connection acquisition with timeout protection
+                conn = ConnectionAcquisitionManager.acquireConnection(dataSource, sessionInfo.getConnHash());
+                log.debug("Successfully acquired connection from pool for hash: {}", sessionInfo.getConnHash());
+            } catch (SQLException e) {
+                log.error("Failed to acquire connection from pool for hash: {}. Error: {}",
+                    sessionInfo.getConnHash(), e.getMessage());
+                
+                // Re-throw the enhanced exception from ConnectionAcquisitionManager
+                throw e;
+            }
+            
             if (startSessionIfNone) {
                 SessionInfo updatedSession = this.sessionManager.createSession(sessionInfo.getClientUUID(), conn);
                 dtoBuilder.session(updatedSession);

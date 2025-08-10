@@ -21,11 +21,11 @@ public class ConnectionPoolConfigurationTest {
 
     @Test
     public void testDefaultConstantsAreSet() {
-        assertEquals(10, CommonConstants.DEFAULT_MAXIMUM_POOL_SIZE);
-        assertEquals(10, CommonConstants.DEFAULT_MINIMUM_IDLE);
+        assertEquals(20, CommonConstants.DEFAULT_MAXIMUM_POOL_SIZE);
+        assertEquals(5, CommonConstants.DEFAULT_MINIMUM_IDLE);
         assertEquals(600000L, CommonConstants.DEFAULT_IDLE_TIMEOUT);
         assertEquals(1800000L, CommonConstants.DEFAULT_MAX_LIFETIME);
-        assertEquals(30000L, CommonConstants.DEFAULT_CONNECTION_TIMEOUT);
+        assertEquals(10000L, CommonConstants.DEFAULT_CONNECTION_TIMEOUT);
     }
 
     @Test

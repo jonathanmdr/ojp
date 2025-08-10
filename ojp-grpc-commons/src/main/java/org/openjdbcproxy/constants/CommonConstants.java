@@ -24,10 +24,11 @@ public class CommonConstants {
     public static final String OJP_REGEX_PATTERN = "ojp\\[([^\\]]+)\\]";
     public static final String OJP_CLOB_PREFIX = "OJP_CLOB_PREFIX:";
 
-    // HikariCP default connection pool settings
-    public static final int DEFAULT_MAXIMUM_POOL_SIZE = 10;
-    public static final int DEFAULT_MINIMUM_IDLE = 10;
-    public static final long DEFAULT_IDLE_TIMEOUT = 600000;
-    public static final long DEFAULT_MAX_LIFETIME = 1800000;
-    public static final long DEFAULT_CONNECTION_TIMEOUT = 30000;
+    // HikariCP default connection pool settings - optimized for high concurrency
+    // ISSUE #29 FIX: Updated these values to prevent indefinite blocking under high load
+    public static final int DEFAULT_MAXIMUM_POOL_SIZE = 20;  // Increased from 10 to handle more concurrent requests
+    public static final int DEFAULT_MINIMUM_IDLE = 5;        // Reduced from 10 to allow pool to scale down
+    public static final long DEFAULT_IDLE_TIMEOUT = 600000;  // 10 minutes
+    public static final long DEFAULT_MAX_LIFETIME = 1800000; // 30 minutes  
+    public static final long DEFAULT_CONNECTION_TIMEOUT = 10000; // Reduced from 30s to 10s for faster failure
 }

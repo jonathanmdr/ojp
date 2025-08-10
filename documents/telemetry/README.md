@@ -1,23 +1,16 @@
 # Telemetry Documentation
 
-OJP (Open JDBC Proxy) provides comprehensive observability features to monitor and trace database operations through its telemetry system.
+OJP (Open JDBC Proxy) provides observability features to monitor database operations through its telemetry system.
 
-## Supported Telemetry Features
-
-### Distributed Tracing with OpenTelemetry
-OJP implements distributed tracing using the OpenTelemetry standard, allowing you to:
-- Track SQL operations across the proxy and database layers
-- Monitor connection lifecycle and performance
-- Trace requests from client applications through the proxy to the database
-- Correlate database operations with application traces
+## Currently Supported Telemetry Features
 
 ### Metrics via Prometheus Exporter
 OJP exposes operational metrics through a Prometheus-compatible endpoint, providing insights into:
-- Connection pool utilization and health
-- Query execution times and throughput
-- Error rates and connection failures
-- gRPC communication metrics
-- Database-specific performance indicators
+- gRPC communication metrics (request counts, latency, errors)
+- Server operational metrics
+- Connection and session information
+
+**Note**: OJP currently implements metrics collection via OpenTelemetry with Prometheus export. Distributed tracing export capabilities are not yet implemented.
 
 ## Accessing Telemetry Data
 
@@ -30,34 +23,70 @@ Metrics are exposed via HTTP endpoint and can be scraped by Prometheus:
 To access metrics:
 1. Configure Prometheus to scrape the OJP server metrics endpoint
 2. Set up Grafana dashboards to visualize the metrics
-3. Create alerts based on connection pool health and performance thresholds
-
-### OpenTelemetry Traces
-Traces can be exported to various backends supported by OpenTelemetry:
-- **Jaeger**: For distributed tracing visualization
-- **Zipkin**: Alternative tracing backend
-- **OTLP receivers**: Any OpenTelemetry Protocol compatible system
-- **Cloud providers**: AWS X-Ray, Google Cloud Trace, Azure Monitor
+3. Create alerts based on server performance and error thresholds
 
 ## Configuration Options
 
-The telemetry system can be configured through the OJP server configuration file. Below is a placeholder YAML configuration example:
+The telemetry system can be configured through JVM system properties or environment variables. JVM properties take precedence over environment variables.
 
+### Available Configuration Properties
+
+| Property | Environment Variable | Default | Description |
+|----------|---------------------|---------|-------------|
+| `ojp.opentelemetry.enabled` | `OJP_OPENTELEMETRY_ENABLED` | `true` | Enable/disable OpenTelemetry metrics collection |
+| `ojp.prometheus.port` | `OJP_PROMETHEUS_PORT` | `9090` | Port for Prometheus metrics HTTP server |
+| `ojp.prometheus.allowedIps` | `OJP_PROMETHEUS_ALLOWED_IPS` | `0.0.0.0/0` | Comma-separated list of allowed IP addresses/CIDR blocks for metrics endpoint |
+
+### Configuration Examples
+
+**Using JVM Properties:**
+```bash
+java -jar ojp-server.jar \
+  -Dojp.opentelemetry.enabled=true \
+  -Dojp.prometheus.port=9090 \
+  -Dojp.prometheus.allowedIps=127.0.0.1,10.0.0.0/8
 ```
 
+**Using Environment Variables:**
+```bash
+export OJP_OPENTELEMETRY_ENABLED=true
+export OJP_PROMETHEUS_PORT=9090
+export OJP_PROMETHEUS_ALLOWED_IPS=127.0.0.1,10.0.0.0/8
+java -jar ojp-server.jar
 ```
 
 ## Integration Examples
 
 ### With Prometheus and Grafana
-1. Configure Prometheus to scrape OJP metrics
-2. Import OJP Grafana dashboard templates
-3. Set up alerts for connection pool exhaustion and high error rates
+1. Configure Prometheus to scrape OJP metrics:
 
+```yaml
+# prometheus.yml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'ojp-server'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+```
+
+2. Import OJP metrics into Grafana by adding Prometheus as a data source
+3. Create dashboards to visualize gRPC call metrics, error rates, and server performance
+4. Set up alerts for server errors and performance degradation
+
+## Limitations
+
+**Current Limitations:**
+- Distributed tracing export is not yet implemented
+- Trace exporters for Zipkin, Jaeger, OTLP, and cloud providers are not available
+- SQL-level tracing is not currently supported
+- Only gRPC-level metrics and basic server metrics are collected
 
 ## Best Practices
 
-- **Production Sampling**: Reduce trace sampling rate in production to minimize overhead
-- **Metric Retention**: Configure appropriate retention policies for metrics storage
-- **Security**: Ensure telemetry endpoints are properly secured in production environments
+- **Security**: Ensure telemetry endpoints are properly secured in production environments using the IP whitelist feature
 - **Performance**: Monitor the performance impact of telemetry collection on the proxy
+- **Monitoring**: Set up alerts for server errors and unusual traffic patterns
