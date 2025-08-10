@@ -89,14 +89,14 @@ public class SlotManager {
         
         lastSlowActivity.set(System.currentTimeMillis());
         
-        // Try to acquire from slow pool first
-        if (slowOperationSemaphore.tryAcquire(timeoutMs, TimeUnit.MILLISECONDS)) {
+        // First try to acquire immediately without waiting
+        if (slowOperationSemaphore.tryAcquire()) {
             activeSlowOperations.incrementAndGet();
-            log.debug("Acquired slow slot from slow pool. Active slow: {}", activeSlowOperations.get());
+            log.debug("Acquired slow slot from slow pool immediately. Active slow: {}", activeSlowOperations.get());
             return true;
         }
         
-        // If slow pool is full, try to borrow from fast pool if it's idle
+        // If slow pool is exhausted, try to borrow from fast pool if it's idle
         if (canBorrowFromFastToSlow()) {
             if (fastOperationSemaphore.tryAcquire(100, TimeUnit.MILLISECONDS)) {
                 activeSlowOperations.incrementAndGet();
@@ -105,6 +105,13 @@ public class SlotManager {
                          activeSlowOperations.get(), fastSlotsBorrowedToSlow.get());
                 return true;
             }
+        }
+        
+        // Only wait for slow slot if borrowing is not possible or failed
+        if (slowOperationSemaphore.tryAcquire(timeoutMs, TimeUnit.MILLISECONDS)) {
+            activeSlowOperations.incrementAndGet();
+            log.debug("Acquired slow slot from slow pool after waiting. Active slow: {}", activeSlowOperations.get());
+            return true;
         }
         
         log.debug("Failed to acquire slow slot within {}ms timeout", timeoutMs);
@@ -125,14 +132,14 @@ public class SlotManager {
         
         lastFastActivity.set(System.currentTimeMillis());
         
-        // Try to acquire from fast pool first
-        if (fastOperationSemaphore.tryAcquire(timeoutMs, TimeUnit.MILLISECONDS)) {
+        // First try to acquire immediately without waiting
+        if (fastOperationSemaphore.tryAcquire()) {
             activeFastOperations.incrementAndGet();
-            log.debug("Acquired fast slot from fast pool. Active fast: {}", activeFastOperations.get());
+            log.debug("Acquired fast slot from fast pool immediately. Active fast: {}", activeFastOperations.get());
             return true;
         }
         
-        // If fast pool is full, try to borrow from slow pool if it's idle
+        // If fast pool is exhausted, try to borrow from slow pool if it's idle
         if (canBorrowFromSlowToFast()) {
             if (slowOperationSemaphore.tryAcquire(100, TimeUnit.MILLISECONDS)) {
                 activeFastOperations.incrementAndGet();
@@ -141,6 +148,13 @@ public class SlotManager {
                          activeFastOperations.get(), slowSlotsBorrowedToFast.get());
                 return true;
             }
+        }
+        
+        // Only wait for fast slot if borrowing is not possible or failed
+        if (fastOperationSemaphore.tryAcquire(timeoutMs, TimeUnit.MILLISECONDS)) {
+            activeFastOperations.incrementAndGet();
+            log.debug("Acquired fast slot from fast pool after waiting. Active fast: {}", activeFastOperations.get());
+            return true;
         }
         
         log.debug("Failed to acquire fast slot within {}ms timeout", timeoutMs);
