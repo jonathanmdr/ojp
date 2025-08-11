@@ -66,7 +66,7 @@ If Docker is not available in your environment, you can build and run OJP Server
 
 - [Architectural decision records (ADRs)](documents/ADRs) - Technical decisions and rationale behind OJP's architecture.
 - [Get started: Spring Boot, Quarkus and Micronaut](documents/java-frameworks) - Framework-specific integration guides and examples.
-- [Connection Pool Configuration](documents/configuration/CONNECTION_POOL_CONFIG.md) - OJP connection pool settings and tuning parameters.
+- [Connection Pool Configuration](documents/configuration/ojp-jdbc-configuration.md) - OJP JDBC driver setup and connection pool settings.
 - [OJP Server Configuration](documents/configuration/ojp-server-configuration.md) - Server startup options and runtime configuration.
 - [Slow query segregation feature](documents/designs/SLOW_QUERY_SEGREGATION.md) - Feature that prevent connection starvation by slow queries (or statements).
 - [Telemetry and Observability](documents/telemetry/README.md) - OpenTelemetry integration and monitoring setup.
