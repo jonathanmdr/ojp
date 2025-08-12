@@ -164,6 +164,7 @@ We have comprehensive JDBC integration tests with OJP for the following database
 - MySQL
 - Oracle
 - SQL Server
+- DB2
 - H2
 
 The free and open source databases (H2, Postgres, MySQL and MariaDB) jdbc drivers are packed with OJP and have integration tests always running in our CI pipelines, for proprietary databases as Oracle and SQL Server see specific sections.
