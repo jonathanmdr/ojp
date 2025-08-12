@@ -5,13 +5,11 @@ import com.openjdbcproxy.grpc.SessionInfo;
 import lombok.SneakyThrows;
 import org.openjdbcproxy.grpc.server.SessionManager;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Utility class for handling LOB (Large Object) operations.
@@ -20,14 +18,23 @@ import java.util.UUID;
 public class LobProcessor {
 
     /**
-     * Processes a BLOB from a result set, handling database-specific logic.
+     * Processes a BLOB from a result set using hydrated approach.
+     * 
+     * NOTE: This method now uses a hydrated approach for all databases, where the entire 
+     * BLOB content is materialized in memory as a byte array. This ensures consistent 
+     * behavior across all database types and eliminates the complexity of streaming LOBs.
+     * 
+     * Performance implications:
+     * - Higher memory usage for large BLOBs (entire content loaded into memory)
+     * - Faster access once loaded, but higher initial load time
+     * - May limit maximum BLOB size due to memory constraints
      *
-     * @param sessionManager The session manager for LOB registration
+     * @param sessionManager The session manager (unused in hydrated approach)
      * @param session       The current session
      * @param rs           The result set
      * @param columnIndex  The column index (0-based)
-     * @param dbNameMap    Map of connection hash to database name
-     * @return The processed BLOB value (UUID or byte array)
+     * @param dbNameMap    Map of connection hash to database name (unused in hydrated approach)
+     * @return The processed BLOB value as byte array
      * @throws SQLException if BLOB processing fails
      */
     @SneakyThrows
@@ -37,26 +44,30 @@ public class LobProcessor {
         if (blob == null) {
             return null;
         }
-        DbName dbName = dbNameMap.get(session.getConnHash());
-        //SQL Server and DB2 must eagerly hydrate LOBs as per LOBs get invalidated once cursor moves.
-        if (DbName.SQL_SERVER.equals(dbName) || DbName.DB2.equals(dbName)) {
-            return blob.getBinaryStream().readAllBytes();
-        }
-        String lobUUID = UUID.randomUUID().toString();
-        sessionManager.registerLob(session, blob, lobUUID);
-        return lobUUID;
+        // Hydrated approach: materialize the entire BLOB content in memory for all databases
+        // This provides consistent behavior and eliminates streaming complexity
+        return blob.getBinaryStream().readAllBytes();
     }
 
     /**
-     * Processes binary data from a result set, handling database-specific logic.
+     * Processes binary data from a result set using hydrated approach.
+     * 
+     * NOTE: This method now uses a hydrated approach for all databases, where binary streams 
+     * are materialized in memory as byte arrays. This ensures consistent behavior across all 
+     * database types and eliminates the complexity of streaming binary data.
+     * 
+     * Performance implications:
+     * - Higher memory usage for large binary data (entire content loaded into memory)
+     * - Faster access once loaded, but higher initial load time
+     * - May limit maximum binary data size due to memory constraints
      *
-     * @param sessionManager The session manager for LOB registration
+     * @param sessionManager The session manager (unused in hydrated approach)
      * @param session       The current session
-     * @param dbName        The database name
+     * @param dbName        The database name (unused in hydrated approach)
      * @param rs           The result set
      * @param columnIndex  The column index (0-based)
      * @param inputStreamTypes List of input stream types
-     * @return The processed binary value
+     * @return The processed binary value as byte array or primitive byte
      * @throws SQLException if binary processing fails
      */
     @SneakyThrows
@@ -83,14 +94,10 @@ public class LobProcessor {
                 return null;
             }
 
-            //SQL Server and DB2 must eagerly hydrate LOBs as per LOBs get invalidated once cursor moves.
-            if (DbName.SQL_SERVER.equals(dbName) || DbName.DB2.equals(dbName)) {
-                byte[] allBytes = inputStream.readAllBytes();
-                inputStream = new ByteArrayInputStream(allBytes);
-            }
-
-            binaryValue = UUID.randomUUID().toString();
-            sessionManager.registerLob(session, inputStream, binaryValue.toString());
+            // Hydrated approach: materialize the entire binary stream content in memory for all databases
+            // This provides consistent behavior and eliminates streaming complexity
+            byte[] allBytes = inputStream.readAllBytes();
+            binaryValue = allBytes;
         }
         return binaryValue;
     }
