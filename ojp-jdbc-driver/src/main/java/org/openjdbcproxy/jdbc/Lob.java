@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import static org.openjdbcproxy.constants.CommonConstants.MAX_LOB_DATA_BLOCK_SIZE;
 import static org.openjdbcproxy.grpc.SerializationHandler.deserialize;
 import static org.openjdbcproxy.grpc.SerializationHandler.serialize;
 import static org.openjdbcproxy.grpc.client.GrpcExceptionHandler.handle;
@@ -142,54 +141,17 @@ public class Lob {
         try {
             this.haveLobReferenceValidation();
 
-            return new InputStream() {
-                private InputStream currentBlockInputStream;
-                private long currentPos = pos - 1;//minus 1 because it will increment it in the loop
-
-                @SneakyThrows
-                @Override
-                public int read() throws IOException {
-                    int currentByte = this.currentBlockInputStream != null ? this.currentBlockInputStream.read() : -1;
-                    int TWO_BLOCKS_SIZE = 2 * MAX_LOB_DATA_BLOCK_SIZE;
-                    boolean lastBlockReached = (currentByte == -1 && currentPos > 1 && currentPos % TWO_BLOCKS_SIZE != 0);
-                    if (currentByte != -1) {
-                        currentPos++;
-                    }
-
-                    if ((currentBlockInputStream == null || currentByte == -1) && !lastBlockReached) {
-                        //Read next 2 blocks
-                        Iterator<LobDataBlock> dataBlocks = null;
-                        try {
-                            dataBlocks = statementService.readLob(lobReference.get(), currentPos + 1, TWO_BLOCKS_SIZE);
-                            this.currentBlockInputStream = lobService.parseReceivedBlocks(dataBlocks);
-                            if (currentBlockInputStream == null) {
-                                return -1;
-                            }
-                            currentByte = this.currentBlockInputStream.read();
-                            currentPos++;
-                        } catch (SQLException e) {
-                            log.error("SQLException in getBinaryStream InputStream.read() - readLob/parseReceivedBlocks", e);
-                            throw new RuntimeException(e);
-                        } catch (StatusRuntimeException e) {
-                            try {
-                                throw handle(e);
-                            } catch (SQLException ex) {
-                                log.error("SQLException in handle(StatusRuntimeException)", ex);
-                                throw new RuntimeException(ex);
-                            }
-                        } catch (Exception e) {
-                            log.error("Exception in getBinaryStream InputStream.read()", e);
-                            throw new RuntimeException(e);
-                        }
-                    }
-
-                    if (currentPos >= length) {
-                        return -1;//Finish stream if reached the length required
-                    }
-
-                    return currentByte;
-                }
-            };
+            // In hydrated approach, request all the LOB data at once
+            // The server will return the complete LOB data in a single response
+            Iterator<LobDataBlock> dataBlocks = statementService.readLob(lobReference.get(), pos, (int) length);
+            InputStream fullDataStream = lobService.parseReceivedBlocks(dataBlocks);
+            
+            if (fullDataStream == null) {
+                return new java.io.ByteArrayInputStream(new byte[0]); // Return empty stream
+            }
+            
+            return fullDataStream;
+            
         } catch (SQLException e) {
             log.error("SQLException in getBinaryStream", e);
             throw e;

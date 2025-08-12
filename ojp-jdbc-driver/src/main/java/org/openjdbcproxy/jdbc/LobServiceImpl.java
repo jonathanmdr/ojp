@@ -1,8 +1,6 @@
 package org.openjdbcproxy.jdbc;
 
-import com.google.common.primitives.Bytes;
 import com.google.protobuf.ByteString;
-import com.openjdbcproxy.grpc.DbName;
 import com.openjdbcproxy.grpc.LobDataBlock;
 import com.openjdbcproxy.grpc.LobReference;
 import com.openjdbcproxy.grpc.LobType;
@@ -15,13 +13,10 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.openjdbcproxy.constants.CommonConstants.MAX_LOB_DATA_BLOCK_SIZE;
 import static org.openjdbcproxy.constants.CommonConstants.PREPARED_STATEMENT_BINARY_STREAM_LENGTH;
 import static org.openjdbcproxy.grpc.SerializationHandler.serialize;
 
@@ -41,83 +36,51 @@ public class LobServiceImpl implements LobService {
     @SneakyThrows
     @Override
     public LobReference sendBytes(LobType lobType, long pos, InputStream is, Map<Integer, Object> metadata) throws SQLException {
-
+        
         BufferedInputStream bis = new BufferedInputStream(is);
-        AtomicInteger transferredBytes = new AtomicInteger(0);
         long length = metadata.get(PREPARED_STATEMENT_BINARY_STREAM_LENGTH) != null ?
                 (Long) metadata.get(PREPARED_STATEMENT_BINARY_STREAM_LENGTH) : -1l;
         byte[] metadataBytes = (metadata == null) ? new byte[]{} : serialize(metadata);
 
+        // Hydrated approach: Read all bytes at once instead of streaming
+        // This provides consistent behavior across all databases and eliminates streaming complexity
+        final byte[] allBytes;
+        try {
+            byte[] readBytes = bis.readAllBytes();
+            
+            // Apply length limit if specified
+            if (length != -1 && readBytes.length > length) {
+                byte[] limitedBytes = new byte[(int) length];
+                System.arraycopy(readBytes, 0, limitedBytes, 0, (int) length);
+                allBytes = limitedBytes;
+            } else {
+                allBytes = readBytes;
+            }
+        } catch (IOException e) {
+            throw new SQLException("Failed to read LOB data: " + e.getMessage(), e);
+        }
+
+        final byte[] finalMetadataBytes = metadataBytes;
+
+        // Create a simple iterator that returns all data in a single block
         Iterator<LobDataBlock> itLobDataBlocks = new Iterator<LobDataBlock>() {
+            private boolean sent = false;
 
-            byte[] nextBytes = new byte[]{};
-            boolean startBlockSent = false;
-
-            @SneakyThrows
             @Override
-            public synchronized boolean hasNext() {
-                if (DbName.H2.equals(connection.getDbName())) {
-                    startBlockSent = true; //H2 does not support partial binary streams
-                }
-                if (!startBlockSent) {
-                    return  true;
-                }
-                //Read one next byte to know if the stream of bytes finished.
-                nextBytes = bis.readNBytes(1);
-                return nextBytes.length > 0;
+            public boolean hasNext() {
+                return !sent;
             }
 
-            @SneakyThrows
             @Override
-            public synchronized LobDataBlock next() {
-                if (DbName.H2.equals(connection.getDbName())) {
-                    startBlockSent = true; //H2 does not support partial binary streams
-                }
-                // A start block with empty bytes is always sent for cases where an empty array is set.
-                if (!startBlockSent) {
-                    startBlockSent = true;
-                    return LobDataBlock.newBuilder()
-                            .setLobType(lobType)
-                            .setSession(connection.getSession())
-                            .setPosition(1)
-                            .setData(ByteString.copyFrom(new byte[0]))
-                            .setMetadata(ByteString.copyFrom(metadataBytes))
-                            .build();
-                }
-                byte[] bytesRead;
-                if (nextBytes.length > 0) {
-                    //H2 does not support multiple writes to the same blob. All is written at once. H2 error = Feature not supported: "Allocate a new object to set its value." [50100-232]
-                    if (DbName.H2.equals(connection.getDbName())) {
-                        bytesRead = Bytes.concat(nextBytes, bis.readAllBytes());
-                    } else {
-                        //Concatenate the one byte already read in the hasNext method
-                        bytesRead = Bytes.concat(nextBytes, bis.readNBytes(MAX_LOB_DATA_BLOCK_SIZE - 1));
-                    }
-                } else {
-                    bytesRead = bis.readNBytes(MAX_LOB_DATA_BLOCK_SIZE);
-                }
-                transferredBytes.set(transferredBytes.get() + (MAX_LOB_DATA_BLOCK_SIZE));
-                long updatedPosition = (transferredBytes.get() + pos) - MAX_LOB_DATA_BLOCK_SIZE;
-                log.debug("Sending the next block of bytes updatedPosition: {}", updatedPosition);
-
-                bytesRead = this.maxLengthTrim(bytesRead, length, (updatedPosition + bytesRead.length - 1));
-
+            public LobDataBlock next() {
+                sent = true;
                 return LobDataBlock.newBuilder()
                         .setLobType(lobType)
                         .setSession(connection.getSession())
-                        .setPosition(updatedPosition)
-                        .setData(ByteString.copyFrom(bytesRead))
-                        .setMetadata(ByteString.copyFrom(metadataBytes))
+                        .setPosition(pos)
+                        .setData(ByteString.copyFrom(allBytes))
+                        .setMetadata(ByteString.copyFrom(finalMetadataBytes))
                         .build();
-            }
-
-            private byte[] maxLengthTrim(byte[] bytesRead, long length, long bytesSendCount) {
-                if (length == -1 || bytesSendCount <= length) {
-                    return bytesRead;
-                }
-                int diff = (int) (bytesSendCount - length);
-                int currentSize = bytesRead.length;
-                return Arrays.copyOfRange(bytesRead, 0, (currentSize - diff));
             }
         };
 
@@ -126,28 +89,31 @@ public class LobServiceImpl implements LobService {
 
     @Override
     public InputStream parseReceivedBlocks(Iterator<LobDataBlock> itBlocks) {
+        // In the hydrated approach, we expect to receive all data in a single block
+        // instead of multiple streaming blocks
+        if (!itBlocks.hasNext()) {
+            return null;
+        }
+        
         LobDataBlock lobDataBlock = itBlocks.next();
         if (lobDataBlock.getPosition() == -1 && lobDataBlock.getData().toByteArray().length < 1) {
             return null;
         }
 
-        return new InputStream() {
-            private int currentPos = -1;
-
-            private byte[] currentBlock = lobDataBlock.getData().toByteArray();
-
-            @Override
-            public int read() throws IOException {
-                if (currentPos >= (currentBlock.length - 1)) {
-                    if (!itBlocks.hasNext()) {
-                        return -1;// -1 means end of the stream.
-                    }
-                    currentBlock = itBlocks.next().getData().toByteArray();
-                    currentPos = -1;
-                }
-                int currentByte = currentBlock[++currentPos];
-                return currentByte & 0xFF;// Need to return unsigned byte (& 0xFF) to not incorrectly cause EOF if int representation of byte is -1
-            }
-        };
+        // Convert the single data block directly to an InputStream
+        // Note: In hydrated approach, all remaining blocks should contain the complete data
+        byte[] allData = lobDataBlock.getData().toByteArray();
+        
+        // If there are more blocks (shouldn't happen in hydrated approach), concatenate them
+        while (itBlocks.hasNext()) {
+            LobDataBlock nextBlock = itBlocks.next();
+            byte[] nextData = nextBlock.getData().toByteArray();
+            byte[] combined = new byte[allData.length + nextData.length];
+            System.arraycopy(allData, 0, combined, 0, allData.length);
+            System.arraycopy(nextData, 0, combined, allData.length, nextData.length);
+            allData = combined;
+        }
+        
+        return new java.io.ByteArrayInputStream(allData);
     }
 }
