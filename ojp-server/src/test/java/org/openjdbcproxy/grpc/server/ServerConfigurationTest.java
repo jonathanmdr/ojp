@@ -22,7 +22,6 @@ public class ServerConfigurationTest {
         System.clearProperty("ojp.server.threadPoolSize");
         System.clearProperty("ojp.server.maxRequestSize");
         System.clearProperty("ojp.server.logLevel");
-        System.clearProperty("ojp.server.accessLogging");
         System.clearProperty("ojp.server.allowedIps");
         System.clearProperty("ojp.server.connectionIdleTimeout");
         System.clearProperty("ojp.prometheus.allowedIps");
@@ -40,7 +39,6 @@ public class ServerConfigurationTest {
         assertEquals(ServerConfiguration.DEFAULT_THREAD_POOL_SIZE, config.getThreadPoolSize());
         assertEquals(ServerConfiguration.DEFAULT_MAX_REQUEST_SIZE, config.getMaxRequestSize());
         assertEquals(ServerConfiguration.DEFAULT_LOG_LEVEL, config.getLogLevel());
-        assertEquals(ServerConfiguration.DEFAULT_ACCESS_LOGGING, config.isAccessLogging());
         assertEquals(ServerConfiguration.DEFAULT_ALLOWED_IPS, config.getAllowedIps());
         assertEquals(ServerConfiguration.DEFAULT_CONNECTION_IDLE_TIMEOUT, config.getConnectionIdleTimeout());
         assertEquals(ServerConfiguration.DEFAULT_PROMETHEUS_ALLOWED_IPS, config.getPrometheusAllowedIps());
@@ -58,7 +56,6 @@ public class ServerConfigurationTest {
         System.setProperty("ojp.server.threadPoolSize", "100");
         System.setProperty("ojp.server.maxRequestSize", "8388608"); // 8MB
         System.setProperty("ojp.server.logLevel", "DEBUG");
-        System.setProperty("ojp.server.accessLogging", "true");
         System.setProperty("ojp.server.allowedIps", "192.168.1.0/24,10.0.0.1");
         System.setProperty("ojp.server.connectionIdleTimeout", "60000");
         System.setProperty("ojp.prometheus.allowedIps", "127.0.0.1,192.168.1.0/24");
@@ -73,7 +70,6 @@ public class ServerConfigurationTest {
         assertEquals(100, config.getThreadPoolSize());
         assertEquals(8388608, config.getMaxRequestSize());
         assertEquals("DEBUG", config.getLogLevel());
-        assertTrue(config.isAccessLogging());
         assertEquals(List.of("192.168.1.0/24", "10.0.0.1"), config.getAllowedIps());
         assertEquals(60000, config.getConnectionIdleTimeout());
         assertEquals(List.of("127.0.0.1", "192.168.1.0/24"), config.getPrometheusAllowedIps());
@@ -110,12 +106,10 @@ public class ServerConfigurationTest {
     @Test
     public void testBooleanValues() {
         System.setProperty("ojp.opentelemetry.enabled", "true");
-        System.setProperty("ojp.server.accessLogging", "false");
 
         ServerConfiguration config = new ServerConfiguration();
 
         assertTrue(config.isOpenTelemetryEnabled());
-        assertFalse(config.isAccessLogging());
     }
 
     @Test

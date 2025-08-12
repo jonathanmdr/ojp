@@ -23,7 +23,6 @@ public class ServerConfiguration {
     private static final String THREAD_POOL_SIZE_KEY = "ojp.server.threadPoolSize";
     private static final String MAX_REQUEST_SIZE_KEY = "ojp.server.maxRequestSize";
     private static final String LOG_LEVEL_KEY = "ojp.server.logLevel";
-    private static final String ACCESS_LOGGING_KEY = "ojp.server.accessLogging";
     private static final String ALLOWED_IPS_KEY = "ojp.server.allowedIps";
     private static final String CONNECTION_IDLE_TIMEOUT_KEY = "ojp.server.connectionIdleTimeout";
     private static final String PROMETHEUS_ALLOWED_IPS_KEY = "ojp.prometheus.allowedIps";
@@ -63,7 +62,6 @@ public class ServerConfiguration {
     private final int threadPoolSize;
     private final int maxRequestSize;
     private final String logLevel;
-    private final boolean accessLogging;
     private final List<String> allowedIps;
     private final long connectionIdleTimeout;
     private final List<String> prometheusAllowedIps;
@@ -83,7 +81,6 @@ public class ServerConfiguration {
         this.threadPoolSize = getIntProperty(THREAD_POOL_SIZE_KEY, DEFAULT_THREAD_POOL_SIZE);
         this.maxRequestSize = getIntProperty(MAX_REQUEST_SIZE_KEY, DEFAULT_MAX_REQUEST_SIZE);
         this.logLevel = getStringProperty(LOG_LEVEL_KEY, DEFAULT_LOG_LEVEL);
-        this.accessLogging = getBooleanProperty(ACCESS_LOGGING_KEY, DEFAULT_ACCESS_LOGGING);
         this.allowedIps = getListProperty(ALLOWED_IPS_KEY, DEFAULT_ALLOWED_IPS);
         this.connectionIdleTimeout = getLongProperty(CONNECTION_IDLE_TIMEOUT_KEY, DEFAULT_CONNECTION_IDLE_TIMEOUT);
         this.prometheusAllowedIps = getListProperty(PROMETHEUS_ALLOWED_IPS_KEY, DEFAULT_PROMETHEUS_ALLOWED_IPS);
@@ -181,7 +178,6 @@ public class ServerConfiguration {
         logger.info("  Thread Pool Size: {}", threadPoolSize);
         logger.info("  Max Request Size: {} bytes", maxRequestSize);
         logger.info("  Log Level: {}", logLevel);
-        logger.info("  Access Logging: {}", accessLogging);
         logger.info("  Allowed IPs: {}", allowedIps);
         logger.info("  Connection Idle Timeout: {} ms", connectionIdleTimeout);
         logger.info("  Prometheus Allowed IPs: {}", prometheusAllowedIps);
@@ -221,10 +217,6 @@ public class ServerConfiguration {
 
     public String getLogLevel() {
         return logLevel;
-    }
-
-    public boolean isAccessLogging() {
-        return accessLogging;
     }
 
     public List<String> getAllowedIps() {

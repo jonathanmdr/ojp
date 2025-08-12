@@ -21,7 +21,6 @@ The server supports configuration through both JVM system properties and environ
 | Property                      | Environment Variable          | Type    | Default | Description                               |
 |-------------------------------|-------------------------------|---------|---------|-------------------------------------------|
 | `ojp.server.logLevel`         | `OJP_SERVER_LOGLEVEL`         | string  | INFO    | Log verbosity level (TRACE, DEBUG, INFO, WARN, ERROR) |
-| `ojp.server.accessLogging`    | `OJP_SERVER_ACCESSLOGGING`    | boolean | false   | Enable/disable access logging            |
 
 ### Security Settings
 
@@ -39,10 +38,10 @@ The server supports configuration through both JVM system properties and environ
 
 ### Circuit Breaker Settings
 
-| Property                             | Environment Variable                 | Type | Default | Description                                   |
-|--------------------------------------|--------------------------------------|------|---------|-----------------------------------------------|
-| `ojp.server.circuitBreakerTimeout`   | `OJP_SERVER_CIRCUITBREAKERTIMEOUT`   | long | 60000   | Circuit breaker timeout in milliseconds      |
-| `ojp.server.circuitBreakerThreshold` | `OJP_SERVER_CIRCUITBREAKERTHRESHOLD` | int  | 3       | Circuit breaker failure threshold            |
+| Property                             | Environment Variable                 | Type | Default | Description                                       |
+|--------------------------------------|--------------------------------------|------|---------|---------------------------------------------------|
+| `ojp.server.circuitBreakerTimeout`   | `OJP_SERVER_CIRCUITBREAKERTIMEOUT`   | long | 60000   | Circuit breaker timeout once open in milliseconds |
+| `ojp.server.circuitBreakerThreshold` | `OJP_SERVER_CIRCUITBREAKERTHRESHOLD` | int  | 3       | Circuit breaker failure threshold                 |
 
 ### Slow Query Segregation Settings
 
@@ -305,6 +304,5 @@ INFO org.openjdbcproxy.grpc.server.ServerConfiguration -   Slow Query Slot Perce
 
 ## Related Documentation
 
-- **[OJP JDBC Configuration](ojp-jdbc-configuration.md)** - JDBC driver setup and client connection pool settings
 - **[Slow Query Segregation Documentation](../designs/SLOW_QUERY_SEGREGATION.md)** - Detailed guide to the slow query segregation feature
 - **[Example Configuration Properties](ojp-server-example.properties)** - Complete example configuration file with all settings
