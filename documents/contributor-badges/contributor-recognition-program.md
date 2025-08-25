@@ -64,3 +64,11 @@ Each badge reflects **real impact** in code, testing, documentation, or communit
 💡 **Note**: Contributions across **multiple tracks** (e.g., code + docs + community) can **accelerate the path to the OJP Champion badge**, reflecting well-rounded impact.
 
 ---
+
+## 🎖️ Contributor Badges Awarded
+
+| Name          | Badge      | Country of birth | Country of residency | Award date(s) |
+|---------------|------------|------------------|----------------------|---------------|
+| Be the first! | Badge icon | Country Name           | Country Name         | Date          |
+
+---
