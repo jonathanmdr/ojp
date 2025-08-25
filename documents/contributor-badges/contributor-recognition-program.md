@@ -57,4 +57,10 @@ Each badge reflects **real impact** in code, testing, documentation, or communit
 - **Recognition, not bureaucracy**:  
   The process is designed to be **lightweight, fair, and community-first** — focused on celebrating real contributions rather than ticking boxes.
 
+- **High-impact figures**:  
+  Recognized leaders in the Java or broader tech community (e.g., Java Champions, conference speakers, authors of influential projects) may be awarded higher badges — including **direct entry to OJP Champion** — due to the exceptional reach and visibility of their contributions.
+
+
+💡 **Note**: Contributions across **multiple tracks** (e.g., code + docs + community) can **accelerate the path to the OJP Champion badge**, reflecting well-rounded impact.
+
 ---
