@@ -70,6 +70,7 @@ If Docker is not available in your environment, you can build and run OJP Server
 - [OJP Server Configuration](documents/configuration/ojp-server-configuration.md) - Server startup options and runtime configuration.
 - [Slow query segregation feature](documents/designs/SLOW_QUERY_SEGREGATION.md) - Feature that prevent connection starvation by slow queries (or statements).
 - [Telemetry and Observability](documents/telemetry/README.md) - OpenTelemetry integration and monitoring setup.
+- [OJP Contributor Recognition Program](documents/contributor-badges/contributor-recognition-program.md) - OJP Contributor Recognition rewards program and badges.
 
 ## High Level Design
 
