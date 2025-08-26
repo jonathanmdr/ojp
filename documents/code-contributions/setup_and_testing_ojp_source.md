@@ -44,11 +44,16 @@ The free and open source databases (H2, Postgres, MySQL and MariaDB) jdbc driver
 
 ### Oracle Database Setup (Optional)
 Oracle integration tests require the Oracle JDBC driver and due to licensing restrictions we do not pack it with OJP.
-For detailed Oracle setup instructions, see [Oracle Testing Guide](documents/environment-setup/oracle-testing-guide.md).
+For detailed Oracle setup instructions, see [Oracle Testing Guide](../../documents/environment-setup/oracle-testing-guide.md).
 
 ### SQL Server Database Setup (Optional)
 SQL Server integration tests use the Microsoft SQL Server JDBC driver which is not included in OJP dependencies.
-For detailed SQL Server setup instructions, see [SQL Server Testing Guide](documents/environment-setup/sqlserver-testing-guide.md).
+For detailed SQL Server setup instructions, see [SQL Server Testing Guide](../../documents/environment-setup/sqlserver-testing-guide.md).
+
+### DB2 Database Setup (Optional)
+DB2 integration tests use the IBM JDBC driver which is not included in OJP dependencies.
+For detailed DB2 instructions, see [DB2 Testing Guide](../../documents/environment-setup/db2-testing-guide.md).
+
 
 ### Testing Configuration
 - Test connection configurations are stored in CSV files under `test/resources`
