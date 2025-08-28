@@ -50,7 +50,7 @@ Add the OJP JDBC driver dependency to your project:
 <dependency>
     <groupId>org.openjdbcproxy</groupId>
     <artifactId>ojp-jdbc-driver</artifactId>
-    <version>0.0.7-alpha</version>
+    <version>0.1.0-beta</version>
 </dependency>
 ```
 

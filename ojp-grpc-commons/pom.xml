@@ -4,13 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <name>OJP Commons</name>
     <artifactId>ojp-grpc-commons</artifactId>
-    <version>0.0.8-alpha</version>
+    <version>0.1.0-beta</version>
 
     <parent>
         <groupId>org.openjdbcproxy</groupId>
         <artifactId>ojp-parent</artifactId>
-        <version>0.0.8-alpha</version>
+        <version>0.1.0-beta</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
