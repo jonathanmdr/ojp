@@ -28,7 +28,7 @@
    cd ojp-jdbc-driver
    mvn test -DdisablePostgresTests -DdisableMySQLTests -DdisableMariaDBTests
    ```
-**Note:** With the disable flags only H2 integration tests will run, to run the full set of integration tests you have to run all the databases locally, follow the instructions at [Run Local Databases](documents/environment-setup/run-local-databases.md)
+**Note:** With the disable flags only H2 integration tests will run, to run the full set of integration tests you have to run all the databases locally, follow the instructions at [Run Local Databases](../../documents/environment-setup/run-local-databases.md)
 
 ### Databases with integration tests
 We have comprehensive JDBC integration tests with OJP for the following databases:
