@@ -66,8 +66,16 @@ Each badge reflects **real impact** in code, testing, documentation, or communit
 
 ## 🎖️ Contributor Badges Awarded
 
-| Name          | Badge      | Country of birth | Country of residency | Award date(s) |
-|---------------|------------|------------------|----------------------|---------------|
-| Be the first! | Badge icon | Country Name           | Country Name         | Date          |
+### Intermediate
+| Name              | Badge                                                                                | Country of birth | Country of residency | Award date(s) | Indicated By | Awarded by |
+|-------------------|--------------------------------------------------------------------------------------|------------------|----------------------|---------------|---------------|---------------|
+| [Roger Floriano](https://github.com/petruki) | <img src="/documents/images/ojp_quality_advocate_badge.png" width="80" height="80"/> | Brazil           | Canada               | 01/09/2025    | Rogerio Robetti | Rogerio Robetti |
+
+
+### Entry Level
+| Name              | Badge                                                                                | Country of birth | Country of residency | Award date(s) | Indicated By | Awarded by |
+|-------------------|--------------------------------------------------------------------------------------|------------------|----------------------|---------------|---------------|---------------|
+| [Roger Floriano](https://github.com/petruki) | <img src="/documents/images/ojp_code_contributor_badge.png" width="80" height="80"/> | Brazil           | Canada               | 01/09/2025    | Rogerio Robetti | Rogerio Robetti |
+| [Roger Floriano](https://github.com/petruki) | <img src="/documents/images/ojp_tester_badge.png" width="80" height="80"/>           | Brazil           | Canada               | 01/09/2025    | Rogerio Robetti | Rogerio Robetti |
 
 ---
