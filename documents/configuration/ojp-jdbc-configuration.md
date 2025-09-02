@@ -48,7 +48,7 @@ Add the OJP JDBC driver dependency to your project:
 
 ```xml
 <dependency>
-    <groupId>org.openjdbcproxy</groupId>
+    <groupId>org.openjproxy</groupId>
     <artifactId>ojp-jdbc-driver</artifactId>
     <version>0.1.0-beta</version>
 </dependency>
@@ -72,7 +72,7 @@ Replace your existing JDBC connection URL by prefixing with `ojp[host:port]_`:
 "jdbc:ojp[localhost:1059]_sqlserver://localhost:1433;databaseName=mydb"
 ```
 
-Use the OJP driver class: `org.openjdbcproxy.jdbc.Driver`
+Use the OJP driver class: `org.openjproxy.jdbc.Driver`
 
 ### Important Notes
 

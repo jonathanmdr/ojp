@@ -8,15 +8,15 @@
     <version>0.1.0-beta</version>
 
     <parent>
-        <groupId>org.openjdbcproxy</groupId>
+        <groupId>org.openjproxy</groupId>
         <artifactId>ojp-parent</artifactId>
         <version>0.1.0-beta</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <properties>
-        <maven.compiler.source>22</maven.compiler.source>
-        <maven.compiler.target>22</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
 
         <grpc.version>1.70.0</grpc.version>
         <slf4j.version>2.0.17</slf4j.version>
@@ -25,7 +25,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.openjdbcproxy</groupId>
+            <groupId>org.openjproxy</groupId>
             <artifactId>ojp-grpc-commons</artifactId>
             <version>0.1.0-beta</version>
         </dependency>
@@ -208,7 +208,7 @@
                             <transformers>
                                 <transformer implementation=
                                                      "org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>org.openjdbcproxy.grpc.server.GrpcServer</mainClass>
+                                    <mainClass>org.openjproxy.grpc.server.GrpcServer</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
@@ -228,7 +228,7 @@
                         <image>rrobetti/ojp:0.1.0-beta</image>
                     </to>
                     <container>
-                        <mainClass>org.openjdbcproxy.grpc.server.GrpcServer</mainClass>
+                        <mainClass>org.openjproxy.grpc.server.GrpcServer</mainClass>
                         <ports>
                             <port>1059</port>
                         </ports>

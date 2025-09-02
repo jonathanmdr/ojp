@@ -73,12 +73,12 @@ java -jar ojp-server/target/ojp-server-0.1.0-beta-shaded.jar
 When the server starts successfully, you should see output similar to:
 
 ```
-[main] INFO org.openjdbcproxy.grpc.server.ServerConfiguration - OJP Server Configuration:
-[main] INFO org.openjdbcproxy.grpc.server.ServerConfiguration -   Server Port: 1059
-[main] INFO org.openjdbcproxy.grpc.server.ServerConfiguration -   Prometheus Port: 9090
-[main] INFO org.openjdbcproxy.grpc.server.ServerConfiguration -   OpenTelemetry Enabled: true
-[main] INFO org.openjdbcproxy.grpc.server.GrpcServer - Starting OJP gRPC Server on port 1059
-[main] INFO org.openjdbcproxy.grpc.server.GrpcServer - OJP gRPC Server started successfully and awaiting termination
+[main] INFO org.openjproxy.grpc.server.ServerConfiguration - OJP Server Configuration:
+[main] INFO org.openjproxy.grpc.server.ServerConfiguration -   Server Port: 1059
+[main] INFO org.openjproxy.grpc.server.ServerConfiguration -   Prometheus Port: 9090
+[main] INFO org.openjproxy.grpc.server.ServerConfiguration -   OpenTelemetry Enabled: true
+[main] INFO org.openjproxy.grpc.server.GrpcServer - Starting OJP gRPC Server on port 1059
+[main] INFO org.openjproxy.grpc.server.GrpcServer - OJP gRPC Server started successfully and awaiting termination
 ```
 
 ### Running with Custom Configuration
@@ -216,7 +216,7 @@ java -Xmx2g -jar ojp-server/target/ojp-server-0.1.0-beta-shaded.jar
 
 ```bash
 java -cp "oracle-driver.jar:ojp-server-0.1.0-beta-shaded.jar" \
-     org.openjdbcproxy.grpc.server.GrpcServer
+     org.openjproxy.grpc.server.GrpcServer
 ```
 
 ### Performance Tuning

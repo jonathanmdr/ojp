@@ -3,14 +3,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.openjdbcproxy</groupId>
+    <groupId>org.openjproxy</groupId>
     <artifactId>ojp-parent</artifactId>
     <version>0.1.0-beta</version>
     <packaging>pom</packaging>
 
     <name>OJP Parent</name>
     <url>https://github.com/Open-JDBC-Proxy/ojp</url>
-    <description>Parent pom for OJP (Open JDBC Proxy)</description>
+    <description>Parent pom for OJP (Open J Proxy)</description>
 
     <modules>
         <module>ojp-grpc-commons</module>
@@ -39,7 +39,7 @@
                                     <goal>java</goal>
                                 </goals>
                                 <configuration>
-                                    <mainClass>org.openjdbcproxy.grpc.server.GrpcServer</mainClass>
+                                    <mainClass>org.openjproxy.grpc.server.GrpcServer</mainClass>
                                 </configuration>
                             </execution>
                         </executions>

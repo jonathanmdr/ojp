@@ -4,8 +4,8 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.openjdbcproxy.grpc.SerializationHandler.deserialize;
-import static org.openjdbcproxy.grpc.SerializationHandler.serialize;
+import static org.openjproxy.grpc.SerializationHandler.deserialize;
+import static org.openjproxy.grpc.SerializationHandler.serialize;
 
 public class SerializationHandlerTest {
     @Test

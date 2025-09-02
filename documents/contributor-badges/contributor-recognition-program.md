@@ -1,6 +1,6 @@
 # 🏅 OJP Contributor Recognition Program
 
-The Open JDBC Proxy (OJP) project thrives on community contributions of all kinds — code, testing, documentation, and evangelism.  
+The Open J Proxy (OJP) project thrives on community contributions of all kinds — code, testing, documentation, and evangelism.  
 Each track has progressive badges that reflect your journey. No matter the path, all contributors can ultimately reach the highest honor: **🏆 OJP Champion**.
 
 ---
