@@ -5,8 +5,10 @@
 [![Main CI](https://github.com/Open-JDBC-Proxy/ojp/actions/workflows/main.yml/badge.svg)](https://github.com/Open-JDBC-Proxy/ojp/actions/workflows/main.yml)
 [![Spring Boot/Micronaut/Quarkus Integration](https://github.com/Open-JDBC-Proxy/ojp-framework-integration/actions/workflows/main.yml/badge.svg)](https://github.com/Open-JDBC-Proxy/ojp-framework-integration/actions/workflows/main.yml)
 
-
 A JDBC Driver and Layer 7 Proxy Server to decouple applications from relational database connection management.
+
+[![Discord](https://img.shields.io/discord/1385189361565433927?label=Discord&logo=discord)](https://discord.gg/J5DdHpaUzu)
+
 
 ---
 
