@@ -1103,9 +1103,6 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 throw new SQLException("Connection is closed");
             }
         } else {
-            //TODO check why reaches here and can't find the datasource sometimes, conn hash should never change for a single client
-            //log.info("Lookup connection hash -> " + sessionInfo.getConnHash());
-            
             // Get the datasource for this connection hash
             HikariDataSource dataSource = this.datasourceMap.get(sessionInfo.getConnHash());
             if (dataSource == null) {
