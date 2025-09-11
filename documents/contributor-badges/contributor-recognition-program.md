@@ -73,8 +73,9 @@ Each badge reflects **real impact** in code, testing, documentation, or communit
 
 
 ### Entry Level
-| Name              | Badge                                                                                | Country of birth | Country of residency | Award date(s) | Indicated By | Awarded by |
-|-------------------|--------------------------------------------------------------------------------------|------------------|----------------------|---------------|---------------|---------------|
+| Name                                         | Badge                                                                                | Country of birth | Country of residency | Award date(s) | Indicated By | Awarded by |
+|----------------------------------------------|--------------------------------------------------------------------------------------|------------------|----------------------|---------------|---------------|---------------|
+| [Diego Vagliati](https://github.com/ribossomo) | <img src="/documents/images/ojp_code_contributor_badge.png" width="80" height="80"/> | Brazil           | Brazil               | 05/09/2025    | Rogerio Robetti | Rogerio Robetti |
 | [Roger Floriano](https://github.com/petruki) | <img src="/documents/images/ojp_code_contributor_badge.png" width="80" height="80"/> | Brazil           | Canada               | 01/09/2025    | Rogerio Robetti | Rogerio Robetti |
 | [Roger Floriano](https://github.com/petruki) | <img src="/documents/images/ojp_tester_badge.png" width="80" height="80"/>           | Brazil           | Canada               | 01/09/2025    | Rogerio Robetti | Rogerio Robetti |
 
