@@ -1,6 +1,6 @@
 # Telemetry Documentation
 
-OJP (Open JDBC Proxy) provides observability features to monitor database operations through its telemetry system.
+OJP (Open J Proxy) provides observability features to monitor database operations through its telemetry system.
 
 ## Currently Supported Telemetry Features
 

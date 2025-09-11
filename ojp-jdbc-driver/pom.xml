@@ -9,7 +9,7 @@
     <version>0.1.1-beta</version>
 
     <parent>
-        <groupId>org.openjdbcproxy</groupId>
+        <groupId>org.openjproxy</groupId>
         <artifactId>ojp-parent</artifactId>
         <version>0.1.1-beta</version>
         <relativePath>../pom.xml</relativePath>
@@ -25,7 +25,7 @@
     <dependencies>
 
         <dependency>
-            <groupId>org.openjdbcproxy</groupId>
+            <groupId>org.openjproxy</groupId>
             <artifactId>ojp-grpc-commons</artifactId>
             <version>0.1.1-beta</version>
         </dependency>
@@ -202,6 +202,6 @@
     </developers>
 
     <url>https://github.com/Open-JDBC-Proxy/ojp</url>
-    <description>JDBC driver for OJP (Open JDBC Proxy)</description>
+    <description>JDBC driver for OJP (Open J Proxy)</description>
 
 </project>

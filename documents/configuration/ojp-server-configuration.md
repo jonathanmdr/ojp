@@ -282,12 +282,12 @@ Enable debug logging to see configuration loading:
 Configuration summary is logged at startup:
 
 ```
-INFO org.openjdbcproxy.grpc.server.ServerConfiguration - OJP Server Configuration:
-INFO org.openjdbcproxy.grpc.server.ServerConfiguration -   Server Port: 1059
-INFO org.openjdbcproxy.grpc.server.ServerConfiguration -   Prometheus Port: 9090
-INFO org.openjdbcproxy.grpc.server.ServerConfiguration -   OpenTelemetry Enabled: true
-INFO org.openjdbcproxy.grpc.server.ServerConfiguration -   Slow Query Segregation Enabled: true
-INFO org.openjdbcproxy.grpc.server.ServerConfiguration -   Slow Query Slot Percentage: 20%
+INFO org.openjproxy.grpc.server.ServerConfiguration - OJP Server Configuration:
+INFO org.openjproxy.grpc.server.ServerConfiguration -   Server Port: 1059
+INFO org.openjproxy.grpc.server.ServerConfiguration -   Prometheus Port: 9090
+INFO org.openjproxy.grpc.server.ServerConfiguration -   OpenTelemetry Enabled: true
+INFO org.openjproxy.grpc.server.ServerConfiguration -   Slow Query Segregation Enabled: true
+INFO org.openjproxy.grpc.server.ServerConfiguration -   Slow Query Slot Percentage: 20%
 ...
 ```
 

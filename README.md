@@ -1,5 +1,5 @@
 
-# Open JDBC Proxy
+# Open J Proxy
 
 ![Release](https://img.shields.io/github/v/release/Open-JDBC-Proxy/ojp?include_prereleases)
 [![Main CI](https://github.com/Open-JDBC-Proxy/ojp/actions/workflows/main.yml/badge.svg)](https://github.com/Open-JDBC-Proxy/ojp/actions/workflows/main.yml)
@@ -36,7 +36,7 @@ docker run --rm -d -p 1059:1059 rrobetti/ojp:0.1.0-beta
 ### 2. Add OJP JDBC Driver to your project
 ```xml
 <dependency>
-    <groupId>org.openjdbcproxy</groupId>
+    <groupId>org.openjproxy</groupId>
     <artifactId>ojp-jdbc-driver</artifactId>
     <version>0.1.0-beta</version>
 </dependency>
@@ -58,7 +58,7 @@ Replace your existing connection URL by prefixing with `ojp[host:port]_`:
 // SQL Server example
 "jdbc:ojp[localhost:1059]_sqlserver://localhost:1433;databaseName=mydb"
 ```
-Use the ojp driver: `org.openjdbcproxy.jdbc.Driver`
+Use the ojp driver: `org.openjproxy.jdbc.Driver`
 
 That's it! Your application now uses intelligent connection pooling through OJP.
 
@@ -122,7 +122,7 @@ The ojp-jdbc-driver is an implementation of the JDBC specification. It connects 
 Latest version:
 
          <dependency>
-             <groupId>org.openjdbcproxy</groupId>
+             <groupId>org.openjproxy</groupId>
              <artifactId>ojp-jdbc-driver</artifactId>
              <version>0.1.0-beta</version>
          </dependency>

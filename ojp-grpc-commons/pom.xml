@@ -9,7 +9,7 @@
     <version>0.1.1-beta</version>
 
     <parent>
-        <groupId>org.openjdbcproxy</groupId>
+        <groupId>org.openjproxy</groupId>
         <artifactId>ojp-parent</artifactId>
         <version>0.1.1-beta</version>
         <relativePath>../pom.xml</relativePath>
