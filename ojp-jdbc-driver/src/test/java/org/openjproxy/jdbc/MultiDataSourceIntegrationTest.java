@@ -295,6 +295,76 @@ public class MultiDataSourceIntegrationTest {
         }
     }
 
+    @Test
+    public void testCrossDatabaseTableAccessThrowsException() throws Exception {
+        // Test that trying to access a table from one database using a datasource 
+        // configured for a different database throws appropriate exception
+        String testPropertiesContent = 
+            "# DataSource for database A\n" +
+            "dbA.ojp.connection.pool.maximumPoolSize=10\n" +
+            "dbA.ojp.connection.pool.minimumIdle=2\n" +
+            "\n" +
+            "# DataSource for database B\n" +
+            "dbB.ojp.connection.pool.maximumPoolSize=10\n" +
+            "dbB.ojp.connection.pool.minimumIdle=2\n";
+        
+        Driver testDriver = createTestDriver(testPropertiesContent);
+        
+        // Create a table in database A using datasource A
+        String tableInDbA = "table_in_database_a";
+        try (Connection dbAConn = testDriver.connect(buildOjpUrl("database_a", "dbA"), new Properties())) {
+            createAndTestTable(dbAConn, tableInDbA);
+            // Verify the table exists in database A
+            assertTrue(tableExists(dbAConn, tableInDbA));
+        }
+        
+        // Create a different table in database B using datasource B to verify it works
+        String tableInDbB = "table_in_database_b";
+        try (Connection dbBConn = testDriver.connect(buildOjpUrl("database_b", "dbB"), new Properties())) {
+            createAndTestTable(dbBConn, tableInDbB);
+            // Verify the table exists in database B
+            assertTrue(tableExists(dbBConn, tableInDbB));
+        }
+        
+        // Now try to access the table from database A using datasource B (which points to database B)
+        // This should throw an exception because the table doesn't exist in database B
+        try (Connection dbBConn = testDriver.connect(buildOjpUrl("database_b", "dbB"), new Properties())) {
+            Statement stmt = dbBConn.createStatement();
+            
+            // This should throw SQLException because table_in_database_a doesn't exist in database B
+            assertThrows(SQLException.class, () -> {
+                stmt.executeQuery("SELECT * FROM " + tableInDbA);
+            }, "Expected SQLException when trying to access table from different database");
+            
+            // Verify the specific error message indicates table doesn't exist
+            try {
+                stmt.executeQuery("SELECT * FROM " + tableInDbA);
+                fail("Should have thrown SQLException for non-existent table");
+            } catch (SQLException e) {
+                String errorMessage = e.getMessage().toLowerCase();
+                assertTrue(
+                    errorMessage.contains("table") && (
+                        errorMessage.contains("not found") ||
+                        errorMessage.contains("does not exist") ||
+                        errorMessage.contains("doesn't exist") ||
+                        errorMessage.contains("not exist")
+                    ),
+                    "Expected error message about table not existing, but got: " + e.getMessage()
+                );
+            }
+        }
+        
+        // Verify the reverse scenario - trying to access table from database B using datasource A
+        try (Connection dbAConn = testDriver.connect(buildOjpUrl("database_a", "dbA"), new Properties())) {
+            Statement stmt = dbAConn.createStatement();
+            
+            // This should also throw SQLException because table_in_database_b doesn't exist in database A
+            assertThrows(SQLException.class, () -> {
+                stmt.executeQuery("SELECT * FROM " + tableInDbB);
+            }, "Expected SQLException when trying to access table from different database");
+        }
+    }
+
     /**
      * Creates a test driver that uses the provided properties content instead of loading from classpath.
      */
