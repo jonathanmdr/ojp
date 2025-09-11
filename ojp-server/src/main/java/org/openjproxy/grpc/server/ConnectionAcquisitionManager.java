@@ -16,7 +16,7 @@ import java.sql.SQLException;
  * connection pool was exhausted. The solution relies on HikariCP's built-in timeout
  * mechanisms while providing enhanced error reporting with pool statistics.
  * 
- * @see <a href="https://github.com/Open-JDBC-Proxy/ojp/issues/29">Issue #29</a>
+ * @see <a href="https://github.com/Open-J-Proxy/ojp/issues/29">Issue #29</a>
  */
 @Slf4j
 public class ConnectionAcquisitionManager {

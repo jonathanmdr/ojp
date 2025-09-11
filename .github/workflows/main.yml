@@ -176,6 +176,6 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.INTEGRATION_REPO_PAT }}
-          repository: Open-JDBC-Proxy/ojp-framework-integration
+          repository: Open-J-Proxy/ojp-framework-integration
           event-type: ojp-updated
           client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'

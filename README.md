@@ -1,9 +1,9 @@
 
 # Open J Proxy
 
-![Release](https://img.shields.io/github/v/release/Open-JDBC-Proxy/ojp?include_prereleases)
-[![Main CI](https://github.com/Open-JDBC-Proxy/ojp/actions/workflows/main.yml/badge.svg)](https://github.com/Open-JDBC-Proxy/ojp/actions/workflows/main.yml)
-[![Spring Boot/Micronaut/Quarkus Integration](https://github.com/Open-JDBC-Proxy/ojp-framework-integration/actions/workflows/main.yml/badge.svg)](https://github.com/Open-JDBC-Proxy/ojp-framework-integration/actions/workflows/main.yml)
+![Release](https://img.shields.io/github/v/release/Open-J-Proxy/ojp?include_prereleases)
+[![Main CI](https://github.com/Open-J-Proxy/ojp/actions/workflows/main.yml/badge.svg)](https://github.com/Open-J-Proxy/ojp/actions/workflows/main.yml)
+[![Spring Boot/Micronaut/Quarkus Integration](https://github.com/Open-J-Proxy/ojp-framework-integration/actions/workflows/main.yml/badge.svg)](https://github.com/Open-J-Proxy/ojp-framework-integration/actions/workflows/main.yml)
 
 A JDBC Driver and Layer 7 Proxy Server to decouple applications from relational database connection management.
 

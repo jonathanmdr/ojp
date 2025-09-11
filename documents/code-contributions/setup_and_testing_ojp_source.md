@@ -8,7 +8,7 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/Open-JDBC-Proxy/ojp.git
+   git clone https://github.com/Open-J-Proxy/ojp.git
    cd ojp
    ```
 

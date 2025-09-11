@@ -28,7 +28,7 @@ OpenJDK 64-Bit Server VM (build 22.0.1+8-16, mixed mode, sharing)
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Open-JDBC-Proxy/ojp.git
+git clone https://github.com/Open-J-Proxy/ojp.git
 cd ojp
 ```
 

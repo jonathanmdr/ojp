@@ -9,7 +9,7 @@
     <packaging>pom</packaging>
 
     <name>OJP Parent</name>
-    <url>https://github.com/Open-JDBC-Proxy/ojp</url>
+    <url>https://github.com/Open-J-Proxy/ojp</url>
     <description>Parent pom for OJP (Open J Proxy)</description>
 
     <modules>
@@ -81,9 +81,9 @@
 
     <!-- Add SCM and project info for Maven Central requirements -->
     <scm>
-        <url>https://github.com/Open-JDBC-Proxy/ojp</url>
-        <connection>scm:git:https://github.com/Open-JDBC-Proxy/ojp.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/Open-JDBC-Proxy/ojp.git</developerConnection>
+        <url>https://github.com/Open-J-Proxy/ojp</url>
+        <connection>scm:git:https://github.com/Open-J-Proxy/ojp.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/Open-J-Proxy/ojp.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
