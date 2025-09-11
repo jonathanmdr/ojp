@@ -90,26 +90,31 @@ public class MultiDataSourceIntegrationTest {
         
         // Test connection with default datasource
         try (Connection defaultConn = testDriver.connect(buildOjpUrl("singledb", "default"), new Properties())) {
-            createAndTestTable(defaultConn, "default_table");
+            createAndTestTable(defaultConn, "shared_table");
         }
         
-        // Test connection with mainApp datasource
+        // Test connection with mainApp datasource - should access same database
         try (Connection mainAppConn = testDriver.connect(buildOjpUrl("singledb", "mainApp"), new Properties())) {
-            createAndTestTable(mainAppConn, "mainapp_table");
+            // Should be able to access the table created by default datasource
+            assertTrue(tableExists(mainAppConn, "shared_table"));
+            // Create additional data to verify connection works
+            createAndTestTable(mainAppConn, "mainapp_additional_table");
         }
         
-        // Test connection with batchJob datasource  
+        // Test connection with batchJob datasource - should access same database
         try (Connection batchJobConn = testDriver.connect(buildOjpUrl("singledb", "batchJob"), new Properties())) {
-            createAndTestTable(batchJobConn, "batchjob_table");
+            // Should be able to access tables created by other datasources (same database)
+            assertTrue(tableExists(batchJobConn, "shared_table"));
+            assertTrue(tableExists(batchJobConn, "mainapp_additional_table"));
+            // Create additional data to verify connection works
+            createAndTestTable(batchJobConn, "batchjob_additional_table");
         }
         
-        // Verify that different datasources can access same database but with different table names
-        // This ensures misrouted queries would fail due to table name differences
+        // Verify that all datasources can access all tables in the same database
         try (Connection defaultConn = testDriver.connect(buildOjpUrl("singledb", "default"), new Properties())) {
-            // Should be able to access default_table but not mainapp_table or batchjob_table
-            assertTrue(tableExists(defaultConn, "default_table"));
-            assertFalse(tableExists(defaultConn, "mainapp_table"));
-            assertFalse(tableExists(defaultConn, "batchjob_table"));
+            assertTrue(tableExists(defaultConn, "shared_table"));
+            assertTrue(tableExists(defaultConn, "mainapp_additional_table"));
+            assertTrue(tableExists(defaultConn, "batchjob_additional_table"));
         }
     }
 
