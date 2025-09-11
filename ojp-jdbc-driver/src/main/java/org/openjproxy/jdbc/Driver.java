@@ -11,14 +11,10 @@ import org.openjproxy.grpc.client.StatementServiceGrpcClient;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import static org.openjproxy.jdbc.Constants.PASSWORD;
@@ -82,54 +78,48 @@ public class Driver implements java.sql.Driver {
     }
     
     /**
-     * Parses the URL to extract dataSource parameter and return clean URL.
+     * Parses the URL to extract dataSource parameter from the OJP section and return clean URL.
+     * Format: jdbc:ojp[host:port(dataSource)]_actualDriver://...
      */
     private UrlParseResult parseUrlWithDataSource(String url) {
         if (url == null) {
             return new UrlParseResult(url, "default");
         }
         
-        // Look for query parameters after ?
-        int queryStart = url.indexOf('?');
-        if (queryStart == -1) {
-            // No query parameters, use default dataSource
+        // Look for the OJP section: jdbc:ojp[host:port(dataSource)]_
+        if (!url.startsWith("jdbc:ojp[")) {
             return new UrlParseResult(url, "default");
         }
         
-        String cleanUrl = url.substring(0, queryStart);
-        String queryString = url.substring(queryStart + 1);
+        int bracketStart = url.indexOf('[');
+        int bracketEnd = url.indexOf(']');
         
-        // Parse query parameters
-        Map<String, String> params = parseQueryString(queryString);
-        String dataSourceName = params.getOrDefault("dataSource", "default");
+        if (bracketStart == -1 || bracketEnd == -1) {
+            return new UrlParseResult(url, "default");
+        }
+        
+        String ojpSection = url.substring(bracketStart + 1, bracketEnd);
+        
+        // Look for dataSource in parentheses: host:port(dataSource)
+        int parenStart = ojpSection.indexOf('(');
+        int parenEnd = ojpSection.lastIndexOf(')');
+        
+        String dataSourceName = "default";
+        String cleanOjpSection = ojpSection;
+        
+        if (parenStart != -1 && parenEnd != -1 && parenEnd > parenStart) {
+            // Extract dataSource name from parentheses
+            dataSourceName = ojpSection.substring(parenStart + 1, parenEnd);
+            // Remove the dataSource part from OJP section
+            cleanOjpSection = ojpSection.substring(0, parenStart);
+        }
+        
+        // Reconstruct the URL without the dataSource part
+        String cleanUrl = "jdbc:ojp[" + cleanOjpSection + "]" + url.substring(bracketEnd + 1);
         
         return new UrlParseResult(cleanUrl, dataSourceName);
     }
-    
-    /**
-     * Parse query string into key-value pairs.
-     */
-    private Map<String, String> parseQueryString(String queryString) {
-        Map<String, String> params = new HashMap<>();
-        if (queryString == null || queryString.trim().isEmpty()) {
-            return params;
-        }
-        
-        String[] pairs = queryString.split("&");
-        for (String pair : pairs) {
-            String[] keyValue = pair.split("=", 2);
-            if (keyValue.length == 2) {
-                try {
-                    String key = URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8);
-                    String value = URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8);
-                    params.put(key, value);
-                } catch (Exception e) {
-                    log.warn("Failed to parse URL parameter: {}", pair, e);
-                }
-            }
-        }
-        return params;
-    }
+
     
     /**
      * Result class for URL parsing.

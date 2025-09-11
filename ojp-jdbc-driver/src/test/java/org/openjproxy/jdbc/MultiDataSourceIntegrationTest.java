@@ -33,6 +33,17 @@ public class MultiDataSourceIntegrationTest {
     private static final String OJP_URL_BASE = "jdbc:ojp[localhost:1059]_h2:mem:test_";
     private static boolean serverAvailable = false;
     
+    /**
+     * Helper method to build OJP URLs with optional datasource name
+     */
+    private String buildOjpUrl(String databaseName, String dataSourceName) {
+        if (dataSourceName == null || "default".equals(dataSourceName)) {
+            return OJP_URL_BASE + databaseName;
+        } else {
+            return "jdbc:ojp[localhost:1059(" + dataSourceName + ")]_h2:mem:test_" + databaseName;
+        }
+    }
+    
     @BeforeAll
     public static void checkServerAvailability() {
         // Check if OJP server is running before attempting any tests
@@ -78,23 +89,23 @@ public class MultiDataSourceIntegrationTest {
         Driver testDriver = createTestDriver(testPropertiesContent);
         
         // Test connection with default datasource
-        try (Connection defaultConn = testDriver.connect(OJP_URL_BASE + "singledb", new Properties())) {
+        try (Connection defaultConn = testDriver.connect(buildOjpUrl("singledb", "default"), new Properties())) {
             createAndTestTable(defaultConn, "default_table");
         }
         
         // Test connection with mainApp datasource
-        try (Connection mainAppConn = testDriver.connect(OJP_URL_BASE + "singledb?dataSource=mainApp", new Properties())) {
+        try (Connection mainAppConn = testDriver.connect(buildOjpUrl("singledb", "mainApp"), new Properties())) {
             createAndTestTable(mainAppConn, "mainapp_table");
         }
         
         // Test connection with batchJob datasource  
-        try (Connection batchJobConn = testDriver.connect(OJP_URL_BASE + "singledb?dataSource=batchJob", new Properties())) {
+        try (Connection batchJobConn = testDriver.connect(buildOjpUrl("singledb", "batchJob"), new Properties())) {
             createAndTestTable(batchJobConn, "batchjob_table");
         }
         
         // Verify that different datasources can access same database but with different table names
         // This ensures misrouted queries would fail due to table name differences
-        try (Connection defaultConn = testDriver.connect(OJP_URL_BASE + "singledb", new Properties())) {
+        try (Connection defaultConn = testDriver.connect(buildOjpUrl("singledb", "default"), new Properties())) {
             // Should be able to access default_table but not mainapp_table or batchjob_table
             assertTrue(tableExists(defaultConn, "default_table"));
             assertFalse(tableExists(defaultConn, "mainapp_table"));
@@ -121,7 +132,7 @@ public class MultiDataSourceIntegrationTest {
         user1Props.setProperty("user", "user1");
         user1Props.setProperty("password", "password1");
         
-        try (Connection user1Conn = testDriver.connect(OJP_URL_BASE + "multiuser?dataSource=user1", user1Props)) {
+        try (Connection user1Conn = testDriver.connect(buildOjpUrl("multiuser", "user1"), user1Props)) {
             createAndTestTable(user1Conn, "user1_data");
         }
         
@@ -130,7 +141,7 @@ public class MultiDataSourceIntegrationTest {
         user2Props.setProperty("user", "user2"); 
         user2Props.setProperty("password", "password2");
         
-        try (Connection user2Conn = testDriver.connect(OJP_URL_BASE + "multiuser?dataSource=user2", user2Props)) {
+        try (Connection user2Conn = testDriver.connect(buildOjpUrl("multiuser", "user2"), user2Props)) {
             createAndTestTable(user2Conn, "user2_data");
         }
     }
@@ -155,33 +166,33 @@ public class MultiDataSourceIntegrationTest {
         Driver testDriver = createTestDriver(testPropertiesContent);
         
         // Test Database A - Primary datasource
-        try (Connection dbAPrimaryConn = testDriver.connect(OJP_URL_BASE + "databaseA?dataSource=dbA_primary", new Properties())) {
+        try (Connection dbAPrimaryConn = testDriver.connect(buildOjpUrl("databaseA", "dbA_primary"), new Properties())) {
             createAndTestTable(dbAPrimaryConn, "dba_primary_table");
         }
         
         // Test Database A - Readonly datasource
-        try (Connection dbAReadonlyConn = testDriver.connect(OJP_URL_BASE + "databaseA?dataSource=dbA_readonly", new Properties())) {
+        try (Connection dbAReadonlyConn = testDriver.connect(buildOjpUrl("databaseA", "dbA_readonly"), new Properties())) {
             createAndTestTable(dbAReadonlyConn, "dba_readonly_table");
         }
         
         // Test Database B - Primary datasource 
-        try (Connection dbBPrimaryConn = testDriver.connect(OJP_URL_BASE + "databaseB?dataSource=dbB_primary", new Properties())) {
+        try (Connection dbBPrimaryConn = testDriver.connect(buildOjpUrl("databaseB", "dbB_primary"), new Properties())) {
             createAndTestTable(dbBPrimaryConn, "dbb_primary_table");
         }
         
         // Test Database B - Analytics datasource
-        try (Connection dbBAnalyticsConn = testDriver.connect(OJP_URL_BASE + "databaseB?dataSource=dbB_analytics", new Properties())) {
+        try (Connection dbBAnalyticsConn = testDriver.connect(buildOjpUrl("databaseB", "dbB_analytics"), new Properties())) {
             createAndTestTable(dbBAnalyticsConn, "dbb_analytics_table");
         }
         
         // Verify isolation between databases - try to access wrong database tables
-        try (Connection dbAConn = testDriver.connect(OJP_URL_BASE + "databaseA?dataSource=dbA_primary", new Properties())) {
+        try (Connection dbAConn = testDriver.connect(buildOjpUrl("databaseA", "dbA_primary"), new Properties())) {
             // Database A should not have Database B tables
             assertTrue(tableExists(dbAConn, "dba_primary_table"));
             assertFalse(tableExists(dbAConn, "dbb_primary_table"));
         }
         
-        try (Connection dbBConn = testDriver.connect(OJP_URL_BASE + "databaseB?dataSource=dbB_primary", new Properties())) {
+        try (Connection dbBConn = testDriver.connect(buildOjpUrl("databaseB", "dbB_primary"), new Properties())) {
             // Database B should not have Database A tables
             assertTrue(tableExists(dbBConn, "dbb_primary_table"));
             assertFalse(tableExists(dbBConn, "dba_primary_table"));
@@ -197,14 +208,14 @@ public class MultiDataSourceIntegrationTest {
         Driver testDriver = createTestDriver(testPropertiesContent);
         
         // Connection with configured datasource should work
-        try (Connection configuredConn = testDriver.connect(OJP_URL_BASE + "testdb?dataSource=configuredDS", new Properties())) {
+        try (Connection configuredConn = testDriver.connect(buildOjpUrl("testdb", "configuredDS"), new Properties())) {
             assertNotNull(configuredConn);
             createAndTestTable(configuredConn, "configured_table");
         }
         
         // Connection with unconfigured datasource should return properties with no pool settings
         // (The server will use defaults, but the client won't send any specific properties)
-        try (Connection unconfiguredConn = testDriver.connect(OJP_URL_BASE + "testdb?dataSource=unconfiguredDS", new Properties())) {
+        try (Connection unconfiguredConn = testDriver.connect(buildOjpUrl("testdb", "unconfiguredDS"), new Properties())) {
             assertNotNull(unconfiguredConn);
             // This should work but use default pool settings
             createAndTestTable(unconfiguredConn, "unconfigured_table");
@@ -221,13 +232,13 @@ public class MultiDataSourceIntegrationTest {
         Driver testDriver = createTestDriver(testPropertiesContent);
         
         // Connection without dataSource parameter should use default configuration
-        try (Connection defaultConn = testDriver.connect(OJP_URL_BASE + "backcompat", new Properties())) {
+        try (Connection defaultConn = testDriver.connect(buildOjpUrl("backcompat", "default"), new Properties())) {
             assertNotNull(defaultConn);
             createAndTestTable(defaultConn, "backcompat_table");
         }
         
         // Connection with explicit default dataSource should also work
-        try (Connection explicitDefaultConn = testDriver.connect(OJP_URL_BASE + "backcompat?dataSource=default", new Properties())) {
+        try (Connection explicitDefaultConn = testDriver.connect(buildOjpUrl("backcompat", "default"), new Properties())) {
             assertNotNull(explicitDefaultConn);
             // Should be able to access the same table
             assertTrue(tableExists(explicitDefaultConn, "backcompat_table"));

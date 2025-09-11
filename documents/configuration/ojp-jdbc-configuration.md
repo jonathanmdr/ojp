@@ -4,16 +4,15 @@ This document covers configuration options for the OJP JDBC driver, including cl
 
 ## Overview
 
-The OJP JDBC driver supports configurable connection pool settings via an `ojp.properties` file with advanced multi-datasource capabilities. This allows customization of HikariCP connection pool behavior on a per-client basis with support for multiple named datasources for enhanced security and flexibility.
+The OJP JDBC driver supports configurable connection pool settings via an `ojp.properties` file with advanced multi-datasource capabilities. This allows customization of HikariCP connection pool behavior on a per-client basis with support for multiple named datasources for enhanced flexibility.
 
 ## Multi-DataSource Configuration
 
-### Security and Flexibility Benefits
+### Flexibility and Operational Benefits
 
-The multi-datasource configuration approach provides several security and operational benefits:
+The multi-datasource configuration approach provides several operational benefits:
 
 - **Configuration Isolation**: Different applications or components can have their own pool configurations without interfering with each other
-- **Security Through Abstraction**: DataSource names act as logical identifiers that don't expose sensitive database details like usernames or database names
 - **Operational Flexibility**: Different datasources can point to the same database with different pool settings optimized for their use case
 - **Resource Management**: Fine-grained control over connection pool resources per application component
 
@@ -55,15 +54,15 @@ ojp.connection.pool.idleTimeout=600000
 
 #### Specifying DataSource in JDBC URL
 
-Include the `dataSource` parameter in your JDBC URL to specify which datasource configuration to use:
+Include the dataSource name in parentheses within the OJP connection section to specify which datasource configuration to use:
 
 ```java
 // Use the mainApp datasource configuration
-String url = "jdbc:ojp[localhost:1059]_postgresql://user@localhost/mydb?dataSource=mainApp";
+String url = "jdbc:ojp[localhost:1059(mainApp)]_postgresql://user@localhost/mydb";
 Connection conn = DriverManager.getConnection(url, "user", "password");
 
 // Use the reporting datasource configuration  
-String reportingUrl = "jdbc:ojp[localhost:1059]_postgresql://user@localhost/mydb?dataSource=reporting";
+String reportingUrl = "jdbc:ojp[localhost:1059(reporting)]_postgresql://user@localhost/mydb";
 Connection reportingConn = DriverManager.getConnection(reportingUrl, "user", "password");
 
 // Use default configuration (no dataSource parameter)
@@ -89,9 +88,9 @@ Both can connect to the same database:
 ```java
 // Same database, different pool configurations
 Connection primaryConn = DriverManager.getConnection(
-    "jdbc:ojp[localhost:1059]_postgres:mydb?dataSource=primary", "user", "pass");
+    "jdbc:ojp[localhost:1059(primary)]_postgres:mydb", "user", "pass");
 Connection backgroundConn = DriverManager.getConnection(
-    "jdbc:ojp[localhost:1059]_postgres:mydb?dataSource=background", "user", "pass");
+    "jdbc:ojp[localhost:1059(background)]_postgres:mydb", "user", "pass");
 ```
 
 ## Client-Side Connection Pool Configuration
@@ -195,31 +194,31 @@ Replace your existing JDBC connection URL by prefixing with `ojp[host:port]_` an
 "jdbc:ojp[localhost:1059]_postgresql://user@localhost/mydb"
 
 // After with named datasource
-"jdbc:ojp[localhost:1059]_postgresql://user@localhost/mydb?dataSource=mainApp"
+"jdbc:ojp[localhost:1059(mainApp)]_postgresql://user@localhost/mydb"
 
 // Oracle example with datasource
-"jdbc:ojp[localhost:1059]_oracle:thin:@localhost:1521/XEPDB1?dataSource=analytics"
+"jdbc:ojp[localhost:1059(analytics)]_oracle:thin:@localhost:1521/XEPDB1"
 
 // SQL Server example with datasource
-"jdbc:ojp[localhost:1059]_sqlserver://localhost:1433;databaseName=mydb?dataSource=reporting"
+"jdbc:ojp[localhost:1059(reporting)]_sqlserver://localhost:1433;databaseName=mydb"
 ```
 
 Use the OJP driver class: `org.openjproxy.jdbc.Driver`
 
 ### DataSource Parameter Usage
 
-The `dataSource` URL parameter specifies which configuration to use:
+The dataSource specification in parentheses within the OJP connection section specifies which configuration to use:
 - **No parameter**: Uses "default" datasource configuration
-- **`?dataSource=myApp`**: Uses configuration prefixed with "myApp."
-- **`?dataSource=analytics`**: Uses configuration prefixed with "analytics."
+- **`(myApp)`**: Uses configuration prefixed with "myApp."
+- **`(analytics)`**: Uses configuration prefixed with "analytics."
 
 ```java
 // Examples of different datasource usage
 Connection mainConn = DriverManager.getConnection(
-    "jdbc:ojp[localhost:1059]_postgres:mydb?dataSource=mainApp", "user", "pass");
+    "jdbc:ojp[localhost:1059(mainApp)]_postgres:mydb", "user", "pass");
     
 Connection analyticsConn = DriverManager.getConnection(
-    "jdbc:ojp[localhost:1059]_postgres:mydb?dataSource=analytics", "user", "pass");
+    "jdbc:ojp[localhost:1059(analytics)]_postgres:mydb", "user", "pass");
     
 Connection defaultConn = DriverManager.getConnection(
     "jdbc:ojp[localhost:1059]_postgres:mydb", "user", "pass"); // Uses default config

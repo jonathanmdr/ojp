@@ -29,46 +29,23 @@ public class MultiDataSourceConfigurationTest {
         assertEquals("jdbc:ojp[localhost:1059]_h2:~/test", cleanUrl1);
         assertEquals("default", dataSourceName1);
         
-        // Test URL with dataSource parameter
-        Object result2 = parseUrlMethod.invoke(driver, "jdbc:ojp[localhost:1059]_h2:~/test?dataSource=myApp");
+        // Test URL with dataSource parameter in parentheses
+        Object result2 = parseUrlMethod.invoke(driver, "jdbc:ojp[localhost:1059(myApp)]_h2:~/test");
         String cleanUrl2 = (String) result2.getClass().getDeclaredField("cleanUrl").get(result2);
         String dataSourceName2 = (String) result2.getClass().getDeclaredField("dataSourceName").get(result2);
         
         assertEquals("jdbc:ojp[localhost:1059]_h2:~/test", cleanUrl2);
         assertEquals("myApp", dataSourceName2);
         
-        // Test URL with multiple parameters including dataSource
-        Object result3 = parseUrlMethod.invoke(driver, "jdbc:ojp[localhost:1059]_h2:~/test?timeout=30&dataSource=readOnly&ssl=true");
+        // Test URL with port and datasource
+        Object result3 = parseUrlMethod.invoke(driver, "jdbc:ojp[localhost:1059(readOnly)]_h2:~/test");
         String cleanUrl3 = (String) result3.getClass().getDeclaredField("cleanUrl").get(result3);
         String dataSourceName3 = (String) result3.getClass().getDeclaredField("dataSourceName").get(result3);
         
         assertEquals("jdbc:ojp[localhost:1059]_h2:~/test", cleanUrl3);
         assertEquals("readOnly", dataSourceName3);
     }
-    
-    @Test
-    public void testQueryStringParsing() throws Exception {
-        Driver driver = new Driver();
-        Method parseQueryStringMethod = Driver.class.getDeclaredMethod("parseQueryString", String.class);
-        parseQueryStringMethod.setAccessible(true);
-        
-        // Test simple query string
-        @SuppressWarnings("unchecked")
-        java.util.Map<String, String> params1 = (java.util.Map<String, String>) parseQueryStringMethod.invoke(driver, "dataSource=myApp");
-        assertEquals("myApp", params1.get("dataSource"));
-        
-        // Test multiple parameters
-        @SuppressWarnings("unchecked")
-        java.util.Map<String, String> params2 = (java.util.Map<String, String>) parseQueryStringMethod.invoke(driver, "timeout=30&dataSource=readOnly&ssl=true");
-        assertEquals("30", params2.get("timeout"));
-        assertEquals("readOnly", params2.get("dataSource"));
-        assertEquals("true", params2.get("ssl"));
-        
-        // Test empty query string
-        @SuppressWarnings("unchecked")
-        java.util.Map<String, String> params3 = (java.util.Map<String, String>) parseQueryStringMethod.invoke(driver, "");
-        assertTrue(params3.isEmpty());
-    }
+
     
     @Test
     public void testLoadOjpPropertiesForDataSource() throws Exception {
