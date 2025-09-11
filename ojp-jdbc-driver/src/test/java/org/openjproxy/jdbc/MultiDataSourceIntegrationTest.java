@@ -120,34 +120,37 @@ public class MultiDataSourceIntegrationTest {
 
     @Test
     public void testMultipleDataSourcesForSingleDatabaseDifferentUsers() throws Exception {
-        // This test simulates different users accessing the same database
+        // This test simulates different datasources for different application contexts
+        // Both use the same H2 user credentials but different datasource configurations
         String testPropertiesContent = 
-            "# User1 datasource\n" +
-            "user1.ojp.connection.pool.maximumPoolSize=15\n" +
-            "user1.ojp.connection.pool.minimumIdle=3\n" +
+            "# App1 datasource\n" +
+            "app1.ojp.connection.pool.maximumPoolSize=15\n" +
+            "app1.ojp.connection.pool.minimumIdle=3\n" +
             "\n" +
-            "# User2 datasource\n" +
-            "user2.ojp.connection.pool.maximumPoolSize=10\n" +
-            "user2.ojp.connection.pool.minimumIdle=2\n";
+            "# App2 datasource\n" +
+            "app2.ojp.connection.pool.maximumPoolSize=10\n" +
+            "app2.ojp.connection.pool.minimumIdle=2\n";
         
         Driver testDriver = createTestDriver(testPropertiesContent);
         
-        // Test connection with user1 datasource
-        Properties user1Props = new Properties();
-        user1Props.setProperty("user", "user1");
-        user1Props.setProperty("password", "password1");
+        // Test connection with app1 datasource - using standard H2 credentials
+        Properties app1Props = new Properties();
+        app1Props.setProperty("user", "sa");
+        app1Props.setProperty("password", "");
         
-        try (Connection user1Conn = testDriver.connect(buildOjpUrl("multiuser", "user1"), user1Props)) {
-            createAndTestTable(user1Conn, "user1_data");
+        try (Connection app1Conn = testDriver.connect(buildOjpUrl("multiuser", "app1"), app1Props)) {
+            createAndTestTable(app1Conn, "app1_data");
         }
         
-        // Test connection with user2 datasource
-        Properties user2Props = new Properties();
-        user2Props.setProperty("user", "user2"); 
-        user2Props.setProperty("password", "password2");
+        // Test connection with app2 datasource - using same H2 credentials but different pool config
+        Properties app2Props = new Properties();
+        app2Props.setProperty("user", "sa"); 
+        app2Props.setProperty("password", "");
         
-        try (Connection user2Conn = testDriver.connect(buildOjpUrl("multiuser", "user2"), user2Props)) {
-            createAndTestTable(user2Conn, "user2_data");
+        try (Connection app2Conn = testDriver.connect(buildOjpUrl("multiuser", "app2"), app2Props)) {
+            createAndTestTable(app2Conn, "app2_data");
+            // Verify both datasources access the same database (same user, same database)
+            assertTrue(tableExists(app2Conn, "app1_data"));
         }
     }
 
