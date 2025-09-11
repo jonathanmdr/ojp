@@ -120,37 +120,79 @@ public class MultiDataSourceIntegrationTest {
 
     @Test
     public void testMultipleDataSourcesForSingleDatabaseDifferentUsers() throws Exception {
-        // This test simulates different datasources for different application contexts
-        // Both use the same H2 user credentials but different datasource configurations
+        // This test simulates different datasources for different users with different privileges
+        // Using different H2 users with different pool configurations
         String testPropertiesContent = 
-            "# App1 datasource\n" +
+            "# App1 datasource - high privilege user\n" +
             "app1.ojp.connection.pool.maximumPoolSize=15\n" +
             "app1.ojp.connection.pool.minimumIdle=3\n" +
             "\n" +
-            "# App2 datasource\n" +
+            "# App2 datasource - limited privilege user\n" +
             "app2.ojp.connection.pool.maximumPoolSize=10\n" +
             "app2.ojp.connection.pool.minimumIdle=2\n";
         
         Driver testDriver = createTestDriver(testPropertiesContent);
         
-        // Test connection with app1 datasource - using standard H2 credentials
-        Properties app1Props = new Properties();
-        app1Props.setProperty("user", "sa");
-        app1Props.setProperty("password", "");
+        // First, create the users and set up tables using admin connection (sa user)
+        Properties adminProps = new Properties();
+        adminProps.setProperty("user", "sa");
+        adminProps.setProperty("password", "");
         
-        try (Connection app1Conn = testDriver.connect(buildOjpUrl("multiuser", "app1"), app1Props)) {
-            createAndTestTable(app1Conn, "app1_data");
+        try (Connection adminConn = testDriver.connect(buildOjpUrl("multiuser", "default"), adminProps)) {
+            // Create the test table that we'll use for privilege testing
+            adminConn.createStatement().execute("DROP TABLE IF EXISTS MY_TABLE");
+            adminConn.createStatement().execute("CREATE TABLE MY_TABLE (id INT PRIMARY KEY, name VARCHAR(50))");
+            
+            // Create user1 with full privileges
+            adminConn.createStatement().execute("DROP USER IF EXISTS user1");
+            adminConn.createStatement().execute("CREATE USER user1 PASSWORD 'pass1'");
+            adminConn.createStatement().execute("GRANT ALL ON SCHEMA PUBLIC TO user1");
+            
+            // Create user2 with limited privileges (only SELECT and INSERT on MY_TABLE)
+            adminConn.createStatement().execute("DROP USER IF EXISTS user2");
+            adminConn.createStatement().execute("CREATE USER user2 PASSWORD 'pass2'");
+            adminConn.createStatement().execute("GRANT SELECT, INSERT ON MY_TABLE TO user2");
         }
         
-        // Test connection with app2 datasource - using same H2 credentials but different pool config
-        Properties app2Props = new Properties();
-        app2Props.setProperty("user", "sa"); 
-        app2Props.setProperty("password", "");
+        // Test connection with app1 datasource using jdbc:ojp[localhost:1059(app1)]_h2:mem:multiuser
+        Properties user1Props = new Properties();
+        user1Props.setProperty("user", "user1");
+        user1Props.setProperty("password", "pass1");
         
-        try (Connection app2Conn = testDriver.connect(buildOjpUrl("multiuser", "app2"), app2Props)) {
-            createAndTestTable(app2Conn, "app2_data");
-            // Verify both datasources access the same database (same user, same database)
-            assertTrue(tableExists(app2Conn, "app1_data"));
+        try (Connection app1Conn = testDriver.connect(buildOjpUrl("multiuser", "app1"), user1Props)) {
+            // user1 should be able to create tables (has ALL privileges)
+            app1Conn.createStatement().execute("DROP TABLE IF EXISTS app1_data");
+            app1Conn.createStatement().execute("CREATE TABLE app1_data (id INT, data VARCHAR(50))");
+            app1Conn.createStatement().execute("INSERT INTO app1_data VALUES (1, 'app1 created this')");
+            
+            // user1 can also access MY_TABLE
+            app1Conn.createStatement().execute("INSERT INTO MY_TABLE VALUES (1, 'inserted by user1')");
+        }
+        
+        // Test connection with app2 datasource using jdbc:ojp[localhost:1059(app2)]_h2:mem:multiuser  
+        Properties user2Props = new Properties();
+        user2Props.setProperty("user", "user2");
+        user2Props.setProperty("password", "pass2");
+        
+        try (Connection app2Conn = testDriver.connect(buildOjpUrl("multiuser", "app2"), user2Props)) {
+            // user2 can INSERT into MY_TABLE (has SELECT, INSERT privileges)
+            app2Conn.createStatement().execute("INSERT INTO MY_TABLE VALUES (2, 'inserted by user2')");
+            
+            // user2 can SELECT from MY_TABLE
+            var rs = app2Conn.createStatement().executeQuery("SELECT COUNT(*) FROM MY_TABLE");
+            rs.next();
+            assertEquals(2, rs.getInt(1)); // Should see both records
+            
+            // user2 should NOT be able to create new tables (doesn't have CREATE privileges beyond MY_TABLE)
+            try {
+                app2Conn.createStatement().execute("CREATE TABLE app2_data (id INT)");
+                fail("user2 should not have CREATE TABLE privileges");
+            } catch (SQLException e) {
+                // Expected - user2 doesn't have CREATE privileges on schema
+                assertTrue(e.getMessage().contains("Admin rights required") || 
+                          e.getMessage().contains("insufficient privilege") ||
+                          e.getMessage().contains("Access denied"));
+            }
         }
     }
 

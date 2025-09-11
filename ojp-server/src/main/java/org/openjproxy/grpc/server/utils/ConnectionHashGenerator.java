@@ -28,12 +28,8 @@ public class ConnectionHashGenerator {
         try {
             MessageDigest messageDigest = MessageDigest.getInstance(SHA_256);
             
-            // Include URL, user, password as before
-            String baseString = connectionDetails.getUrl() + connectionDetails.getUser() + connectionDetails.getPassword();
-            
-            // Extract dataSource name from properties and include it in hash
-            String dataSourceName = extractDataSourceName(connectionDetails);
-            String hashInput = baseString + "|dataSource:" + dataSourceName;
+            // Concatenate all parts at once: URL, user, password, and dataSource name
+            String hashInput = connectionDetails.getUrl() + connectionDetails.getUser() + connectionDetails.getPassword() + extractDataSourceName(connectionDetails);
             
             messageDigest.update(hashInput.getBytes());
             return new String(messageDigest.digest());
