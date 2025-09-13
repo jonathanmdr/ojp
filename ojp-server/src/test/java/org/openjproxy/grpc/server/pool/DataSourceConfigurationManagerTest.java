@@ -36,10 +36,10 @@ public class DataSourceConfigurationManagerTest {
     @Test
     public void testCustomDataSourceConfiguration() {
         Properties props = new Properties();
-        props.setProperty("ojp.datasource.name", "myApp");
-        props.setProperty("ojp.connection.pool.maximumPoolSize", "50");
-        props.setProperty("ojp.connection.pool.minimumIdle", "10");
-        props.setProperty("ojp.connection.pool.connectionTimeout", "15000");
+        props.setProperty(CommonConstants.DATASOURCE_NAME_PROPERTY, "myApp");
+        props.setProperty(CommonConstants.MAXIMUM_POOL_SIZE_PROPERTY, "50");
+        props.setProperty(CommonConstants.MINIMUM_IDLE_PROPERTY, "10");
+        props.setProperty(CommonConstants.CONNECTION_TIMEOUT_PROPERTY, "15000");
         
         DataSourceConfigurationManager.DataSourceConfiguration config = 
                 DataSourceConfigurationManager.getConfiguration(props);
@@ -57,10 +57,10 @@ public class DataSourceConfigurationManagerTest {
     @Test
     public void testReadOnlyDataSourceConfiguration() {
         Properties props = new Properties();
-        props.setProperty("ojp.datasource.name", "readOnly");
-        props.setProperty("ojp.connection.pool.maximumPoolSize", "5");
-        props.setProperty("ojp.connection.pool.minimumIdle", "1");
-        props.setProperty("ojp.connection.pool.idleTimeout", "30000");
+        props.setProperty(CommonConstants.DATASOURCE_NAME_PROPERTY, "readOnly");
+        props.setProperty(CommonConstants.MAXIMUM_POOL_SIZE_PROPERTY, "5");
+        props.setProperty(CommonConstants.MINIMUM_IDLE_PROPERTY, "1");
+        props.setProperty(CommonConstants.IDLE_TIMEOUT_PROPERTY, "30000");
         
         DataSourceConfigurationManager.DataSourceConfiguration config = 
                 DataSourceConfigurationManager.getConfiguration(props);
@@ -76,8 +76,8 @@ public class DataSourceConfigurationManagerTest {
     @Test
     public void testConfigurationCaching() {
         Properties props = new Properties();
-        props.setProperty("ojp.datasource.name", "cached");
-        props.setProperty("ojp.connection.pool.maximumPoolSize", "25");
+        props.setProperty(CommonConstants.DATASOURCE_NAME_PROPERTY, "cached");
+        props.setProperty(CommonConstants.MAXIMUM_POOL_SIZE_PROPERTY, "25");
         
         // First call should create and cache the configuration
         DataSourceConfigurationManager.DataSourceConfiguration config1 = 
@@ -94,12 +94,12 @@ public class DataSourceConfigurationManagerTest {
     @Test
     public void testConfigurationCacheWithDifferentProperties() {
         Properties props1 = new Properties();
-        props1.setProperty("ojp.datasource.name", "app1");
-        props1.setProperty("ojp.connection.pool.maximumPoolSize", "25");
+        props1.setProperty(CommonConstants.DATASOURCE_NAME_PROPERTY, "app1");
+        props1.setProperty(CommonConstants.MAXIMUM_POOL_SIZE_PROPERTY, "25");
         
         Properties props2 = new Properties();
-        props2.setProperty("ojp.datasource.name", "app2");
-        props2.setProperty("ojp.connection.pool.maximumPoolSize", "30");
+        props2.setProperty(CommonConstants.DATASOURCE_NAME_PROPERTY, "app2");
+        props2.setProperty(CommonConstants.MAXIMUM_POOL_SIZE_PROPERTY, "30");
         
         // Different datasource names should create separate cache entries
         DataSourceConfigurationManager.DataSourceConfiguration config1 = 
@@ -118,9 +118,9 @@ public class DataSourceConfigurationManagerTest {
     @Test
     public void testInvalidPropertyValues() {
         Properties props = new Properties();
-        props.setProperty("ojp.datasource.name", "testInvalid");
-        props.setProperty("ojp.connection.pool.maximumPoolSize", "not-a-number");
-        props.setProperty("ojp.connection.pool.connectionTimeout", "invalid-long");
+        props.setProperty(CommonConstants.DATASOURCE_NAME_PROPERTY, "testInvalid");
+        props.setProperty(CommonConstants.MAXIMUM_POOL_SIZE_PROPERTY, "not-a-number");
+        props.setProperty(CommonConstants.CONNECTION_TIMEOUT_PROPERTY, "invalid-long");
         
         DataSourceConfigurationManager.DataSourceConfiguration config = 
                 DataSourceConfigurationManager.getConfiguration(props);
@@ -135,8 +135,8 @@ public class DataSourceConfigurationManagerTest {
     @Test
     public void testEmptyDataSourceName() {
         Properties props = new Properties();
-        props.setProperty("ojp.datasource.name", "");
-        props.setProperty("ojp.connection.pool.maximumPoolSize", "35");
+        props.setProperty(CommonConstants.DATASOURCE_NAME_PROPERTY, "");
+        props.setProperty(CommonConstants.MAXIMUM_POOL_SIZE_PROPERTY, "35");
         
         DataSourceConfigurationManager.DataSourceConfiguration config = 
                 DataSourceConfigurationManager.getConfiguration(props);
@@ -149,8 +149,8 @@ public class DataSourceConfigurationManagerTest {
     @Test
     public void testClearCache() {
         Properties props = new Properties();
-        props.setProperty("ojp.datasource.name", "clearTest");
-        props.setProperty("ojp.connection.pool.maximumPoolSize", "15");
+        props.setProperty(CommonConstants.DATASOURCE_NAME_PROPERTY, "clearTest");
+        props.setProperty(CommonConstants.MAXIMUM_POOL_SIZE_PROPERTY, "15");
         
         // Create a configuration
         DataSourceConfigurationManager.getConfiguration(props);
@@ -164,10 +164,10 @@ public class DataSourceConfigurationManagerTest {
     @Test
     public void testToString() {
         Properties props = new Properties();
-        props.setProperty("ojp.datasource.name", "testString");
-        props.setProperty("ojp.connection.pool.maximumPoolSize", "40");
-        props.setProperty("ojp.connection.pool.minimumIdle", "8");
-        props.setProperty("ojp.connection.pool.connectionTimeout", "12000");
+        props.setProperty(CommonConstants.DATASOURCE_NAME_PROPERTY, "testString");
+        props.setProperty(CommonConstants.MAXIMUM_POOL_SIZE_PROPERTY, "40");
+        props.setProperty(CommonConstants.MINIMUM_IDLE_PROPERTY, "8");
+        props.setProperty(CommonConstants.CONNECTION_TIMEOUT_PROPERTY, "12000");
         
         DataSourceConfigurationManager.DataSourceConfiguration config = 
                 DataSourceConfigurationManager.getConfiguration(props);

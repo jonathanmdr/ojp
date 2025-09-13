@@ -1,14 +1,12 @@
-package org.openjproxy.jdbc;
+package openjproxy.jdbc;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.openjproxy.jdbc.Driver;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.Socket;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -27,13 +25,11 @@ import static org.junit.jupiter.api.Assertions.fail;
  * Tests the complete flow from client to server with different datasource configurations.
  * 
  * Note: These tests require the OJP server to be running on localhost:1059.
- * Tests will be skipped if the server is not available.
  */
 public class MultiDataSourceIntegrationTest {
 
     private static final String H2_URL_BASE = "jdbc:h2:mem:test_";
     private static final String OJP_URL_BASE = "jdbc:ojp[localhost:1059]_h2:mem:test_";
-    private static boolean serverAvailable = false;
     
     /**
      * Helper method to build OJP URLs with optional datasource name
@@ -46,22 +42,8 @@ public class MultiDataSourceIntegrationTest {
         }
     }
     
-    @BeforeAll
-    public static void checkServerAvailability() {
-        // Check if OJP server is running before attempting any tests
-        try (Socket socket = new Socket("localhost", 1059)) {
-            serverAvailable = true;
-        } catch (Exception e) {
-            System.out.println("OJP server not available on localhost:1059. Integration tests will be skipped.");
-            serverAvailable = false;
-        }
-    }
-    
     @BeforeEach
     public void setUp() {
-        // Skip all tests if server is not available
-        Assumptions.assumeTrue(serverAvailable, "OJP server is not available on localhost:1059");
-        
         // Ensure we start with clean state
         System.clearProperty("ojp.test.properties");
     }
