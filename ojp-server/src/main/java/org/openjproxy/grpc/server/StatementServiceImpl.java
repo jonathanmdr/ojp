@@ -183,6 +183,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 serverConfiguration.getSlowQueryIdleTimeout(),
                 serverConfiguration.getSlowQuerySlowSlotTimeout(),
                 serverConfiguration.getSlowQueryFastSlotTimeout(),
+                serverConfiguration.getSlowQueryUpdateGlobalAvgInterval(),
                 true
             );
             slowQuerySegregationManagers.put(connHash, manager);
@@ -191,7 +192,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         } else {
             // Create disabled manager for consistency
             SlowQuerySegregationManager manager = new SlowQuerySegregationManager(
-                1, 0, 0, 0, 0, false
+                1, 0, 0, 0, 0, 0, false
             );
             slowQuerySegregationManagers.put(connHash, manager);
             log.info("Created disabled SlowQuerySegregationManager for datasource {}", connHash);
@@ -207,7 +208,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         if (manager == null) {
             log.warn("No SlowQuerySegregationManager found for connection hash {}, creating disabled fallback", connHash);
             // Create a disabled manager as fallback
-            manager = new SlowQuerySegregationManager(1, 0, 0, 0, 0, false);
+            manager = new SlowQuerySegregationManager(1, 0, 0, 0, 0, 0, false);
             slowQuerySegregationManagers.put(connHash, manager);
         }
         return manager;

@@ -25,23 +25,40 @@ public class SlowQuerySegregationManager {
      * @param idleTimeoutMs The time in milliseconds before a slot is considered idle and eligible for borrowing
      * @param slowSlotTimeoutMs The timeout in milliseconds for acquiring slow operation slots
      * @param fastSlotTimeoutMs The timeout in milliseconds for acquiring fast operation slots
+     * @param updateGlobalAvgIntervalSeconds The interval in seconds for updating global average (0 = update every query)
+     * @param enabled Whether the slow query segregation feature is enabled
+     */
+    public SlowQuerySegregationManager(int totalSlots, int slowSlotPercentage, long idleTimeoutMs,
+                                     long slowSlotTimeoutMs, long fastSlotTimeoutMs, long updateGlobalAvgIntervalSeconds, boolean enabled) {
+        this.enabled = enabled;
+        this.slowSlotTimeoutMs = slowSlotTimeoutMs;
+        this.fastSlotTimeoutMs = fastSlotTimeoutMs;
+        this.performanceMonitor = new QueryPerformanceMonitor(updateGlobalAvgIntervalSeconds);
+        
+        if (enabled) {
+            this.slotManager = new SlotManager(totalSlots, slowSlotPercentage, idleTimeoutMs);
+            log.info("SlowQuerySegregationManager initialized: enabled={}, totalSlots={}, slowSlotPercentage={}%, idleTimeout={}ms, slowSlotTimeout={}ms, fastSlotTimeout={}ms, updateGlobalAvgInterval={}s",
+                    enabled, totalSlots, slowSlotPercentage, idleTimeoutMs, slowSlotTimeoutMs, fastSlotTimeoutMs, updateGlobalAvgIntervalSeconds);
+        } else {
+            this.slotManager = null;
+            log.info("SlowQuerySegregationManager initialized: enabled={}, updateGlobalAvgInterval={}s", enabled, updateGlobalAvgIntervalSeconds);
+        }
+    }
+    
+    /**
+     * Creates a new SlowQuerySegregationManager with default global average update interval.
+     * This constructor maintains backward compatibility.
+     * 
+     * @param totalSlots The maximum total number of concurrent operations (from HikariCP max pool size)
+     * @param slowSlotPercentage The percentage of slots allocated to slow operations (0-100)
+     * @param idleTimeoutMs The time in milliseconds before a slot is considered idle and eligible for borrowing
+     * @param slowSlotTimeoutMs The timeout in milliseconds for acquiring slow operation slots
+     * @param fastSlotTimeoutMs The timeout in milliseconds for acquiring fast operation slots
      * @param enabled Whether the slow query segregation feature is enabled
      */
     public SlowQuerySegregationManager(int totalSlots, int slowSlotPercentage, long idleTimeoutMs,
                                      long slowSlotTimeoutMs, long fastSlotTimeoutMs, boolean enabled) {
-        this.enabled = enabled;
-        this.slowSlotTimeoutMs = slowSlotTimeoutMs;
-        this.fastSlotTimeoutMs = fastSlotTimeoutMs;
-        this.performanceMonitor = new QueryPerformanceMonitor();
-        
-        if (enabled) {
-            this.slotManager = new SlotManager(totalSlots, slowSlotPercentage, idleTimeoutMs);
-            log.info("SlowQuerySegregationManager initialized: enabled={}, totalSlots={}, slowSlotPercentage={}%, idleTimeout={}ms, slowSlotTimeout={}ms, fastSlotTimeout={}ms",
-                    enabled, totalSlots, slowSlotPercentage, idleTimeoutMs, slowSlotTimeoutMs, fastSlotTimeoutMs);
-        } else {
-            this.slotManager = null;
-            log.info("SlowQuerySegregationManager initialized: enabled={}", enabled);
-        }
+        this(totalSlots, slowSlotPercentage, idleTimeoutMs, slowSlotTimeoutMs, fastSlotTimeoutMs, 0L, enabled);
     }
     
     /**

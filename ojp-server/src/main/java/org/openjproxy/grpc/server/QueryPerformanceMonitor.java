@@ -13,6 +13,10 @@ import java.util.concurrent.atomic.AtomicLong;
  * new_average = ((stored_average * 4) + new_measurement) / 5
  * 
  * This gives 20% weight to the newest measurement, smoothing out outliers.
+ * 
+ * The global average update is configurable and can be controlled by an interval to improve performance.
+ * Thread safety is intentionally not implemented for performance reasons - this class prioritizes
+ * speed over perfect consistency in a concurrent environment.
  */
 @Slf4j
 public class QueryPerformanceMonitor {
@@ -53,6 +57,42 @@ public class QueryPerformanceMonitor {
     private volatile double overallAverageExecutionTime = 0.0;
     private final AtomicLong totalOperations = new AtomicLong(0);
     
+    // Global average update interval configuration
+    private final long updateGlobalAvgIntervalSeconds;
+    private final TimeProvider timeProvider;
+    private volatile long lastGlobalAvgUpdateTime = 0L;
+    private volatile int lastKnownUniqueQueryCount = 0;
+    
+    /**
+     * Creates a QueryPerformanceMonitor with default settings (always update global average).
+     */
+    public QueryPerformanceMonitor() {
+        this(0L, TimeProvider.SYSTEM);
+    }
+    
+    /**
+     * Creates a QueryPerformanceMonitor with specified update interval.
+     * 
+     * @param updateGlobalAvgIntervalSeconds interval in seconds between global average updates.
+     *                                      If 0, global average is updated on every query (default behavior).
+     */
+    public QueryPerformanceMonitor(long updateGlobalAvgIntervalSeconds) {
+        this(updateGlobalAvgIntervalSeconds, TimeProvider.SYSTEM);
+    }
+    
+    /**
+     * Creates a QueryPerformanceMonitor with specified update interval and time provider (for testing).
+     * 
+     * @param updateGlobalAvgIntervalSeconds interval in seconds between global average updates.
+     *                                      If 0, global average is updated on every query (default behavior).
+     * @param timeProvider provider for current time (allows mocking in tests)
+     */
+    public QueryPerformanceMonitor(long updateGlobalAvgIntervalSeconds, TimeProvider timeProvider) {
+        this.updateGlobalAvgIntervalSeconds = updateGlobalAvgIntervalSeconds;
+        this.timeProvider = timeProvider;
+        this.lastGlobalAvgUpdateTime = timeProvider.currentTimeSeconds();
+    }
+    
     /**
      * Records the execution time for an operation.
      * 
@@ -65,6 +105,8 @@ public class QueryPerformanceMonitor {
             return;
         }
         
+        boolean isNewOperation = !operationRecords.containsKey(operationHash);
+        
         PerformanceRecord record = operationRecords.compute(operationHash, (key, existing) -> {
             if (existing == null) {
                 return new PerformanceRecord(executionTimeMs);
@@ -75,10 +117,45 @@ public class QueryPerformanceMonitor {
         });
         
         totalOperations.incrementAndGet();
-        updateOverallAverage();
+        
+        // Update global average based on interval and conditions
+        if (shouldUpdateGlobalAverage(isNewOperation)) {
+            updateOverallAverage();
+        }
         
         log.debug("Updated operation {} with execution time {}ms, average now {}ms", 
                  operationHash, executionTimeMs, record.getAverageExecutionTime());
+    }
+    
+    /**
+     * Determines if the global average should be updated based on interval and new unique queries.
+     * 
+     * @param isNewOperation true if this is a new unique operation
+     * @return true if global average should be updated
+     */
+    private boolean shouldUpdateGlobalAverage(boolean isNewOperation) {
+        // If interval is 0, always update (default behavior)
+        if (updateGlobalAvgIntervalSeconds == 0) {
+            return true;
+        }
+        
+        // If this is a new unique operation, always update immediately
+        if (isNewOperation) {
+            log.debug("Updating global average immediately due to new unique operation");
+            return true;
+        }
+        
+        // Check if enough time has passed since last update
+        long currentTime = timeProvider.currentTimeSeconds();
+        boolean intervalElapsed = (currentTime - lastGlobalAvgUpdateTime) >= updateGlobalAvgIntervalSeconds;
+        
+        if (intervalElapsed) {
+            log.debug("Updating global average due to interval elapsed: {} seconds since last update", 
+                     currentTime - lastGlobalAvgUpdateTime);
+            return true;
+        }
+        
+        return false;
     }
     
     /**
@@ -128,6 +205,7 @@ public class QueryPerformanceMonitor {
     /**
      * Updates the overall average execution time.
      * This is calculated as the average of all current operation averages.
+     * This method is intentionally not synchronized for performance reasons.
      */
     private void updateOverallAverage() {
         if (operationRecords.isEmpty()) {
@@ -140,6 +218,10 @@ public class QueryPerformanceMonitor {
                 .sum();
         
         overallAverageExecutionTime = sum / operationRecords.size();
+        
+        // Update the last update time and known unique query count
+        lastGlobalAvgUpdateTime = timeProvider.currentTimeSeconds();
+        lastKnownUniqueQueryCount = operationRecords.size();
         
         log.trace("Updated overall average execution time to {}ms across {} operations", 
                  overallAverageExecutionTime, operationRecords.size());
@@ -170,6 +252,8 @@ public class QueryPerformanceMonitor {
         operationRecords.clear();
         overallAverageExecutionTime = 0.0;
         totalOperations.set(0);
+        lastGlobalAvgUpdateTime = timeProvider.currentTimeSeconds();
+        lastKnownUniqueQueryCount = 0;
         log.info("Performance monitor cleared");
     }
 }
