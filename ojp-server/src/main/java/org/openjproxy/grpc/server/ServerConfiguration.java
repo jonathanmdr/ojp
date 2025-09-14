@@ -33,6 +33,7 @@ public class ServerConfiguration {
     private static final String SLOW_QUERY_IDLE_TIMEOUT_KEY = "ojp.server.slowQuerySegregation.idleTimeout";
     private static final String SLOW_QUERY_SLOW_SLOT_TIMEOUT_KEY = "ojp.server.slowQuerySegregation.slowSlotTimeout";
     private static final String SLOW_QUERY_FAST_SLOT_TIMEOUT_KEY = "ojp.server.slowQuerySegregation.fastSlotTimeout";
+    private static final String SLOW_QUERY_UPDATE_GLOBAL_AVG_INTERVAL_KEY = "ojp.server.slowQuerySegregation.updateGlobalAvgInterval";
 
     // Default values
     public static final int DEFAULT_SERVER_PORT = CommonConstants.DEFAULT_PORT_NUMBER;
@@ -53,6 +54,7 @@ public class ServerConfiguration {
     public static final long DEFAULT_SLOW_QUERY_IDLE_TIMEOUT = 10000; // 10 seconds idle timeout
     public static final long DEFAULT_SLOW_QUERY_SLOW_SLOT_TIMEOUT = 120000; // 120 seconds slow slot timeout
     public static final long DEFAULT_SLOW_QUERY_FAST_SLOT_TIMEOUT = 60000; // 60 seconds fast slot timeout
+    public static final long DEFAULT_SLOW_QUERY_UPDATE_GLOBAL_AVG_INTERVAL = 300; // 300 seconds (5 minutes) global average update interval
 
     // Configuration values
     private final int serverPort;
@@ -72,6 +74,7 @@ public class ServerConfiguration {
     private final long slowQueryIdleTimeout;
     private final long slowQuerySlowSlotTimeout;
     private final long slowQueryFastSlotTimeout;
+    private final long slowQueryUpdateGlobalAvgInterval;
 
     public ServerConfiguration() {
         this.serverPort = getIntProperty(SERVER_PORT_KEY, DEFAULT_SERVER_PORT);
@@ -91,6 +94,7 @@ public class ServerConfiguration {
         this.slowQueryIdleTimeout = getLongProperty(SLOW_QUERY_IDLE_TIMEOUT_KEY, DEFAULT_SLOW_QUERY_IDLE_TIMEOUT);
         this.slowQuerySlowSlotTimeout = getLongProperty(SLOW_QUERY_SLOW_SLOT_TIMEOUT_KEY, DEFAULT_SLOW_QUERY_SLOW_SLOT_TIMEOUT);
         this.slowQueryFastSlotTimeout = getLongProperty(SLOW_QUERY_FAST_SLOT_TIMEOUT_KEY, DEFAULT_SLOW_QUERY_FAST_SLOT_TIMEOUT);
+        this.slowQueryUpdateGlobalAvgInterval = getLongProperty(SLOW_QUERY_UPDATE_GLOBAL_AVG_INTERVAL_KEY, DEFAULT_SLOW_QUERY_UPDATE_GLOBAL_AVG_INTERVAL);
 
         logConfigurationSummary();
     }
@@ -188,6 +192,7 @@ public class ServerConfiguration {
         logger.info("  Slow Query Idle Timeout: {} ms", slowQueryIdleTimeout);
         logger.info("  Slow Query Slow Slot Timeout: {} ms", slowQuerySlowSlotTimeout);
         logger.info("  Slow Query Fast Slot Timeout: {} ms", slowQueryFastSlotTimeout);
+        logger.info("  Slow Query Update Global Avg Interval: {} seconds", slowQueryUpdateGlobalAvgInterval);
     }
 
     // Getters
@@ -257,5 +262,9 @@ public class ServerConfiguration {
 
     public long getSlowQueryFastSlotTimeout() {
         return slowQueryFastSlotTimeout;
+    }
+
+    public long getSlowQueryUpdateGlobalAvgInterval() {
+        return slowQueryUpdateGlobalAvgInterval;
     }
 }
