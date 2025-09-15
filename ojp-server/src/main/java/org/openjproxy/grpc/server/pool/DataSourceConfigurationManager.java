@@ -31,11 +31,11 @@ public class DataSourceConfigurationManager {
         
         public DataSourceConfiguration(String dataSourceName, Properties properties) {
             this.dataSourceName = dataSourceName;
-            this.maximumPoolSize = getIntProperty(properties, "ojp.connection.pool.maximumPoolSize", CommonConstants.DEFAULT_MAXIMUM_POOL_SIZE);
-            this.minimumIdle = getIntProperty(properties, "ojp.connection.pool.minimumIdle", CommonConstants.DEFAULT_MINIMUM_IDLE);
-            this.idleTimeout = getLongProperty(properties, "ojp.connection.pool.idleTimeout", CommonConstants.DEFAULT_IDLE_TIMEOUT);
-            this.maxLifetime = getLongProperty(properties, "ojp.connection.pool.maxLifetime", CommonConstants.DEFAULT_MAX_LIFETIME);
-            this.connectionTimeout = getLongProperty(properties, "ojp.connection.pool.connectionTimeout", CommonConstants.DEFAULT_CONNECTION_TIMEOUT);
+            this.maximumPoolSize = getIntProperty(properties, CommonConstants.MAXIMUM_POOL_SIZE_PROPERTY, CommonConstants.DEFAULT_MAXIMUM_POOL_SIZE);
+            this.minimumIdle = getIntProperty(properties, CommonConstants.MINIMUM_IDLE_PROPERTY, CommonConstants.DEFAULT_MINIMUM_IDLE);
+            this.idleTimeout = getLongProperty(properties, CommonConstants.IDLE_TIMEOUT_PROPERTY, CommonConstants.DEFAULT_IDLE_TIMEOUT);
+            this.maxLifetime = getLongProperty(properties, CommonConstants.MAX_LIFETIME_PROPERTY, CommonConstants.DEFAULT_MAX_LIFETIME);
+            this.connectionTimeout = getLongProperty(properties, CommonConstants.CONNECTION_TIMEOUT_PROPERTY, CommonConstants.DEFAULT_CONNECTION_TIMEOUT);
         }
         
         // Getters
@@ -62,11 +62,12 @@ public class DataSourceConfigurationManager {
     public static DataSourceConfiguration getConfiguration(Properties clientProperties) {
         // Extract datasource name from properties (set by Driver)
         String dataSourceName = clientProperties != null ? 
-                clientProperties.getProperty("ojp.datasource.name", "default") : "default";
+                clientProperties.getProperty(CommonConstants.DATASOURCE_NAME_PROPERTY, "default") : "default";
         
         // Create cache key that includes the properties hash to handle configuration changes
         String cacheKey = createCacheKey(dataSourceName, clientProperties);
         
+        // Cache lookup with lazy initialization - creates new configuration only if not already cached
         return configCache.computeIfAbsent(cacheKey, k -> {
             DataSourceConfiguration config = new DataSourceConfiguration(dataSourceName, clientProperties);
             log.info("Created new DataSourceConfiguration: {}", config);
@@ -76,6 +77,9 @@ public class DataSourceConfigurationManager {
     
     /**
      * Creates a cache key that includes datasource name and a hash of relevant properties.
+     * The cache key is used to determine if a configuration has already been created and cached,
+     * allowing for efficient reuse of configurations while detecting when property changes
+     * require a new configuration to be created.
      */
     private static String createCacheKey(String dataSourceName, Properties properties) {
         if (properties == null) {
@@ -86,11 +90,11 @@ public class DataSourceConfigurationManager {
         StringBuilder sb = new StringBuilder(dataSourceName).append(":");
         
         String[] keys = {
-                "ojp.connection.pool.maximumPoolSize",
-                "ojp.connection.pool.minimumIdle", 
-                "ojp.connection.pool.idleTimeout",
-                "ojp.connection.pool.maxLifetime",
-                "ojp.connection.pool.connectionTimeout"
+                CommonConstants.MAXIMUM_POOL_SIZE_PROPERTY,
+                CommonConstants.MINIMUM_IDLE_PROPERTY, 
+                CommonConstants.IDLE_TIMEOUT_PROPERTY,
+                CommonConstants.MAX_LIFETIME_PROPERTY,
+                CommonConstants.CONNECTION_TIMEOUT_PROPERTY
         };
         
         for (String key : keys) {
