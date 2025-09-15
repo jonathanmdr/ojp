@@ -37,7 +37,7 @@ public class QueryPerformanceMonitorIntervalTest {
 
     @Test
     public void testDefaultBehavior_AlwaysUpdate() {
-        // Default behavior (interval = 0) should always update global average
+        // Test always-update behavior (interval = 0) - note: 300 seconds is the actual default
         monitor = new QueryPerformanceMonitor(0L, mockTimeProvider);
         
         // Record first operation
