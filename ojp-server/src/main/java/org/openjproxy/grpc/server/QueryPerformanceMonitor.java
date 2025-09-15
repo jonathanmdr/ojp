@@ -105,7 +105,7 @@ public class QueryPerformanceMonitor {
             return;
         }
         
-        boolean isNewOperation = !operationRecords.containsKey(operationHash);
+        int previousSize = operationRecords.size();
         
         PerformanceRecord record = operationRecords.compute(operationHash, (key, existing) -> {
             if (existing == null) {
@@ -115,6 +115,8 @@ public class QueryPerformanceMonitor {
                 return existing;
             }
         });
+        
+        boolean isNewOperation = operationRecords.size() > previousSize;
         
         totalOperations.incrementAndGet();
         
