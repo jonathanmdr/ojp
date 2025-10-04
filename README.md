@@ -21,7 +21,7 @@ A JDBC Driver and Layer 7 Proxy Server to decouple applications from relational 
 
 ## Value Proposition
 
-OJP protects your databases from overwhelming connection storms by acting as a smart backpressure mechanism. Instead of every application instance opening and holding connections, OJP orchestrates and optimizes database access through intelligent pooling, query flow control, and multi-database support. With minimal configuration changes, you replace native JDBC drivers and gain connection resilience, fault-tolerant orchestration, and safer scalability. Elastic scaling becomes simpler without putting your database at risk.
+OJP protects your databases from overwhelming connection storms by acting as a smart backpressure mechanism. Instead of every application instance opening and holding connections, OJP orchestrates and optimizes database access through intelligent pooling, query flow control, and multi-database support. With minimal configuration changes, you replace native JDBC drivers gaining connection resilience, and safer scalability. Elastic scaling becomes simpler without putting your database at risk.
 
 ---
 ## Quick Start
@@ -30,7 +30,7 @@ Get OJP running in under 5 minutes:
 
 ### 1. Start OJP Server
 ```bash
-docker run --rm -d -p 1059:1059 rrobetti/ojp:0.1.2-snapshot
+docker run --rm -d -p 1059:1059 rrobetti/ojp:0.1.1-beta
 ```
 
 ### 2. Add OJP JDBC Driver to your project
@@ -38,7 +38,7 @@ docker run --rm -d -p 1059:1059 rrobetti/ojp:0.1.2-snapshot
 <dependency>
     <groupId>org.openjproxy</groupId>
     <artifactId>ojp-jdbc-driver</artifactId>
-    <version>0.1.2-snapshot</version>
+    <version>0.1.1-beta</version>
 </dependency>
 ```
 
@@ -124,7 +124,7 @@ Latest version:
          <dependency>
              <groupId>org.openjproxy</groupId>
              <artifactId>ojp-jdbc-driver</artifactId>
-             <version>0.1.2-snapshot</version>
+             <version>0.1.1-beta</version>
          </dependency>
 
 

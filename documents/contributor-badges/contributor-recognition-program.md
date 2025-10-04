@@ -73,11 +73,16 @@ Each badge reflects **real impact** in code, testing, documentation, or communit
 
 
 ### Entry Level
-| Name                                           | Badge                                                                                | Country of birth | Country of residency | Award date(s) | Indicated By | Awarded by |
-|------------------------------------------------|--------------------------------------------------------------------------------------|------------------|----------------------|---------------|---------------|---------------|
-| [Vitor Araujo](https://www.linkedin.com/in/kvitorr/)   | <img src="/documents/images/ojp_documenter_badge.png" width="80" height="80"/>       | Brazil           | Brazil               | 15/09/2025    | Rogerio Robetti | Rogerio Robetti |
-| [Diego Vagliati](https://github.com/ribossomo) | <img src="/documents/images/ojp_code_contributor_badge.png" width="80" height="80"/> | Brazil           | Brazil               | 05/09/2025    | Rogerio Robetti | Rogerio Robetti |
-| [Roger Floriano](https://github.com/petruki)   | <img src="/documents/images/ojp_code_contributor_badge.png" width="80" height="80"/> | Brazil           | Canada               | 01/09/2025    | Rogerio Robetti | Rogerio Robetti |
-| [Roger Floriano](https://github.com/petruki)   | <img src="/documents/images/ojp_tester_badge.png" width="80" height="80"/>           | Brazil           | Canada               | 01/09/2025    | Rogerio Robetti | Rogerio Robetti |
+| Name                                                     | Badge                                                                                | Country of birth | Country of residency | Award date(s) | Indicated By | Awarded by |
+|----------------------------------------------------------|--------------------------------------------------------------------------------------|------------------|----------------------|---------------|---------------|---------------|
+| [Roger Floriano](https://github.com/petruki) | <img src="/documents/images/ojp_advocate_badge.png" width="80" height="80"/>         | Brazil           | Canada               | 26/09/2025    | Rogerio Robetti | Rogerio Robetti |
+| [Alan Jesus](https://www.linkedin.com/in/asiilva/) | <img src="/documents/images/ojp_advocate_badge.png" width="80" height="80"/>         | Brazil           | Brazil               | 26/09/2025    | Rogerio Robetti | Rogerio Robetti |
+| [Ingrid Adine ](https://www.linkedin.com/in/ingridadine/) | <img src="/documents/images/ojp_advocate_badge.png" width="80" height="80"/>         | Brazil           | Brazil               | 26/09/2025    | Rogerio Robetti | Rogerio Robetti |
+| [Saulo Benedetti ](https://www.linkedin.com/in/saulobenedetti/) | <img src="/documents/images/ojp_advocate_badge.png" width="80" height="80"/>         | Brazil           | Brazil               | 26/09/2025    | Rogerio Robetti | Rogerio Robetti |
+| [Alan Jesus](https://www.linkedin.com/in/asiilva/) | <img src="/documents/images/ojp_documenter_badge.png" width="80" height="80"/>       | Brazil           | Brazil               | 22/09/2025    | Rogerio Robetti | Rogerio Robetti |
+| [Vitor Araujo](https://www.linkedin.com/in/kvitorr/)     | <img src="/documents/images/ojp_documenter_badge.png" width="80" height="80"/>       | Brazil           | Brazil               | 15/09/2025    | Rogerio Robetti | Rogerio Robetti |
+| [Diego Vagliati](https://github.com/ribossomo)           | <img src="/documents/images/ojp_code_contributor_badge.png" width="80" height="80"/> | Brazil           | Brazil               | 05/09/2025    | Rogerio Robetti | Rogerio Robetti |
+| [Roger Floriano](https://github.com/petruki)             | <img src="/documents/images/ojp_code_contributor_badge.png" width="80" height="80"/> | Brazil           | Canada               | 01/09/2025    | Rogerio Robetti | Rogerio Robetti |
+| [Roger Floriano](https://github.com/petruki)             | <img src="/documents/images/ojp_tester_badge.png" width="80" height="80"/>           | Brazil           | Canada               | 01/09/2025    | Rogerio Robetti | Rogerio Robetti |
 
 ---
