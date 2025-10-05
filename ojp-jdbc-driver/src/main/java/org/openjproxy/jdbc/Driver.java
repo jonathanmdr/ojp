@@ -23,6 +23,19 @@ import static org.openjproxy.jdbc.Constants.USER;
 @Slf4j
 public class Driver implements java.sql.Driver {
 
+    /**
+     * Result class for URL parsing.
+     */
+    private static class UrlParseResult {
+        final String cleanUrl;
+        final String dataSourceName;
+        
+        UrlParseResult(String cleanUrl, String dataSourceName) {
+            this.cleanUrl = cleanUrl;
+            this.dataSourceName = dataSourceName;
+        }
+    }
+
     static {
         try {
             log.debug("Registering OpenJProxy Driver");
@@ -49,17 +62,24 @@ public class Driver implements java.sql.Driver {
     public java.sql.Connection connect(String url, Properties info) throws SQLException {
         log.debug("connect: url={}, info={}", url, info);
         
-        // Load ojp.properties file if it exists
-        Properties ojpProperties = loadOjpProperties();
+        // Parse URL to extract dataSource name and clean URL
+        UrlParseResult urlParseResult = parseUrlWithDataSource(url);
+        String cleanUrl = urlParseResult.cleanUrl;
+        String dataSourceName = urlParseResult.dataSourceName;
+        
+        log.debug("Parsed URL - clean: {}, dataSource: {}", cleanUrl, dataSourceName);
+        
+        // Load ojp.properties file and extract datasource-specific configuration
+        Properties ojpProperties = loadOjpPropertiesForDataSource(dataSourceName);
         ByteString propertiesBytes = ByteString.EMPTY;
         if (ojpProperties != null && !ojpProperties.isEmpty()) {
             propertiesBytes = ByteString.copyFrom(SerializationHandler.serialize(ojpProperties));
-            log.debug("Loaded ojp.properties with {} properties", ojpProperties.size());
+            log.debug("Loaded ojp.properties with {} properties for dataSource: {}", ojpProperties.size(), dataSourceName);
         }
         
         SessionInfo sessionInfo = statementService
                 .connect(ConnectionDetails.newBuilder()
-                        .setUrl(url)
+                        .setUrl(cleanUrl)
                         .setUser((String) ((info.get(USER) != null)? info.get(USER) : ""))
                         .setPassword((String) ((info.get(PASSWORD) != null) ? info.get(PASSWORD) : ""))
                         .setClientUUID(ClientUUID.getUUID())
@@ -67,10 +87,117 @@ public class Driver implements java.sql.Driver {
                         .build()
                 );
         log.debug("Returning new Connection with sessionInfo: {}", sessionInfo);
-        return new Connection(sessionInfo, statementService, DatabaseUtils.resolveDbName(url));
+        return new Connection(sessionInfo, statementService, DatabaseUtils.resolveDbName(cleanUrl));
     }
     
-    private Properties loadOjpProperties() {
+    /**
+     * Parses the URL to extract dataSource parameter from the OJP section and return clean URL.
+     * 
+     * <p>Example transformations:
+     * <ul>
+     *   <li>Input: {@code jdbc:ojp[localhost:1059(webApp)]_postgresql://localhost/mydb}</li>
+     *   <li>Output: {@code jdbc:ojp[localhost:1059]_postgresql://localhost/mydb}, dataSource: "webApp"</li>
+     * </ul>
+     * <ul>
+     *   <li>Input: {@code jdbc:ojp[localhost:1059]_h2:mem:test}</li>
+     *   <li>Output: {@code jdbc:ojp[localhost:1059]_h2:mem:test}, dataSource: "default"</li>
+     * </ul>
+     * 
+     * @param url the original JDBC URL
+     * @return UrlParseResult containing the cleaned URL (with dataSource removed) and the extracted dataSource name
+     */
+    private UrlParseResult parseUrlWithDataSource(String url) {
+        if (url == null) {
+            return new UrlParseResult(url, "default");
+        }
+        
+        // Look for the OJP section: jdbc:ojp[host:port(dataSource)]_
+        if (!url.startsWith("jdbc:ojp[")) {
+            return new UrlParseResult(url, "default");
+        }
+        
+        int bracketStart = url.indexOf('[');
+        int bracketEnd = url.indexOf(']');
+        
+        if (bracketStart == -1 || bracketEnd == -1) {
+            return new UrlParseResult(url, "default");
+        }
+        
+        String ojpSection = url.substring(bracketStart + 1, bracketEnd);
+        
+        // Look for dataSource in parentheses: host:port(dataSource)
+        int parenStart = ojpSection.indexOf('(');
+        int parenEnd = ojpSection.lastIndexOf(')');
+        
+        String dataSourceName = "default";
+        String cleanOjpSection = ojpSection;
+        
+        if (parenStart != -1 && parenEnd != -1 && parenEnd > parenStart) {
+            // Extract dataSource name from parentheses and trim whitespace
+            dataSourceName = ojpSection.substring(parenStart + 1, parenEnd).trim();
+            // Remove the dataSource part from OJP section
+            cleanOjpSection = ojpSection.substring(0, parenStart);
+        }
+        
+        // Reconstruct the URL without the dataSource part
+        String cleanUrl = "jdbc:ojp[" + cleanOjpSection + "]" + url.substring(bracketEnd + 1);
+        
+        return new UrlParseResult(cleanUrl, dataSourceName);
+    }
+
+    
+    /**
+     * Load ojp.properties and extract configuration specific to the given dataSource.
+     */
+    private Properties loadOjpPropertiesForDataSource(String dataSourceName) {
+        Properties allProperties = loadOjpProperties();
+        if (allProperties == null || allProperties.isEmpty()) {
+            return null;
+        }
+        
+        Properties dataSourceProperties = new Properties();
+        
+        // Look for dataSource-prefixed properties first: {dataSourceName}.ojp.connection.pool.*
+        String prefix = dataSourceName + ".ojp.connection.pool.";
+        boolean foundDataSourceSpecific = false;
+        
+        for (String key : allProperties.stringPropertyNames()) {
+            if (key.startsWith(prefix)) {
+                // Remove the dataSource prefix and keep the standard property name
+                String standardKey = key.substring(dataSourceName.length() + 1); // Remove "{dataSourceName}."
+                dataSourceProperties.setProperty(standardKey, allProperties.getProperty(key));
+                foundDataSourceSpecific = true;
+            }
+        }
+        
+        // If no dataSource-specific properties found, and this is the "default" dataSource,
+        // look for unprefixed properties: ojp.connection.pool.*
+        if (!foundDataSourceSpecific && "default".equals(dataSourceName)) {
+            for (String key : allProperties.stringPropertyNames()) {
+                if (key.startsWith("ojp.connection.pool.")) {
+                    dataSourceProperties.setProperty(key, allProperties.getProperty(key));
+                }
+            }
+        }
+        
+        // If we found any properties, also include the dataSource name as a single property
+        // Note: The dataSource-prefixed properties (e.g., "webApp.ojp.connection.pool.*") 
+        // are sent to the server with their prefixes removed (e.g., "ojp.connection.pool.*"),
+        // and the dataSource name itself is sent separately as "ojp.datasource.name"
+        if (!dataSourceProperties.isEmpty()) {
+            dataSourceProperties.setProperty("ojp.datasource.name", dataSourceName);
+        }
+        
+        log.debug("Loaded {} properties for dataSource '{}': {}", 
+                dataSourceProperties.size(), dataSourceName, dataSourceProperties);
+        
+        return dataSourceProperties.isEmpty() ? null : dataSourceProperties;
+    }
+
+    /**
+     * Load the raw ojp.properties file from classpath.
+     */
+    protected Properties loadOjpProperties() {
         Properties properties = new Properties();
         
         // Only try to load from resources/ojp.properties in the classpath
