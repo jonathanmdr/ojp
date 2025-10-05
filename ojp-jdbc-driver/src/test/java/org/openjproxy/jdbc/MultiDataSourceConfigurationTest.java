@@ -44,6 +44,14 @@ public class MultiDataSourceConfigurationTest {
         
         assertEquals("jdbc:ojp[localhost:1059]_h2:~/test", cleanUrl3);
         assertEquals("readOnly", dataSourceName3);
+        
+        // Test URL with spaces around datasource name - should be trimmed
+        Object result4 = parseUrlMethod.invoke(driver, "jdbc:ojp[localhost:1059( myApp )]_h2:~/test");
+        String cleanUrl4 = (String) result4.getClass().getDeclaredField("cleanUrl").get(result4);
+        String dataSourceName4 = (String) result4.getClass().getDeclaredField("dataSourceName").get(result4);
+        
+        assertEquals("jdbc:ojp[localhost:1059]_h2:~/test", cleanUrl4);
+        assertEquals("myApp", dataSourceName4); // Should be trimmed
     }
 
     

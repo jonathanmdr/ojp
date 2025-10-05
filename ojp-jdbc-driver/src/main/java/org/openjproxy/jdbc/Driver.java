@@ -23,6 +23,19 @@ import static org.openjproxy.jdbc.Constants.USER;
 @Slf4j
 public class Driver implements java.sql.Driver {
 
+    /**
+     * Result class for URL parsing.
+     */
+    private static class UrlParseResult {
+        final String cleanUrl;
+        final String dataSourceName;
+        
+        UrlParseResult(String cleanUrl, String dataSourceName) {
+            this.cleanUrl = cleanUrl;
+            this.dataSourceName = dataSourceName;
+        }
+    }
+
     static {
         try {
             log.debug("Registering OpenJProxy Driver");
@@ -79,7 +92,19 @@ public class Driver implements java.sql.Driver {
     
     /**
      * Parses the URL to extract dataSource parameter from the OJP section and return clean URL.
-     * Format: jdbc:ojp[host:port(dataSource)]_actualDriver://...
+     * 
+     * <p>Example transformations:
+     * <ul>
+     *   <li>Input: {@code jdbc:ojp[localhost:1059(webApp)]_postgresql://localhost/mydb}</li>
+     *   <li>Output: {@code jdbc:ojp[localhost:1059]_postgresql://localhost/mydb}, dataSource: "webApp"</li>
+     * </ul>
+     * <ul>
+     *   <li>Input: {@code jdbc:ojp[localhost:1059]_h2:mem:test}</li>
+     *   <li>Output: {@code jdbc:ojp[localhost:1059]_h2:mem:test}, dataSource: "default"</li>
+     * </ul>
+     * 
+     * @param url the original JDBC URL
+     * @return UrlParseResult containing the cleaned URL (with dataSource removed) and the extracted dataSource name
      */
     private UrlParseResult parseUrlWithDataSource(String url) {
         if (url == null) {
@@ -108,8 +133,8 @@ public class Driver implements java.sql.Driver {
         String cleanOjpSection = ojpSection;
         
         if (parenStart != -1 && parenEnd != -1 && parenEnd > parenStart) {
-            // Extract dataSource name from parentheses
-            dataSourceName = ojpSection.substring(parenStart + 1, parenEnd);
+            // Extract dataSource name from parentheses and trim whitespace
+            dataSourceName = ojpSection.substring(parenStart + 1, parenEnd).trim();
             // Remove the dataSource part from OJP section
             cleanOjpSection = ojpSection.substring(0, parenStart);
         }
@@ -120,19 +145,6 @@ public class Driver implements java.sql.Driver {
         return new UrlParseResult(cleanUrl, dataSourceName);
     }
 
-    
-    /**
-     * Result class for URL parsing.
-     */
-    private static class UrlParseResult {
-        final String cleanUrl;
-        final String dataSourceName;
-        
-        UrlParseResult(String cleanUrl, String dataSourceName) {
-            this.cleanUrl = cleanUrl;
-            this.dataSourceName = dataSourceName;
-        }
-    }
     
     /**
      * Load ojp.properties and extract configuration specific to the given dataSource.
@@ -168,7 +180,10 @@ public class Driver implements java.sql.Driver {
             }
         }
         
-        // If we found any properties, also include the dataSource name for server-side use
+        // If we found any properties, also include the dataSource name as a single property
+        // Note: The dataSource-prefixed properties (e.g., "webApp.ojp.connection.pool.*") 
+        // are sent to the server with their prefixes removed (e.g., "ojp.connection.pool.*"),
+        // and the dataSource name itself is sent separately as "ojp.datasource.name"
         if (!dataSourceProperties.isEmpty()) {
             dataSourceProperties.setProperty("ojp.datasource.name", dataSourceName);
         }
