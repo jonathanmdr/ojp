@@ -20,10 +20,10 @@ public class BasicCrudIntegrationTest {
     private static boolean isPostgresTestDisabled;
     private static boolean isMySQLTestDisabled;
     private static boolean isMariaDBTestDisabled;
+    private static boolean isCockroachDBTestDisabled;
     private static boolean isOracleTestEnabled;
     private static boolean isSqlServerTestEnabled;
     private static boolean isDb2TestEnabled;
-    private static boolean isCockroachDBTestDisabled;
     private static String tablePrefix = "";
 
     @BeforeAll
@@ -31,10 +31,10 @@ public class BasicCrudIntegrationTest {
         isPostgresTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
         isMySQLTestDisabled = Boolean.parseBoolean(System.getProperty("disableMySQLTests", "false"));
         isMariaDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableMariaDBTests", "false"));
+        isCockroachDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableCockroachDBTests", "false"));
         isOracleTestEnabled = Boolean.parseBoolean(System.getProperty("enableOracleTests", "false"));
         isSqlServerTestEnabled = Boolean.parseBoolean(System.getProperty("enableSqlServerTests", "false"));
         isDb2TestEnabled = Boolean.parseBoolean(System.getProperty("enableDb2Tests", "false"));
-        isCockroachDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableCockroachDBTests", "false"));
     }
 
     @ParameterizedTest
