@@ -50,6 +50,43 @@ mvn test -pl ojp-jdbc-driver -Dgpg.skip=true
 
 The CockroachDB integration tests will run automatically along with H2, PostgreSQL, MySQL, and MariaDB tests.
 
+#### Running CockroachDB Tests in Isolation
+
+To run **only** CockroachDB integration tests (excluding all other database tests):
+
+```bash
+# Run all CockroachDB test classes
+mvn test -pl ojp-jdbc-driver -Dtest="CockroachDB*" -Dgpg.skip=true
+
+# Run a specific CockroachDB test class
+mvn test -pl ojp-jdbc-driver -Dtest="CockroachDBConnectionExtensiveTests" -Dgpg.skip=true
+
+# Run a specific test method from a CockroachDB test class
+mvn test -pl ojp-jdbc-driver -Dtest="CockroachDBStatementExtensiveTests#testExecuteQuery" -Dgpg.skip=true
+
+# Run multiple specific CockroachDB test classes
+mvn test -pl ojp-jdbc-driver -Dtest="CockroachDBStatementExtensiveTests,CockroachDBPreparedStatementExtensiveTests" -Dgpg.skip=true
+```
+
+Available CockroachDB test classes:
+- `CockroachDBConnectionExtensiveTests` - Basic connection and CRUD operations
+- `CockroachDBStatementExtensiveTests` - Statement API tests
+- `CockroachDBPreparedStatementExtensiveTests` - PreparedStatement API tests
+- `CockroachDBMultipleTypesIntegrationTest` - Data type handling tests
+- `CockroachDBDatabaseMetaDataExtensiveTests` - DatabaseMetaData tests
+- `CockroachDBBinaryStreamIntegrationTest` - Binary stream handling tests
+- `CockroachDBBlobIntegrationTest` - BLOB/BYTEA operations tests
+- `CockroachDBReadMultipleBlocksOfDataIntegrationTest` - Large result set tests
+- `CockroachDBResultSetMetaDataExtensiveTests` - ResultSetMetaData tests
+- `CockroachDBResultSetTest` - ResultSet navigation and operations tests
+- `CockroachDBSavepointTests` - Transaction savepoint tests
+
+To run all tests **except** CockroachDB:
+
+```bash
+mvn test -pl ojp-jdbc-driver -DdisableCockroachDBTests=true -Dgpg.skip=true
+```
+
 ## Test Configuration Files
 
 - `cockroachdb_connection.csv` - CockroachDB-only connection configuration
