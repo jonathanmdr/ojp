@@ -26,7 +26,8 @@ public class TestDBUtils {
         MYSQL,
         ORACLE,
         SQLSERVER,
-        DB2
+        DB2,
+        COCKROACHDB
     }
 
     /**
@@ -118,7 +119,7 @@ public class TestDBUtils {
             String createTableSql;
             if (sqlSyntax == SqlSyntax.H2) {
                 createTableSql = "CREATE TABLE " + tableName + " (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255))";
-            } else if (sqlSyntax == SqlSyntax.POSTGRES) {
+            } else if (sqlSyntax == SqlSyntax.POSTGRES || sqlSyntax == SqlSyntax.COCKROACHDB) {
                 createTableSql = "CREATE TABLE " + tableName + " (id SERIAL PRIMARY KEY, name VARCHAR(255))";
             } else if (sqlSyntax == SqlSyntax.ORACLE) {
                 // Oracle uses sequences and triggers or IDENTITY columns (12c+)

@@ -35,12 +35,13 @@ We have comprehensive JDBC integration tests with OJP for the following database
 - Postgres
 - MariaDB
 - MySQL
+- CockroachDB
 - Oracle
 - SQL Server
 - DB2
 - H2
 
-The free and open source databases (H2, Postgres, MySQL and MariaDB) jdbc drivers are packed with OJP and have integration tests always running in our CI pipelines, for proprietary databases as Oracle and SQL Server see specific sections.
+The free and open source databases (H2, Postgres, MySQL, MariaDB and CockroachDB) jdbc drivers are packed with OJP and have integration tests always running in our CI pipelines, for proprietary databases as Oracle and SQL Server see specific sections.
 
 ### Oracle Database Setup (Optional)
 Oracle integration tests require the Oracle JDBC driver and due to licensing restrictions we do not pack it with OJP.
@@ -54,6 +55,10 @@ For detailed SQL Server setup instructions, see [SQL Server Testing Guide](../..
 DB2 integration tests use the IBM JDBC driver which is not included in OJP dependencies.
 For detailed DB2 instructions, see [DB2 Testing Guide](../../documents/environment-setup/db2-testing-guide.md).
 
+### CockroachDB Database Setup (Optional)
+CockroachDB integration tests use the PostgreSQL JDBC driver which is already included in OJP dependencies.
+For detailed CockroachDB setup instructions, see [CockroachDB Testing Guide](../../documents/environment-setup/cockroachdb-testing-guide.md).
+
 
 ### Testing Configuration
 - Test connection configurations are stored in CSV files under `test/resources`
@@ -63,6 +68,7 @@ For detailed DB2 instructions, see [DB2 Testing Guide](../../documents/environme
 
 ### Test Options
 - `-DdisablePostgresTests` - Skip PostgreSQL integration tests
+- `-DdisableCockroachDBTests` - Skip CockroachDB integration tests
 - `-DenableOracleTests` - Enable Oracle integration tests (disabled by default, requires manual Oracle JDBC driver setup)
 - `-DenableSqlServerTests` - Enable SQL Server integration tests (disabled by default)
 

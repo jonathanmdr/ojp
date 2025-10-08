@@ -23,6 +23,7 @@ public class BasicCrudIntegrationTest {
     private static boolean isOracleTestEnabled;
     private static boolean isSqlServerTestEnabled;
     private static boolean isDb2TestEnabled;
+    private static boolean isCockroachDBTestDisabled;
     private static String tablePrefix = "";
 
     @BeforeAll
@@ -33,6 +34,7 @@ public class BasicCrudIntegrationTest {
         isOracleTestEnabled = Boolean.parseBoolean(System.getProperty("enableOracleTests", "false"));
         isSqlServerTestEnabled = Boolean.parseBoolean(System.getProperty("enableSqlServerTests", "false"));
         isDb2TestEnabled = Boolean.parseBoolean(System.getProperty("enableDb2Tests", "false"));
+        isCockroachDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableCockroachDBTests", "false"));
     }
 
     @ParameterizedTest
@@ -72,6 +74,12 @@ public class BasicCrudIntegrationTest {
         if (url.toLowerCase().contains("db2") && !isDb2TestEnabled) {
             Assumptions.assumeFalse(true, "Skipping DB2 tests - not enabled");
             tablePrefix = "db2_";
+        }
+
+        // Skip CockroachDB tests if disabled  
+        if (url.toLowerCase().contains("26257") && isCockroachDBTestDisabled) {
+            Assumptions.assumeFalse(true, "Skipping CockroachDB tests");
+            tablePrefix = "cockroachdb_";
         }
 
         Connection conn = DriverManager.getConnection(url, user, pwd);
