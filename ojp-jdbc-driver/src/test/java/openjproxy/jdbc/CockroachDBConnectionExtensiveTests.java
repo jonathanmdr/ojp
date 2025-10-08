@@ -82,11 +82,12 @@ public class CockroachDBConnectionExtensiveTests {
                 // Query and verify auto-incremented ids
                 try (ResultSet rs = statement.executeQuery("SELECT * FROM cockroachdb_serial_test ORDER BY id")) {
                     assertTrue(rs.next());
-                    assertTrue(rs.getInt("id") > 0);
+                    // CockroachDB SERIAL uses BIGINT, so use getLong instead of getInt
+                    assertTrue(rs.getLong("id") > 0);
                     assertEquals("Test 1", rs.getString("name"));
 
                     assertTrue(rs.next());
-                    assertTrue(rs.getInt("id") > 0);
+                    assertTrue(rs.getLong("id") > 0);
                     assertEquals("Test 2", rs.getString("name"));
                 }
 
@@ -102,11 +103,23 @@ public class CockroachDBConnectionExtensiveTests {
         Assumptions.assumeFalse(isTestDisabled, "CockroachDB tests are disabled");
 
         try (Connection connection = DriverManager.getConnection(url, user, pwd)) {
+            // Create table in auto-commit mode first
+            try (Statement statement = connection.createStatement()) {
+                // Drop table if exists first
+                try {
+                    statement.execute("DROP TABLE IF EXISTS cockroachdb_transaction_test");
+                } catch (SQLException e) {
+                    // Ignore
+                }
+
+                // Create table
+                statement.execute("CREATE TABLE cockroachdb_transaction_test (id INT PRIMARY KEY, name VARCHAR(100))");
+            }
+
+            // Now test transactions
             connection.setAutoCommit(false);
 
             try (Statement statement = connection.createStatement()) {
-                TestDBUtils.createBasicTestTable(connection, "cockroachdb_transaction_test", COCKROACHDB, false);
-
                 // Insert data in transaction
                 statement.execute("INSERT INTO cockroachdb_transaction_test (id, name) VALUES (1, 'Transaction Test')");
 
@@ -135,9 +148,13 @@ public class CockroachDBConnectionExtensiveTests {
                     assertEquals(1, rs.getInt(1));
                 }
 
-                // Clean up
-                TestDBUtils.cleanupTestTables(connection, "cockroachdb_transaction_test");
                 connection.commit();
+            }
+
+            // Clean up in auto-commit mode
+            connection.setAutoCommit(true);
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("DROP TABLE IF EXISTS cockroachdb_transaction_test");
             }
         }
     }
@@ -211,7 +228,8 @@ public class CockroachDBConnectionExtensiveTests {
                     assertTrue(rs.next());
                     assertEquals(42, rs.getInt("int_col"));
                     assertEquals(9223372036854775807L, rs.getLong("bigint_col"));
-                    assertEquals(3.14, rs.getFloat("float_col"), 0.01);
+                    // CockroachDB returns Double for FLOAT columns
+                    assertEquals(3.14, rs.getDouble("float_col"), 0.01);
                     assertEquals(12345.67, rs.getDouble("decimal_col"), 0.01);
                     assertEquals("varchar test", rs.getString("varchar_col"));
                     assertEquals("text test", rs.getString("text_col"));
