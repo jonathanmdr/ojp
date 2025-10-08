@@ -187,19 +187,19 @@ public class TestDBUtils {
                         " val_date DATE," +
                         " val_time TIME," +
                         " val_timestamp TIMESTAMP)";
-            } else if (sqlSyntax == SqlSyntax.POSTGRES) {
-                // PostgreSQL syntax - adjust types for PostgreSQL compatibility
+            } else if (sqlSyntax == SqlSyntax.POSTGRES || sqlSyntax == SqlSyntax.COCKROACHDB) {
+                // PostgreSQL/CockroachDB syntax - adjust types for PostgreSQL/CockroachDB compatibility
                 createTableSql = "CREATE TABLE " + tableName + "(" +
                         " val_int INT NOT NULL," +
                         " val_varchar VARCHAR(50) NOT NULL," +
                         " val_double_precision DOUBLE PRECISION," +
                         " val_bigint BIGINT," +
-                        " val_tinyint SMALLINT," +  // PostgreSQL doesn't have TINYINT, use SMALLINT
+                        " val_tinyint SMALLINT," +  // PostgreSQL/CockroachDB doesn't have TINYINT, use SMALLINT
                         " val_smallint SMALLINT," +
                         " val_boolean BOOLEAN," +
                         " val_decimal DECIMAL," +
-                        " val_float REAL," +  // PostgreSQL uses REAL instead of FLOAT(2)
-                        " val_byte BYTEA," +  // PostgreSQL uses BYTEA instead of BINARY
+                        " val_float REAL," +  // PostgreSQL/CockroachDB uses REAL instead of FLOAT(2)
+                        " val_byte BYTEA," +  // PostgreSQL/CockroachDB uses BYTEA instead of BINARY
                         " val_binary BYTEA," +
                         " val_date DATE," +
                         " val_time TIME," +

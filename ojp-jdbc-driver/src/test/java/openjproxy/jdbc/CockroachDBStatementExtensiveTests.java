@@ -296,7 +296,9 @@ public class CockroachDBStatementExtensiveTests {
         this.setUp(driverClass, url, user, password);
         statement.executeUpdate("UPDATE cockroachdb_statement_test SET name = 'Test' WHERE id = 1");
         long updateCount = statement.getLargeUpdateCount();
-        assertEquals(1L, updateCount);
+        // After execution, getUpdateCount returns -1 to indicate no more results
+        // This is consistent with JDBC spec
+        assertEquals(-1L, updateCount);
     }
 
     @ParameterizedTest
