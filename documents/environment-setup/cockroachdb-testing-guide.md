@@ -13,7 +13,7 @@ This document explains how to set up and run CockroachDB tests with OJP.
 Use the official CockroachDB Docker image:
 
 ```bash
-docker run --name ojp-cockroachdb -p 26257:26257 -p 8080:8080 --rm cockroachdb/cockroach:v24.3.4 start-single-node --insecure
+docker run --name ojp-cockroachdb -p 26257:26257 -p 8080:8080 -d --rm cockroachdb/cockroach:v24.3.4 start-single-node --insecure
 ```
 
 Wait for the database to fully start (usually takes less than a minute).
@@ -137,7 +137,7 @@ docker ps | grep cockroach
 docker stop ojp-cockroachdb
 
 # Or use different ports:
-docker run --name ojp-cockroachdb -p 26258:26257 -p 8081:8080 --rm cockroachdb/cockroach:v24.3.4 start-single-node --insecure
+docker run --name ojp-cockroachdb -p 26258:26257 -p 8081:8080 -d --rm cockroachdb/cockroach:v24.3.4 start-single-node --insecure
 ```
 
 ### Connection Refused
