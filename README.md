@@ -30,7 +30,7 @@ Get OJP running in under 5 minutes:
 
 ### 1. Start OJP Server
 ```bash
-docker run --rm -d -p 1059:1059 rrobetti/ojp:0.1.1-beta
+docker run --rm -d --network host rrobetti/ojp:0.1.1-beta
 ```
 
 ### 2. Add OJP JDBC Driver to your project
