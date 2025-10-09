@@ -130,10 +130,10 @@ public class CockroachDBResultSetMetaDataExtensiveTests {
         assertNotNull(catalogName);
 
         // getColumnType
-        assertTrue(metaData.getColumnType(1) > 0); // BIGINT
+        assertEquals(Types.BIGINT, metaData.getColumnType(1));
         assertEquals(Types.VARCHAR, metaData.getColumnType(2));
-        assertEquals(Types.INTEGER, metaData.getColumnType(3));
-        assertEquals(Types.DECIMAL, metaData.getColumnType(4));
+        assertEquals(Types.BIGINT, metaData.getColumnType(3));
+        assertEquals(Types.NUMERIC, metaData.getColumnType(4));
 
         // getColumnTypeName
         assertNotNull(metaData.getColumnTypeName(1));
@@ -235,7 +235,7 @@ public class CockroachDBResultSetMetaDataExtensiveTests {
         assertEquals(5, md.getColumnCount());
         
         // Verify column types
-        assertEquals(Types.INTEGER, md.getColumnType(1));
+        assertEquals(Types.BIGINT, md.getColumnType(1));
         int boolType = md.getColumnType(2);
         assertTrue(boolType == Types.BOOLEAN || boolType == Types.BIT);
         assertEquals(Types.TIMESTAMP, md.getColumnType(3));

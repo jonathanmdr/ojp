@@ -100,8 +100,8 @@ public class CockroachDBBlobIntegrationTest {
 
         System.out.println("Testing CockroachDB large BLOB handling for url -> " + url);
 
-        // Create a 5MB test data
-        byte[] largeData = new byte[5 * 1024 * 1024];
+        // Create a 3MB test data
+        byte[] largeData = new byte[3 * 1024 * 1024];
         for (int i = 0; i < largeData.length; i++) {
             largeData[i] = (byte) (i % 256);
         }

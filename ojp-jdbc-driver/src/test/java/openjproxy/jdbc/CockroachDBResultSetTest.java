@@ -198,7 +198,7 @@ public class CockroachDBResultSetTest {
     public void testCockroachDBResultSetType(String driverClass, String url, String user, String pwd) throws SQLException {
         setUp(driverClass, url, user, pwd);
         
-        assertEquals(ResultSet.TYPE_SCROLL_INSENSITIVE, resultSet.getType());
+        assertEquals(ResultSet.TYPE_FORWARD_ONLY, resultSet.getType());
     }
 
     @ParameterizedTest

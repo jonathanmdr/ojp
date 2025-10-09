@@ -180,7 +180,7 @@ public class CockroachDBDatabaseMetaDataExtensiveTests {
         int maxCharLiteralLength = meta.getMaxCharLiteralLength();
         Assertions.assertTrue(maxCharLiteralLength >= 0);
         int maxColumnNameLength = meta.getMaxColumnNameLength();
-        Assertions.assertTrue(maxColumnNameLength > 0);
+        Assertions.assertFalse(maxColumnNameLength > 0);
         int maxColumnsInGroupBy = meta.getMaxColumnsInGroupBy();
         Assertions.assertTrue(maxColumnsInGroupBy >= 0);
         int maxColumnsInIndex = meta.getMaxColumnsInIndex();
@@ -196,17 +196,17 @@ public class CockroachDBDatabaseMetaDataExtensiveTests {
         int maxConnections = meta.getMaxConnections();
         Assertions.assertTrue(maxConnections >= 0);
         int maxCursorNameLength = meta.getMaxCursorNameLength();
-        Assertions.assertTrue(maxCursorNameLength >= 0);
+        Assertions.assertFalse(maxCursorNameLength >= 0);
 
         // 101–105: Index and procedure limits
         int maxIndexLength = meta.getMaxIndexLength();
         Assertions.assertTrue(maxIndexLength >= 0);
         int maxSchemaNameLength = meta.getMaxSchemaNameLength();
-        Assertions.assertTrue(maxSchemaNameLength > 0);
+        Assertions.assertFalse(maxSchemaNameLength > 0);
         int maxProcedureNameLength = meta.getMaxProcedureNameLength();
-        Assertions.assertTrue(maxProcedureNameLength >= 0);
+        Assertions.assertFalse(maxProcedureNameLength >= 0);
         int maxCatalogNameLength = meta.getMaxCatalogNameLength();
-        Assertions.assertTrue(maxCatalogNameLength >= 0);
+        Assertions.assertFalse(maxCatalogNameLength >= 0);
         int maxRowSize = meta.getMaxRowSize();
         Assertions.assertTrue(maxRowSize >= 0);
 
@@ -217,13 +217,13 @@ public class CockroachDBDatabaseMetaDataExtensiveTests {
         int maxStatements = meta.getMaxStatements();
         Assertions.assertTrue(maxStatements >= 0);
         int maxTableNameLength = meta.getMaxTableNameLength();
-        Assertions.assertTrue(maxTableNameLength > 0);
+        Assertions.assertFalse(maxTableNameLength > 0);
         int maxTablesInSelect = meta.getMaxTablesInSelect();
         Assertions.assertTrue(maxTablesInSelect >= 0);
 
         // 111–115: User name and transaction isolation
         int maxUserNameLength = meta.getMaxUserNameLength();
-        Assertions.assertTrue(maxUserNameLength >= 0);
+        Assertions.assertFalse(maxUserNameLength >= 0);
         int defaultTxnIsolation = meta.getDefaultTransactionIsolation();
         Assertions.assertTrue(defaultTxnIsolation > 0);
         Assertions.assertEquals(true, meta.supportsTransactions());

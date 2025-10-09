@@ -31,8 +31,7 @@ public class CockroachDBSavepointTests {
         assumeFalse(isTestDisabled, "CockroachDB tests are disabled");
         
         connection = DriverManager.getConnection(url, user, pwd);
-        connection.setAutoCommit(false);
-        
+        connection.setAutoCommit(true);
         Statement stmt = connection.createStatement();
         try {
             stmt.execute("DROP TABLE savepoint_test_table");
@@ -45,6 +44,8 @@ public class CockroachDBSavepointTests {
             "CREATE TABLE savepoint_test_table (id INT PRIMARY KEY, name VARCHAR(255))"
         );
         stmt.close();
+
+        connection.setAutoCommit(false);
     }
 
     @AfterEach
