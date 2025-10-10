@@ -33,10 +33,10 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.openjproxy.grpc.SerializationHandler.deserialize;
@@ -72,7 +72,7 @@ public class ResultSet extends RemoteProxyResultSet {
             this.setStatementService(statementService);
             this.setResultSetUUID(opQueryResult.getResultSetUUID());
             this.currentDataBlock = opQueryResult.getRows();
-            this.labelsMap = new HashMap<>();
+            this.labelsMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);//During tests CockroachDB returned column names capital, this is so that the search for a column to be case insensitive.
             List<String> labels = opQueryResult.getLabels();
             for (int i = 0; i < labels.size(); i++) {
                 labelsMap.put(labels.get(i).toUpperCase(), i);
@@ -657,7 +657,7 @@ public class ResultSet extends RemoteProxyResultSet {
         if (this.inProxyMode) {
             return super.findColumn(columnLabel);
         }
-        return this.labelsMap.get(columnLabel);
+        return this.labelsMap.get(columnLabel) + 1;
     }
 
     @Override

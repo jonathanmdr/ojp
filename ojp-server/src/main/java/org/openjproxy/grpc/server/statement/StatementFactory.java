@@ -43,7 +43,8 @@ public class StatementFactory {
             }
             Map<String, Object> properties = deserialize(request.getProperties().toByteArray(), Map.class);
 
-            if (properties.isEmpty()) {
+            if (properties.isEmpty() ||
+                    (properties.size() == 1 && properties.get(CommonConstants.PREPARED_STATEMENT_SQL_KEY) != null)) {
                 return connection.createStatement();
             }
             if (properties.size() == 2) {

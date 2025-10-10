@@ -20,6 +20,7 @@ public class BasicCrudIntegrationTest {
     private static boolean isPostgresTestDisabled;
     private static boolean isMySQLTestDisabled;
     private static boolean isMariaDBTestDisabled;
+    private static boolean isCockroachDBTestDisabled;
     private static boolean isOracleTestEnabled;
     private static boolean isSqlServerTestEnabled;
     private static boolean isDb2TestEnabled;
@@ -30,6 +31,7 @@ public class BasicCrudIntegrationTest {
         isPostgresTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
         isMySQLTestDisabled = Boolean.parseBoolean(System.getProperty("disableMySQLTests", "false"));
         isMariaDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableMariaDBTests", "false"));
+        isCockroachDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableCockroachDBTests", "false"));
         isOracleTestEnabled = Boolean.parseBoolean(System.getProperty("enableOracleTests", "false"));
         isSqlServerTestEnabled = Boolean.parseBoolean(System.getProperty("enableSqlServerTests", "false"));
         isDb2TestEnabled = Boolean.parseBoolean(System.getProperty("enableDb2Tests", "false"));
@@ -72,6 +74,12 @@ public class BasicCrudIntegrationTest {
         if (url.toLowerCase().contains("db2") && !isDb2TestEnabled) {
             Assumptions.assumeFalse(true, "Skipping DB2 tests - not enabled");
             tablePrefix = "db2_";
+        }
+
+        // Skip CockroachDB tests if disabled  
+        if (url.toLowerCase().contains("26257") && isCockroachDBTestDisabled) {
+            Assumptions.assumeFalse(true, "Skipping CockroachDB tests");
+            tablePrefix = "cockroachdb_";
         }
 
         Connection conn = DriverManager.getConnection(url, user, pwd);

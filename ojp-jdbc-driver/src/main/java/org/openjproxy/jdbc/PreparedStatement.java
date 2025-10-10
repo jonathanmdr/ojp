@@ -703,28 +703,14 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
         log.debug("setBinaryStream: {}, <InputStream>, {}", parameterIndex, length);
         this.checkClosed();
         try {
-            if (DbName.DB2.equals(this.getConnection().getDbName())) {
-                int readLength = (length > 0) ? (int) length : Integer.MAX_VALUE;
-                byte[] allBytes = is.readNBytes((int) readLength);
-                this.paramsMap.put(parameterIndex,
-                        Parameter.builder()
-                                .type(BINARY_STREAM)
-                                .index(parameterIndex)
-                                .values(Arrays.asList(allBytes, length))
-                                .build());
-                return;
-            }
-            BinaryStream binaryStream = new BinaryStream(this.getConnection(),
-                    new LobServiceImpl(this.connection, this.statementService),
-                    this.statementService, null);
-            Map<Integer, Object> metadata = new HashMap<>();
-            metadata.put(CommonConstants.PREPARED_STATEMENT_BINARY_STREAM_INDEX, parameterIndex);
-            metadata.put(CommonConstants.PREPARED_STATEMENT_BINARY_STREAM_LENGTH, length);
-            metadata.put(CommonConstants.PREPARED_STATEMENT_BINARY_STREAM_SQL, this.sql);
-            metadata.put(CommonConstants.PREPARED_STATEMENT_UUID_BINARY_STREAM, this.getStatementUUID());
-            LobReference lobReference = binaryStream.sendBinaryStream(LobType.LT_BINARY_STREAM, is, metadata);
-            this.setStatementUUID(lobReference.getStmtUUID());
-            binaryStream.getLobReference().set(lobReference);
+            int readLength = (length > 0) ? (int) length : Integer.MAX_VALUE;
+            byte[] allBytes = is.readNBytes((int) readLength);
+            this.paramsMap.put(parameterIndex,
+                    Parameter.builder()
+                            .type(BINARY_STREAM)
+                            .index(parameterIndex)
+                            .values(Arrays.asList(allBytes, length))
+                            .build());
         } catch (RuntimeException e) {
             throw new SQLException("Unable to write binary stream: " + e.getMessage(), e);
         }
@@ -848,6 +834,20 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
         log.debug("clearBatch called");
         checkClosed();
         this.callProxy(CallType.CALL_CLEAR, "Batch", Void.class);
+    }
+
+    /**
+     * Has to override the Statement implementation because PreparedStatement has to send extra properties like the SQL
+     * being executed, which Statement does not.
+     *
+     * @return int rows number of rows to fetch in each read.
+     * @throws SQLException
+     */
+    @Override
+    public void setFetchSize(int rows) throws SQLException {
+        log.debug("setFetchSize called with {}", rows);
+        checkClosed();
+        this.callProxy(CallType.CALL_SET, "FetchSize", Void.class, List.of(rows));
     }
 
     /**
