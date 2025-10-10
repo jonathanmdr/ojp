@@ -32,8 +32,13 @@ class GrpcServerHealthTest {
 	@BeforeEach
     void setUp() {
 		int testPort = findAvailablePort();
+        int testPrometheusPort = testPort;
+        while (testPrometheusPort == testPort) {
+            testPrometheusPort = findAvailablePort();
+        }
 
         System.setProperty("ojp.server.port", String.valueOf(testPort));
+        System.setProperty("ojp.prometheus.port", String.valueOf(testPrometheusPort));
 
         // Create client channel
         channel = ManagedChannelBuilder.forAddress("localhost", testPort)
