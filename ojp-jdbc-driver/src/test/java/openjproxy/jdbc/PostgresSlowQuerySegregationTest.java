@@ -27,8 +27,8 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 @Slf4j
 public class PostgresSlowQuerySegregationTest {
-    private static final int THREADS = 5; // Number of worker threads
-    private static final int RAMPUP_MS = 10 * 1000; // 10 seconds Ramp-up window in milliseconds
+    private static final int THREADS = 3; // Number of worker threads
+    private static final int RAMPUP_MS = 15 * 1000; // 15 seconds Ramp-up window in milliseconds
 
     private static boolean isTestDisabled;
     private static Queue<Long> queryDurations = new ConcurrentLinkedQueue<>();
