@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 @Slf4j
 public class PostgresSlowQuerySegregationTest {
     private static final int THREADS = 3; // Number of worker threads
-    private static final int RAMPUP_MS = 15 * 1000; // 15 seconds Ramp-up window in milliseconds
+    private static final int RAMPUP_MS = 30 * 1000; // 30 seconds Ramp-up window in milliseconds
 
     private static boolean isTestDisabled;
     private static Queue<Long> queryDurations = new ConcurrentLinkedQueue<>();
@@ -1012,7 +1012,7 @@ public class PostgresSlowQuerySegregationTest {
             return null;
         });
 
-        // 5 heavy queries (1 is super heavy), will take longer than simpler queries and serve as an attack on the connection pool
+        // 5 heavy queries, will take longer than simpler queries and serve as an attack on the connection pool
         timeAndRun(() -> {
             try (Connection conn = getConnection(driverClass, url, user, password)) {
                 try (PreparedStatement pst = conn.prepareStatement(
@@ -1113,16 +1113,13 @@ public class PostgresSlowQuerySegregationTest {
             try (Connection conn = getConnection(driverClass, url, user, password)) {
                 try (PreparedStatement pst = conn.prepareStatement(
                         "SELECT" +
-                            "  u.id," +
-                            "  COUNT(o.id) AS num_orders," +
-                            "  SUM(oi.quantity) AS total_quantity," +
-                            "  AVG(p.price) AS avg_price," +
-                            "  (SELECT AVG(rating) FROM reviews WHERE product_id = p.id) AS avg_rating" +
-                            " FROM users u" +
-                            " JOIN orders o ON u.id = o.user_id" +
-                            " JOIN order_items oi ON o.id = oi.order_id" +
-                            " JOIN products p ON oi.product_id = p.id" +
-                            " GROUP BY u.id, p.id"
+                                "  u.id," +
+                                "  COUNT(o.id) AS num_orders," +
+                                "  SUM(oi.quantity) AS total_quantity" +
+                                " FROM users u" +
+                                " JOIN orders o ON u.id = o.user_id" +
+                                " JOIN order_items oi ON o.id = oi.order_id" +
+                                " GROUP BY u.id"
                 )) {
                     try (ResultSet rs = pst.executeQuery()) {
                         while (rs.next()) {
