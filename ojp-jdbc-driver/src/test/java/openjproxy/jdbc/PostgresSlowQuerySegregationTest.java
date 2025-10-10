@@ -157,10 +157,10 @@ public class PostgresSlowQuerySegregationTest {
         System.out.println("Total test duration: " + totalTimeMs + " ms");
         System.out.printf("Average query duration: %.3f ms\n", avgQueryMs);
         System.out.println("Total query failures: " + numFailures);
-        Assertions.assertEquals(360, numQueries);
+        Assertions.assertEquals(216, numQueries);
         Assertions.assertEquals(0, numFailures);
-        Assertions.assertTrue(totalTimeMs < 150000);
-        Assertions.assertTrue(avgQueryMs < 2000);
+        Assertions.assertTrue(totalTimeMs < 40000);
+        Assertions.assertTrue(avgQueryMs < 40);
     }
 
     private static void timeAndRun(Callable<Void> query) {
