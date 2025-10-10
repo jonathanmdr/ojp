@@ -65,18 +65,6 @@ jobs:
         ports:
           - 5432:5432
 
-      cockroachdb:
-        image: cockroachdb/cockroach:v24.3.4
-        cmd: start-single-node --insecure
-        options: >-
-          --health-cmd "curl -f http://localhost:8080/health?ready=1 || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 26257:26257
-          - 8080:8080
-
       #TODO maybe put proprietary DBs in separated workflows, seem to be insufficient memory in github to run all at once
       #oracle:
       #  image: gvenzl/oracle-xe:21-slim
@@ -138,6 +126,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Start CockroachDB
+        run: |
+          docker run --name ojp-cockroachdb -p 26257:26257 -p 8080:8080 -d cockroachdb/cockroach:v24.3.4 start-single-node --insecure
+          # Wait for CockroachDB to be ready
+          timeout 60 bash -c 'until curl -f http://localhost:8080/health?ready=1 2>/dev/null; do sleep 2; done'
 
       - name: Set up JDK 22 for ojp-server
         uses: actions/setup-java@v4
