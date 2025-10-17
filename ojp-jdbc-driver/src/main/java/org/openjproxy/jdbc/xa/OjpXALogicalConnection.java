@@ -50,8 +50,8 @@ class OjpXALogicalConnection extends Connection {
         log.debug("Logical connection close called");
         if (!closed) {
             closed = true;
-            // Don't actually close the physical connection, just mark this logical connection as closed
-            // The XA connection will close the physical connection
+            // Call parent's close to properly terminate the session on the server
+            super.close();
         }
     }
 
