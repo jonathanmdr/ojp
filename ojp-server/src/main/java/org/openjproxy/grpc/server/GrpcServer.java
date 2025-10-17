@@ -46,16 +46,20 @@ public class GrpcServer {
         }
 
         // Build server with configuration
+        SessionManagerImpl sessionManager = new SessionManagerImpl();
+        org.openjproxy.grpc.server.xa.XaSessionManager xaSessionManager = new org.openjproxy.grpc.server.xa.XaSessionManager();
+        
         ServerBuilder<?> serverBuilder = NettyServerBuilder
                 .forPort(config.getServerPort())
                 .executor(Executors.newFixedThreadPool(config.getThreadPoolSize()))
                 .maxInboundMessageSize(config.getMaxRequestSize())
                 .keepAliveTime(config.getConnectionIdleTimeout(), TimeUnit.MILLISECONDS)
                 .addService(new StatementServiceImpl(
-                        new SessionManagerImpl(),
+                        sessionManager,
                         new CircuitBreaker(config.getCircuitBreakerTimeout(), config.getCircuitBreakerThreshold()),
                         config
                 ))
+                .addService(new org.openjproxy.grpc.server.xa.XaServiceImpl(xaSessionManager))
                 .addService(OjpHealthManager.getHealthStatusManager().getHealthService())
                 .intercept(grpcTelemetry.newServerInterceptor());
 
