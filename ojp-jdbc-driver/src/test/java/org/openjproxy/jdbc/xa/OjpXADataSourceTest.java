@@ -3,6 +3,7 @@ package org.openjproxy.jdbc.xa;
 import org.junit.jupiter.api.Test;
 
 import javax.transaction.xa.Xid;
+import java.sql.SQLException;
 
 import java.util.Properties;
 
@@ -70,7 +71,7 @@ public class OjpXADataSourceTest {
         xaDataSource.setUser("testuser");
         xaDataSource.setPassword("testpass");
         
-        assertThrows(java.sql.SQLException.class, () -> {
+        assertThrows(SQLException.class, () -> {
             xaDataSource.getXAConnection();
         });
     }

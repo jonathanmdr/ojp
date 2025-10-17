@@ -216,16 +216,19 @@ mvn test -Dtest=OjpXADataSourceTest
 
 ### Integration Testing
 
-Integration tests require a running OJP server with an XA-capable database:
+Integration tests require a running OJP server with an XA-capable database. These tests would need to be created to validate the full XA transaction flow.
 
+Example test scenario:
 ```bash
 # Start OJP server
 cd ojp-server
 mvn exec:java
 
-# In another terminal, run integration tests
-cd ojp-jdbc-driver
-mvn test -Dtest=*XAIntegration*
+# In another terminal, create integration tests for:
+# - Basic XA transaction (start, prepare, commit)
+# - Two-phase commit with multiple branches
+# - Rollback scenarios
+# - Recovery scenarios
 ```
 
 ## Troubleshooting
@@ -256,12 +259,13 @@ For best performance:
 
 ## Examples
 
-See the `examples/xa-transactions` directory for complete working examples:
+Example code for using XA transactions is shown throughout this document in the "Usage" sections above. For more complex scenarios, refer to the test cases in `ojp-jdbc-driver/src/test/java/org/openjproxy/jdbc/xa/`.
 
-- Simple XA transaction example
+Future enhancements may include complete working examples for:
+- Simple XA transaction
 - Multi-database distributed transaction
-- Atomikos integration example
-- Recovery scenario example
+- Integration with specific JTA transaction managers
+- Recovery scenarios
 
 ## API Reference
 
