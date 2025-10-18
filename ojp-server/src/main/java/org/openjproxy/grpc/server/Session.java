@@ -158,18 +158,16 @@ public class Session {
             return;
         }
 
-        // For XA connections, close both the XA connection and the logical connection
+        // For XA connections, close the XA connection (which also closes the logical connection)
+        // Do NOT close the regular connection as it would trigger auto-commit changes
         if (isXA && xaConnection != null) {
             try {
                 xaConnection.close();
             } catch (SQLException e) {
                 log.error("Error closing XA connection", e);
             }
-        }
-        
-        //Closing the connection here means that the connection pool will close all resources associated with it and
-        // reset the connection state before returning it to the pool.
-        if (connection != null) {
+        } else if (connection != null) {
+            // For regular connections, close normally
             this.connection.close();
         }
 

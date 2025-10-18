@@ -181,6 +181,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 );
                 Connection connection = xaConnection.getConnection();
                 
+                // Disable auto-commit on the connection - required for XA transactions
+                connection.setAutoCommit(false);
+                
                 // Close the regular connection as we're using XA connection
                 try {
                     regularConnection.close();
