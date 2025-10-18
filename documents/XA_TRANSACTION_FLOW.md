@@ -45,6 +45,26 @@ Application → OjpXADataSource.getXAConnection()
           → Returns SessionInfo(sessionUUID, isXA=true)
 ```
 
+**Why Both XAConnection and Regular Connection?**
+
+The JDBC XA specification requires both:
+
+1. **XAConnection** (`javax.sql.XAConnection`):
+   - Provides access to the `XAResource` for transaction coordination
+   - Used by the transaction manager to control XA operations (start, end, prepare, commit, rollback)
+   - Obtained from `XADataSource.getXAConnection()`
+
+2. **Regular Connection** (`java.sql.Connection`):
+   - Obtained from `xaConnection.getConnection()` per JDBC spec
+   - Used for executing SQL statements (SELECT, INSERT, UPDATE, DELETE)
+   - Associated with the XA transaction but doesn't expose XA control methods
+
+**Key Point**: In JDBC XA architecture, you need BOTH objects because:
+- **XAResource** (from XAConnection) = Transaction control plane
+- **Connection** (from XAConnection.getConnection()) = Data plane for SQL operations
+
+This separation ensures proper transaction boundaries - SQL statements execute through the Connection while the transaction manager coordinates via XAResource, preventing applications from directly calling commit/rollback on the Connection (which would conflict with XA protocol).
+
 **Server State Created:**
 - Session object with:
   - `sessionUUID`: Unique identifier
@@ -267,6 +287,61 @@ Application → connection.close()
 - Closes XAConnection
 - Releases database resources
 - Connection no longer usable
+
+---
+
+## Why New Connection Classes Were Needed
+
+### OjpXAConnection
+
+**Purpose**: Implements `javax.sql.XAConnection` interface to provide XA functionality.
+
+**Why Needed:**
+- **JDBC XA Spec Requirement**: XA-capable data sources must provide `XAConnection` objects
+- **Interface Incompatibility**: `XAConnection` is NOT a subclass of `Connection` - it's a separate interface
+- **Dual Responsibilities**: Must provide both:
+  - `getXAResource()` → For transaction control by transaction manager
+  - `getConnection()` → For SQL execution by application code
+
+**Why Existing Connection Can't Be Reused:**
+- Existing `Connection` class doesn't implement `XAConnection` interface
+- Existing `Connection` class has no concept of `XAResource`
+- XA connections need special session creation with `isXA=true` flag
+- Need to manage XA-specific lifecycle (XAConnection vs logical Connection)
+
+### OjpXALogicalConnection
+
+**Purpose**: Wraps the actual Connection returned by `XAConnection.getConnection()` to enforce XA rules.
+
+**Why Needed:**
+- **Prevent Direct Transaction Control**: Must block `commit()`, `rollback()`, `setAutoCommit()` calls
+  - In XA mode, ONLY the `XAResource` can control transactions
+  - Application calling `connection.commit()` would bypass 2PC protocol
+- **Enforce XA Invariants**: 
+  - `getAutoCommit()` must always return `false` for XA connections
+  - Transaction boundaries controlled exclusively via XAResource
+- **Proper Resource Cleanup**: Ensure connection closure doesn't interfere with ongoing XA transactions
+
+**Why Existing Connection Can't Be Reused:**
+- No mechanism to block commit/rollback methods
+- No way to enforce XA transaction rules
+- Would allow applications to violate XA protocol by calling commit directly
+
+### Architecture Comparison
+
+**Regular (Non-XA) Flow:**
+```
+Application → Connection (OJP Connection) → Server Session → Database Connection
+```
+
+**XA Flow:**
+```
+Transaction Manager → XAResource (OjpXAResource) → Server XA Session → Database XAResource
+Application → Logical Connection (OjpXALogicalConnection) → Server XA Session → Database Connection
+                                                                 ↓ (same session)
+```
+
+**Key Difference**: In XA mode, transaction control and SQL execution use the SAME server session but different client interfaces to enforce proper XA protocol.
 
 ---
 
