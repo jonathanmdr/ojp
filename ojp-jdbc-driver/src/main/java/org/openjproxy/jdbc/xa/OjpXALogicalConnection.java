@@ -38,6 +38,9 @@ class OjpXALogicalConnection extends Connection {
             Driver driver = new Driver();
             this.actualConnection = (Connection) driver.connect(url, info);
             
+            // XA connections must have auto-commit disabled
+            this.actualConnection.setAutoCommit(false);
+            
             // Copy the session from the actual connection
             this.setSession(actualConnection.getSession());
         } catch (SQLException e) {
