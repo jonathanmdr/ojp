@@ -177,9 +177,10 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 );
                 Connection connection = xaConnection.getConnection();
                 
-                // Note: Do NOT call connection.setAutoCommit(false) here
-                // For PostgreSQL XA, the connection's auto-commit state is managed by the XAResource
-                // Calling setAutoCommit on a connection from XAConnection can interfere with XA transaction control
+                // Enable auto-commit for operations performed BEFORE xaStart
+                // This allows DDL/DML outside XA transactions to be committed automatically
+                // Once xaStart is called, the XAResource takes control of the transaction
+                connection.setAutoCommit(true);
                 
                 sessionInfo = sessionManager.createXASession(connectionDetails.getClientUUID(), connection, xaConnection);
                 log.debug("Created XA session: {}", sessionInfo.getSessionUUID());
