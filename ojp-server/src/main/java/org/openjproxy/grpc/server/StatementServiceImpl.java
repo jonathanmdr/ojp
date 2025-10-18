@@ -164,10 +164,30 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
 
         SessionInfo sessionInfo;
         if (connectionDetails.getIsXA()) {
-            // For XA connections, create an XA session
+            // For XA connections, we need to get an XA connection directly from the underlying XADataSource
+            // HikariCP doesn't expose XADataSource interface, so we get a regular connection first
+            // then use the database-specific approach to get XA capabilities
             try {
-                javax.sql.XAConnection xaConnection = ds.unwrap(javax.sql.XADataSource.class).getXAConnection();
+                // Get a regular connection from HikariCP
+                Connection regularConnection = ds.getConnection();
+                
+                // For PostgreSQL, we need to create an XADataSource and get XAConnection from it
+                // Determine database type from URL
+                String url = connectionDetails.getUrl();
+                javax.sql.XADataSource xaDataSource = createXADataSource(url, connectionDetails);
+                javax.sql.XAConnection xaConnection = xaDataSource.getXAConnection(
+                    connectionDetails.getUser(), 
+                    connectionDetails.getPassword()
+                );
                 Connection connection = xaConnection.getConnection();
+                
+                // Close the regular connection as we're using XA connection
+                try {
+                    regularConnection.close();
+                } catch (Exception ex) {
+                    log.warn("Failed to close regular connection: {}", ex.getMessage());
+                }
+                
                 sessionInfo = sessionManager.createXASession(connectionDetails.getClientUUID(), connection, xaConnection);
                 log.debug("Created XA session: {}", sessionInfo.getSessionUUID());
             } catch (Exception e) {
@@ -190,6 +210,68 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         this.dbNameMap.put(connHash, DatabaseUtils.resolveDbName(connectionDetails.getUrl()));
 
         responseObserver.onCompleted();
+    }
+    
+    /**
+     * Creates an XADataSource for the specified database type.
+     */
+    private javax.sql.XADataSource createXADataSource(String url, ConnectionDetails connectionDetails) throws SQLException {
+        String lowerUrl = url.toLowerCase();
+        
+        try {
+            if (lowerUrl.contains("postgresql")) {
+                // PostgreSQL XADataSource
+                org.postgresql.xa.PGXADataSource xaDS = new org.postgresql.xa.PGXADataSource();
+                
+                // Parse connection URL to extract host, port, database
+                // Format: jdbc:postgresql://host:port/database or ojp[...]:host:port/database
+                String cleanUrl = url;
+                if (cleanUrl.toLowerCase().contains("_postgresql:")) {
+                    cleanUrl = cleanUrl.substring(cleanUrl.toLowerCase().indexOf("_postgresql:") + 1);
+                } else if (cleanUrl.toLowerCase().startsWith("jdbc:postgresql:")) {
+                    cleanUrl = cleanUrl.substring("jdbc:".length());
+                }
+                
+                // Parse postgresql://host:port/database
+                if (cleanUrl.startsWith("postgresql://")) {
+                    cleanUrl = cleanUrl.substring("postgresql://".length());
+                    String[] parts = cleanUrl.split("/");
+                    if (parts.length >= 2) {
+                        String hostPort = parts[0];
+                        String database = parts[1].split("\\?")[0]; // Remove query params
+                        
+                        String[] hostPortParts = hostPort.split(":");
+                        String host = hostPortParts[0];
+                        int port = hostPortParts.length > 1 ? Integer.parseInt(hostPortParts[1]) : 5432;
+                        
+                        xaDS.setServerNames(new String[]{host});
+                        xaDS.setPortNumbers(new int[]{port});
+                        xaDS.setDatabaseName(database);
+                    }
+                }
+                
+                xaDS.setUser(connectionDetails.getUser());
+                xaDS.setPassword(connectionDetails.getPassword());
+                
+                log.info("Created PostgreSQL XADataSource");
+                return xaDS;
+                
+            } else if (lowerUrl.contains("mysql")) {
+                // MySQL XADataSource
+                com.mysql.cj.jdbc.MysqlXADataSource xaDS = new com.mysql.cj.jdbc.MysqlXADataSource();
+                xaDS.setUrl(url);
+                xaDS.setUser(connectionDetails.getUser());
+                xaDS.setPassword(connectionDetails.getPassword());
+                log.info("Created MySQL XADataSource");
+                return xaDS;
+                
+            } else {
+                throw new SQLException("XA transactions not supported for database type in URL: " + url);
+            }
+        } catch (Exception e) {
+            log.error("Failed to create XADataSource: {}", e.getMessage(), e);
+            throw new SQLException("Failed to create XADataSource: " + e.getMessage(), e);
+        }
     }
     
     /**
