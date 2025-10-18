@@ -1,12 +1,11 @@
 package org.openjproxy.jdbc.xa;
 
 import com.google.protobuf.ByteString;
-import com.openjproxy.grpc.xa.XaCloseRequest;
-import com.openjproxy.grpc.xa.XaConnectionRequest;
-import com.openjproxy.grpc.xa.XaConnectionResponse;
+import com.openjproxy.grpc.ConnectionDetails;
+import com.openjproxy.grpc.SessionInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.openjproxy.grpc.SerializationHandler;
-import org.openjproxy.grpc.client.XaService;
+import org.openjproxy.grpc.client.StatementService;
 import org.openjproxy.jdbc.ClientUUID;
 
 import javax.sql.ConnectionEvent;
@@ -21,12 +20,13 @@ import java.util.Properties;
 
 /**
  * Implementation of XAConnection that connects to the OJP server for XA operations.
+ * Uses the integrated StatementService for connection management.
  */
 @Slf4j
 public class OjpXAConnection implements XAConnection {
 
-    private final XaService xaService;
-    private final String xaSessionUUID;
+    private final StatementService statementService;
+    private final SessionInfo sessionInfo;
     private final String url;
     private final String user;
     private final String password;
@@ -36,32 +36,32 @@ public class OjpXAConnection implements XAConnection {
     private boolean closed = false;
     private final List<ConnectionEventListener> listeners = new ArrayList<>();
 
-    public OjpXAConnection(XaService xaService, String url, String user, String password, Properties properties) throws SQLException {
+    public OjpXAConnection(StatementService statementService, String url, String user, String password, Properties properties) throws SQLException {
         log.debug("Creating OjpXAConnection for URL: {}", url);
-        this.xaService = xaService;
+        this.statementService = statementService;
         this.url = url;
         this.user = user;
         this.password = password;
         this.properties = properties;
 
         try {
-            // Connect to server and get XA session UUID
+            // Connect to server with XA flag enabled
             ByteString propertiesBytes = ByteString.EMPTY;
             if (properties != null && !properties.isEmpty()) {
                 propertiesBytes = ByteString.copyFrom(SerializationHandler.serialize(properties));
             }
 
-            XaConnectionRequest request = XaConnectionRequest.newBuilder()
+            ConnectionDetails connectionDetails = ConnectionDetails.newBuilder()
                     .setUrl(url)
                     .setUser(user != null ? user : "")
                     .setPassword(password != null ? password : "")
                     .setClientUUID(ClientUUID.getUUID())
                     .setProperties(propertiesBytes)
+                    .setIsXA(true)  // Mark this as an XA connection
                     .build();
 
-            XaConnectionResponse response = xaService.xaConnect(request);
-            this.xaSessionUUID = response.getXaSessionUUID();
-            log.debug("XA connection established with session UUID: {}", xaSessionUUID);
+            this.sessionInfo = statementService.connect(connectionDetails);
+            log.debug("XA connection established with session: {}", sessionInfo.getSessionUUID());
 
         } catch (Exception e) {
             log.error("Failed to create XA connection", e);
@@ -74,7 +74,7 @@ public class OjpXAConnection implements XAConnection {
         log.debug("getXAResource called");
         checkClosed();
         if (xaResource == null) {
-            xaResource = new OjpXAResource(xaService, xaSessionUUID);
+            xaResource = new OjpXAResource(statementService, sessionInfo);
         }
         return xaResource;
     }
@@ -117,10 +117,7 @@ public class OjpXAConnection implements XAConnection {
         
         // Close XA session on server
         try {
-            XaCloseRequest request = XaCloseRequest.newBuilder()
-                    .setXaSessionUUID(xaSessionUUID)
-                    .build();
-            xaService.xaClose(request);
+            statementService.terminateSession(sessionInfo);
         } catch (Exception e) {
             log.error("Error closing XA session", e);
             throw new SQLException("Error closing XA session", e);
@@ -162,10 +159,10 @@ public class OjpXAConnection implements XAConnection {
     }
 
     /**
-     * Get the XA session UUID for this connection.
+     * Get the session info for this XA connection.
      */
-    String getXaSessionUUID() {
-        return xaSessionUUID;
+    SessionInfo getSessionInfo() {
+        return sessionInfo;
     }
 
     private void checkClosed() throws SQLException {

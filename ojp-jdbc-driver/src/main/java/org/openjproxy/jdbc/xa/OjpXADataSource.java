@@ -3,8 +3,8 @@ package org.openjproxy.jdbc.xa;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.openjproxy.grpc.client.XaService;
-import org.openjproxy.grpc.client.XaServiceGrpcClient;
+import org.openjproxy.grpc.client.StatementService;
+import org.openjproxy.grpc.client.StatementServiceGrpcClient;
 
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 /**
  * Implementation of XADataSource for OJP.
  * This is the entry point for JTA transaction managers to obtain XA connections.
+ * Uses the integrated StatementService for all XA operations.
  */
 @Slf4j
 public class OjpXADataSource implements XADataSource {
@@ -35,22 +36,15 @@ public class OjpXADataSource implements XADataSource {
 
     @Getter
     @Setter
-    private String serverHost = "localhost";
-
-    @Getter
-    @Setter
-    private int serverPort = 1059;
-
-    @Getter
-    @Setter
     private int loginTimeout = 0;
 
     private PrintWriter logWriter;
     private final Properties properties = new Properties();
-    private XaService xaService;
+    private static StatementService statementService;
 
     public OjpXADataSource() {
         log.debug("Creating OjpXADataSource");
+        initializeStatementService();
     }
 
     public OjpXADataSource(String url, String user, String password) {
@@ -58,6 +52,18 @@ public class OjpXADataSource implements XADataSource {
         this.user = user;
         this.password = password;
         log.debug("Creating OjpXADataSource with URL: {}", url);
+        initializeStatementService();
+    }
+
+    private void initializeStatementService() {
+        if (statementService == null) {
+            synchronized (OjpXADataSource.class) {
+                if (statementService == null) {
+                    log.debug("Initializing StatementServiceGrpcClient for XA");
+                    statementService = new StatementServiceGrpcClient();
+                }
+            }
+        }
     }
 
     @Override
@@ -74,16 +80,8 @@ public class OjpXADataSource implements XADataSource {
             throw new SQLException("URL is not set");
         }
 
-        // Initialize XA service if not already done
-        if (xaService == null) {
-            synchronized (this) {
-                if (xaService == null) {
-                    xaService = new XaServiceGrpcClient(serverHost, serverPort);
-                }
-            }
-        }
-
-        return new OjpXAConnection(xaService, url, username, password, properties);
+        // Create XA connection using the integrated StatementService
+        return new OjpXAConnection(statementService, url, username, password, properties);
     }
 
     @Override

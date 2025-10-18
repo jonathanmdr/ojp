@@ -26,8 +26,6 @@ public class OjpXADataSourceTest {
         assertEquals("jdbc:ojp[localhost:1059]_postgresql://localhost/testdb", xaDataSource.getUrl());
         assertEquals("testuser", xaDataSource.getUser());
         assertEquals("testpass", xaDataSource.getPassword());
-        assertEquals("localhost", xaDataSource.getServerHost());
-        assertEquals(1059, xaDataSource.getServerPort());
     }
 
     @Test

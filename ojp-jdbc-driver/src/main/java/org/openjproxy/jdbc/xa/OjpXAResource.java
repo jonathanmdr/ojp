@@ -1,9 +1,9 @@
 package org.openjproxy.jdbc.xa;
 
 import com.google.protobuf.ByteString;
-import com.openjproxy.grpc.xa.*;
+import com.openjproxy.grpc.*;
 import lombok.extern.slf4j.Slf4j;
-import org.openjproxy.grpc.client.XaService;
+import org.openjproxy.grpc.client.StatementService;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
@@ -11,18 +11,18 @@ import javax.transaction.xa.Xid;
 import java.sql.SQLException;
 
 /**
- * Implementation of XAResource that delegates all operations to the OJP server via gRPC.
+ * Implementation of XAResource that delegates all operations to the OJP server via StatementService.
  */
 @Slf4j
 public class OjpXAResource implements XAResource {
 
-    private final XaService xaService;
-    private final String xaSessionUUID;
+    private final StatementService statementService;
+    private final SessionInfo sessionInfo;
     private int transactionTimeout = 0;
 
-    public OjpXAResource(XaService xaService, String xaSessionUUID) {
-        this.xaService = xaService;
-        this.xaSessionUUID = xaSessionUUID;
+    public OjpXAResource(StatementService statementService, SessionInfo sessionInfo) {
+        this.statementService = statementService;
+        this.sessionInfo = sessionInfo;
     }
 
     @Override
@@ -30,11 +30,11 @@ public class OjpXAResource implements XAResource {
         log.debug("start: xid={}, flags={}", xid, flags);
         try {
             XaStartRequest request = XaStartRequest.newBuilder()
-                    .setXaSessionUUID(xaSessionUUID)
+                    .setSession(sessionInfo)
                     .setXid(toXidProto(xid))
                     .setFlags(flags)
                     .build();
-            XaResponse response = xaService.xaStart(request);
+            XaResponse response = statementService.xaStart(request);
             if (!response.getSuccess()) {
                 throw new XAException(response.getMessage());
             }
@@ -53,11 +53,11 @@ public class OjpXAResource implements XAResource {
         log.debug("end: xid={}, flags={}", xid, flags);
         try {
             XaEndRequest request = XaEndRequest.newBuilder()
-                    .setXaSessionUUID(xaSessionUUID)
+                    .setSession(sessionInfo)
                     .setXid(toXidProto(xid))
                     .setFlags(flags)
                     .build();
-            XaResponse response = xaService.xaEnd(request);
+            XaResponse response = statementService.xaEnd(request);
             if (!response.getSuccess()) {
                 throw new XAException(response.getMessage());
             }
@@ -76,10 +76,10 @@ public class OjpXAResource implements XAResource {
         log.debug("prepare: xid={}", xid);
         try {
             XaPrepareRequest request = XaPrepareRequest.newBuilder()
-                    .setXaSessionUUID(xaSessionUUID)
+                    .setSession(sessionInfo)
                     .setXid(toXidProto(xid))
                     .build();
-            XaPrepareResponse response = xaService.xaPrepare(request);
+            XaPrepareResponse response = statementService.xaPrepare(request);
             return response.getResult();
         } catch (Exception e) {
             log.error("Error in prepare", e);
@@ -94,11 +94,11 @@ public class OjpXAResource implements XAResource {
         log.debug("commit: xid={}, onePhase={}", xid, onePhase);
         try {
             XaCommitRequest request = XaCommitRequest.newBuilder()
-                    .setXaSessionUUID(xaSessionUUID)
+                    .setSession(sessionInfo)
                     .setXid(toXidProto(xid))
                     .setOnePhase(onePhase)
                     .build();
-            XaResponse response = xaService.xaCommit(request);
+            XaResponse response = statementService.xaCommit(request);
             if (!response.getSuccess()) {
                 throw new XAException(response.getMessage());
             }
@@ -117,10 +117,10 @@ public class OjpXAResource implements XAResource {
         log.debug("rollback: xid={}", xid);
         try {
             XaRollbackRequest request = XaRollbackRequest.newBuilder()
-                    .setXaSessionUUID(xaSessionUUID)
+                    .setSession(sessionInfo)
                     .setXid(toXidProto(xid))
                     .build();
-            XaResponse response = xaService.xaRollback(request);
+            XaResponse response = statementService.xaRollback(request);
             if (!response.getSuccess()) {
                 throw new XAException(response.getMessage());
             }
@@ -139,10 +139,10 @@ public class OjpXAResource implements XAResource {
         log.debug("recover: flag={}", flag);
         try {
             XaRecoverRequest request = XaRecoverRequest.newBuilder()
-                    .setXaSessionUUID(xaSessionUUID)
+                    .setSession(sessionInfo)
                     .setFlag(flag)
                     .build();
-            XaRecoverResponse response = xaService.xaRecover(request);
+            XaRecoverResponse response = statementService.xaRecover(request);
             return response.getXidsList().stream()
                     .map(this::fromXidProto)
                     .toArray(Xid[]::new);
@@ -159,10 +159,10 @@ public class OjpXAResource implements XAResource {
         log.debug("forget: xid={}", xid);
         try {
             XaForgetRequest request = XaForgetRequest.newBuilder()
-                    .setXaSessionUUID(xaSessionUUID)
+                    .setSession(sessionInfo)
                     .setXid(toXidProto(xid))
                     .build();
-            XaResponse response = xaService.xaForget(request);
+            XaResponse response = statementService.xaForget(request);
             if (!response.getSuccess()) {
                 throw new XAException(response.getMessage());
             }
@@ -181,10 +181,10 @@ public class OjpXAResource implements XAResource {
         log.debug("setTransactionTimeout: seconds={}", seconds);
         try {
             XaSetTransactionTimeoutRequest request = XaSetTransactionTimeoutRequest.newBuilder()
-                    .setXaSessionUUID(xaSessionUUID)
+                    .setSession(sessionInfo)
                     .setSeconds(seconds)
                     .build();
-            XaSetTransactionTimeoutResponse response = xaService.xaSetTransactionTimeout(request);
+            XaSetTransactionTimeoutResponse response = statementService.xaSetTransactionTimeout(request);
             if (response.getSuccess()) {
                 this.transactionTimeout = seconds;
             }
@@ -202,9 +202,9 @@ public class OjpXAResource implements XAResource {
         log.debug("getTransactionTimeout");
         try {
             XaGetTransactionTimeoutRequest request = XaGetTransactionTimeoutRequest.newBuilder()
-                    .setXaSessionUUID(xaSessionUUID)
+                    .setSession(sessionInfo)
                     .build();
-            XaGetTransactionTimeoutResponse response = xaService.xaGetTransactionTimeout(request);
+            XaGetTransactionTimeoutResponse response = statementService.xaGetTransactionTimeout(request);
             return response.getSeconds();
         } catch (Exception e) {
             log.error("Error in getTransactionTimeout", e);
@@ -223,10 +223,10 @@ public class OjpXAResource implements XAResource {
         try {
             OjpXAResource other = (OjpXAResource) xares;
             XaIsSameRMRequest request = XaIsSameRMRequest.newBuilder()
-                    .setXaSessionUUID(xaSessionUUID)
-                    .setOtherXaSessionUUID(other.xaSessionUUID)
+                    .setSession1(sessionInfo)
+                    .setSession2(other.sessionInfo)
                     .build();
-            XaIsSameRMResponse response = xaService.xaIsSameRM(request);
+            XaIsSameRMResponse response = statementService.xaIsSameRM(request);
             return response.getIsSame();
         } catch (Exception e) {
             log.error("Error in isSameRM", e);
