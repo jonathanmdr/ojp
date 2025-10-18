@@ -90,8 +90,15 @@ public class OjpXAConnection implements XAConnection {
         }
         
         // Create a new logical connection that uses the same XA session on the server
-        logicalConnection = new OjpXALogicalConnection(this, sessionInfo);
+        logicalConnection = new OjpXALogicalConnection(this, sessionInfo, url);
         return logicalConnection;
+    }
+    
+    /**
+     * Get the statement service for this XA connection.
+     */
+    StatementService getStatementService() {
+        return statementService;
     }
 
     @Override

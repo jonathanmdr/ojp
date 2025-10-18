@@ -2,6 +2,7 @@ package org.openjproxy.jdbc.xa;
 
 import com.openjproxy.grpc.SessionInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.openjproxy.database.DatabaseUtils;
 import org.openjproxy.jdbc.Connection;
 
 import java.sql.SQLException;
@@ -17,13 +18,10 @@ class OjpXALogicalConnection extends Connection {
     private final OjpXAConnection xaConnection;
     private boolean closed = false;
 
-    OjpXALogicalConnection(OjpXAConnection xaConnection, SessionInfo sessionInfo) throws SQLException {
-        super(null, null, null);
+    OjpXALogicalConnection(OjpXAConnection xaConnection, SessionInfo sessionInfo, String url) throws SQLException {
+        // Pass the statementService and dbName to the parent Connection class
+        super(sessionInfo, xaConnection.getStatementService(), DatabaseUtils.resolveDbName(url));
         this.xaConnection = xaConnection;
-        
-        // Use the existing XA session - do NOT create a new connection
-        // The server already has an XA session with the connection from XAConnection
-        this.setSession(sessionInfo);
         
         log.debug("Created logical connection using XA session: {}", sessionInfo.getSessionUUID());
     }
