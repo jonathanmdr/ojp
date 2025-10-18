@@ -97,9 +97,11 @@ public class PostgresXAIntegrationTest {
         
         XAResource xaResource = xaConnection.getXAResource();
         
-        // Create test table
+        // Create test table on a separate connection to avoid XA conflicts
+        // Table creation should not be part of XA transaction
         String tableName = "xa_test_table_" + System.currentTimeMillis();
-        try (Statement stmt = connection.createStatement()) {
+        try (java.sql.Connection regularConn = java.sql.DriverManager.getConnection(url, user, password);
+             Statement stmt = regularConn.createStatement()) {
             stmt.executeUpdate("CREATE TABLE " + tableName + " (id INT PRIMARY KEY, name VARCHAR(100))");
         }
         
