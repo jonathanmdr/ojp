@@ -1,124 +1,31 @@
 package org.openjproxy.jdbc.xa;
 
+import com.openjproxy.grpc.SessionInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.openjproxy.jdbc.Connection;
-import org.openjproxy.jdbc.Driver;
 
 import java.sql.SQLException;
-import java.util.Properties;
 
 /**
- * Logical connection that wraps a physical XA connection.
- * This connection delegates most operations to a standard OJP connection,
+ * Logical connection that wraps the XA session on the server.
+ * This connection delegates to the server-side XA connection for all operations,
  * but ensures that commits and rollbacks are controlled by the XA resource.
  */
 @Slf4j
 class OjpXALogicalConnection extends Connection {
 
     private final OjpXAConnection xaConnection;
-    private final Connection actualConnection;
     private boolean closed = false;
 
-    OjpXALogicalConnection(OjpXAConnection xaConnection, String url, String user, String password) throws SQLException {
+    OjpXALogicalConnection(OjpXAConnection xaConnection, SessionInfo sessionInfo) throws SQLException {
         super(null, null, null);
         this.xaConnection = xaConnection;
         
-        // Establish a regular connection to the server using the XA session
-        // Note: This would ideally reuse the XA session on the server side
-        // For now, we create a standard connection
-        Properties info = new Properties();
-        if (user != null) {
-            info.setProperty("user", user);
-        }
-        if (password != null) {
-            info.setProperty("password", password);
-        }
+        // Use the existing XA session - do NOT create a new connection
+        // The server already has an XA session with the connection from XAConnection
+        this.setSession(sessionInfo);
         
-        try {
-            Driver driver = new Driver();
-            this.actualConnection = (Connection) driver.connect(url, info);
-            
-            // XA connections must have auto-commit disabled
-            this.actualConnection.setAutoCommit(false);
-            
-            // Copy the session from the actual connection
-            this.setSession(actualConnection.getSession());
-        } catch (SQLException e) {
-            log.error("Failed to create logical connection", e);
-            throw e;
-        }
-    }
-
-    /**
-     * Get the actual connection to delegate operations to.
-     */
-    private Connection getActualConnection() {
-        return this.actualConnection;
-    }
-
-    @Override
-    public java.sql.Statement createStatement() throws SQLException {
-        return actualConnection.createStatement();
-    }
-
-    @Override
-    public java.sql.PreparedStatement prepareStatement(String sql) throws SQLException {
-        return actualConnection.prepareStatement(sql);
-    }
-
-    @Override
-    public org.openjproxy.jdbc.CallableStatement prepareCall(String sql) throws SQLException {
-        return (org.openjproxy.jdbc.CallableStatement) actualConnection.prepareCall(sql);
-    }
-
-    @Override
-    public String nativeSQL(String sql) throws SQLException {
-        return actualConnection.nativeSQL(sql);
-    }
-
-    @Override
-    public org.openjproxy.jdbc.DatabaseMetaData getMetaData() throws SQLException {
-        return actualConnection.getMetaData();
-    }
-
-    @Override
-    public void setReadOnly(boolean readOnly) throws SQLException {
-        actualConnection.setReadOnly(readOnly);
-    }
-
-    @Override
-    public boolean isReadOnly() throws SQLException {
-        return actualConnection.isReadOnly();
-    }
-
-    @Override
-    public void setCatalog(String catalog) throws SQLException {
-        actualConnection.setCatalog(catalog);
-    }
-
-    @Override
-    public String getCatalog() throws SQLException {
-        return actualConnection.getCatalog();
-    }
-
-    @Override
-    public void setTransactionIsolation(int level) throws SQLException {
-        actualConnection.setTransactionIsolation(level);
-    }
-
-    @Override
-    public int getTransactionIsolation() throws SQLException {
-        return actualConnection.getTransactionIsolation();
-    }
-
-    @Override
-    public java.sql.SQLWarning getWarnings() throws SQLException {
-        return actualConnection.getWarnings();
-    }
-
-    @Override
-    public void clearWarnings() throws SQLException {
-        actualConnection.clearWarnings();
+        log.debug("Created logical connection using XA session: {}", sessionInfo.getSessionUUID());
     }
 
     @Override
@@ -126,10 +33,8 @@ class OjpXALogicalConnection extends Connection {
         log.debug("Logical connection close called");
         if (!closed) {
             closed = true;
-            // Close the actual connection to properly terminate the session on the server
-            if (actualConnection != null) {
-                actualConnection.close();
-            }
+            // Don't close the underlying XA connection - just mark this logical connection as closed
+            // The actual XA connection will be closed when XAConnection.close() is called
         }
     }
 
@@ -155,8 +60,7 @@ class OjpXALogicalConnection extends Connection {
         if (autoCommit) {
             throw new SQLException("Cannot enable auto-commit on XA connection");
         }
-        // Allow setting to false (XA connections should always be non-auto-commit)
-        actualConnection.setAutoCommit(false);
+        // Allow setting to false (no-op for XA connections which are always non-auto-commit)
     }
 
     @Override

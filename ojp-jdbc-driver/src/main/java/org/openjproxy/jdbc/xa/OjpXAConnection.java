@@ -89,9 +89,8 @@ public class OjpXAConnection implements XAConnection {
             logicalConnection.close();
         }
         
-        // Create a new logical connection that wraps the physical XA connection
-        // This connection should use the same XA session on the server
-        logicalConnection = new OjpXALogicalConnection(this, url, user, password);
+        // Create a new logical connection that uses the same XA session on the server
+        logicalConnection = new OjpXALogicalConnection(this, sessionInfo);
         return logicalConnection;
     }
 

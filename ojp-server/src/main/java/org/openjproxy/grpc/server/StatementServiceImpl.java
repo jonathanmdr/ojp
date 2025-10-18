@@ -165,13 +165,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         SessionInfo sessionInfo;
         if (connectionDetails.getIsXA()) {
             // For XA connections, we need to get an XA connection directly from the underlying XADataSource
-            // HikariCP doesn't expose XADataSource interface, so we get a regular connection first
-            // then use the database-specific approach to get XA capabilities
+            // HikariCP doesn't expose XADataSource interface, so we create XADataSource directly
             try {
-                // Get a regular connection from HikariCP
-                Connection regularConnection = ds.getConnection();
-                
-                // For PostgreSQL, we need to create an XADataSource and get XAConnection from it
+                // For PostgreSQL/MySQL, we need to create an XADataSource and get XAConnection from it
                 // Determine database type from URL
                 String url = connectionDetails.getUrl();
                 javax.sql.XADataSource xaDataSource = createXADataSource(url, connectionDetails);
@@ -181,15 +177,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 );
                 Connection connection = xaConnection.getConnection();
                 
-                // Disable auto-commit on the connection - required for XA transactions
-                connection.setAutoCommit(false);
-                
-                // Close the regular connection as we're using XA connection
-                try {
-                    regularConnection.close();
-                } catch (Exception ex) {
-                    log.warn("Failed to close regular connection: {}", ex.getMessage());
-                }
+                // Note: Do NOT call connection.setAutoCommit(false) here
+                // For PostgreSQL XA, the connection's auto-commit state is managed by the XAResource
+                // Calling setAutoCommit on a connection from XAConnection can interfere with XA transaction control
                 
                 sessionInfo = sessionManager.createXASession(connectionDetails.getClientUUID(), connection, xaConnection);
                 log.debug("Created XA session: {}", sessionInfo.getSessionUUID());
