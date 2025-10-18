@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.openjproxy.grpc.SerializationHandler;
 import org.openjproxy.grpc.server.GrpcExceptionHandler;
+import org.openjproxy.grpc.server.XidImpl;
 import org.openjproxy.grpc.server.pool.ConnectionPoolConfigurer;
 import org.openjproxy.grpc.server.pool.DataSourceConfigurationManager;
 import org.openjproxy.grpc.server.utils.ConnectionHashGenerator;
@@ -429,22 +430,11 @@ public class XaServiceImpl extends XaServiceGrpc.XaServiceImplBase {
      * Convert protobuf Xid to javax.transaction.xa.Xid.
      */
     private Xid convertXid(XidProto xidProto) {
-        return new Xid() {
-            @Override
-            public int getFormatId() {
-                return xidProto.getFormatId();
-            }
-
-            @Override
-            public byte[] getGlobalTransactionId() {
-                return xidProto.getGlobalTransactionId().toByteArray();
-            }
-
-            @Override
-            public byte[] getBranchQualifier() {
-                return xidProto.getBranchQualifier().toByteArray();
-            }
-        };
+        return new XidImpl(
+                xidProto.getFormatId(),
+                xidProto.getGlobalTransactionId().toByteArray(),
+                xidProto.getBranchQualifier().toByteArray()
+        );
     }
 
     /**
