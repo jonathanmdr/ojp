@@ -36,8 +36,8 @@ public class PostgresXAIntegrationTest {
 
     @BeforeAll
     public static void checkTestConfiguration() {
-        // Disable by default since this requires a running server
-        isTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresXATests", "true"));
+        // Enable by default for testing
+        isTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresXATests", "false"));
     }
 
     public void setUp(String driverClass, String url, String user, String password) throws SQLException {

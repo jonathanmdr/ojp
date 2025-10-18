@@ -16,6 +16,7 @@ import java.util.Properties;
 class OjpXALogicalConnection extends Connection {
 
     private final OjpXAConnection xaConnection;
+    private final Connection actualConnection;
     private boolean closed = false;
 
     OjpXALogicalConnection(OjpXAConnection xaConnection, String url, String user, String password) throws SQLException {
@@ -35,9 +36,9 @@ class OjpXALogicalConnection extends Connection {
         
         try {
             Driver driver = new Driver();
-            Connection actualConnection = (Connection) driver.connect(url, info);
+            this.actualConnection = (Connection) driver.connect(url, info);
             
-            // Copy the session and service from the actual connection
+            // Copy the session from the actual connection
             this.setSession(actualConnection.getSession());
         } catch (SQLException e) {
             log.error("Failed to create logical connection", e);
@@ -45,13 +46,87 @@ class OjpXALogicalConnection extends Connection {
         }
     }
 
+    /**
+     * Get the actual connection to delegate operations to.
+     */
+    private Connection getActualConnection() {
+        return this.actualConnection;
+    }
+
+    @Override
+    public java.sql.Statement createStatement() throws SQLException {
+        return actualConnection.createStatement();
+    }
+
+    @Override
+    public java.sql.PreparedStatement prepareStatement(String sql) throws SQLException {
+        return actualConnection.prepareStatement(sql);
+    }
+
+    @Override
+    public org.openjproxy.jdbc.CallableStatement prepareCall(String sql) throws SQLException {
+        return (org.openjproxy.jdbc.CallableStatement) actualConnection.prepareCall(sql);
+    }
+
+    @Override
+    public String nativeSQL(String sql) throws SQLException {
+        return actualConnection.nativeSQL(sql);
+    }
+
+    @Override
+    public org.openjproxy.jdbc.DatabaseMetaData getMetaData() throws SQLException {
+        return actualConnection.getMetaData();
+    }
+
+    @Override
+    public void setReadOnly(boolean readOnly) throws SQLException {
+        actualConnection.setReadOnly(readOnly);
+    }
+
+    @Override
+    public boolean isReadOnly() throws SQLException {
+        return actualConnection.isReadOnly();
+    }
+
+    @Override
+    public void setCatalog(String catalog) throws SQLException {
+        actualConnection.setCatalog(catalog);
+    }
+
+    @Override
+    public String getCatalog() throws SQLException {
+        return actualConnection.getCatalog();
+    }
+
+    @Override
+    public void setTransactionIsolation(int level) throws SQLException {
+        actualConnection.setTransactionIsolation(level);
+    }
+
+    @Override
+    public int getTransactionIsolation() throws SQLException {
+        return actualConnection.getTransactionIsolation();
+    }
+
+    @Override
+    public java.sql.SQLWarning getWarnings() throws SQLException {
+        return actualConnection.getWarnings();
+    }
+
+    @Override
+    public void clearWarnings() throws SQLException {
+        actualConnection.clearWarnings();
+    }
+
     @Override
     public void close() throws SQLException {
         log.debug("Logical connection close called");
         if (!closed) {
             closed = true;
-            // Call parent's close to properly terminate the session on the server
-            super.close();
+            // Close the actual connection to properly terminate the session on the server
+            if (actualConnection != null) {
+                actualConnection.close();
+            }
         }
     }
 
@@ -78,6 +153,12 @@ class OjpXALogicalConnection extends Connection {
             throw new SQLException("Cannot enable auto-commit on XA connection");
         }
         // Allow setting to false (XA connections should always be non-auto-commit)
-        super.setAutoCommit(false);
+        actualConnection.setAutoCommit(false);
+    }
+
+    @Override
+    public boolean getAutoCommit() throws SQLException {
+        // XA connections are always non-auto-commit
+        return false;
     }
 }
