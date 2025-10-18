@@ -53,6 +53,8 @@ import org.openjproxy.grpc.server.resultset.ResultSetWrapper;
 import org.openjproxy.grpc.server.lob.LobProcessor;
 import org.openjproxy.grpc.server.utils.StatementRequestValidator;
 
+import javax.sql.XAConnection;
+import javax.sql.XADataSource;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Reader;
@@ -160,12 +162,30 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
 
         this.sessionManager.registerClientUUID(connHash, connectionDetails.getClientUUID());
 
-        SessionInfo.Builder sessionInfoBuilder = SessionInfo.newBuilder()
-                .setConnHash(connHash)
-                .setClientUUID(connectionDetails.getClientUUID())
-                .setIsXA(connectionDetails.getIsXA());
+        SessionInfo sessionInfo;
+        if (connectionDetails.getIsXA()) {
+            // For XA connections, create an XA session
+            try {
+                javax.sql.XAConnection xaConnection = ds.unwrap(javax.sql.XADataSource.class).getXAConnection();
+                Connection connection = xaConnection.getConnection();
+                sessionInfo = sessionManager.createXASession(connectionDetails.getClientUUID(), connection, xaConnection);
+                log.debug("Created XA session: {}", sessionInfo.getSessionUUID());
+            } catch (Exception e) {
+                log.error("Failed to create XA session: {}", e.getMessage(), e);
+                SQLException sqlException = new SQLException("Failed to create XA session: " + e.getMessage(), e);
+                sendSQLExceptionMetadata(sqlException, responseObserver);
+                return;
+            }
+        } else {
+            // For regular connections, just return session info without creating a session yet
+            sessionInfo = SessionInfo.newBuilder()
+                    .setConnHash(connHash)
+                    .setClientUUID(connectionDetails.getClientUUID())
+                    .setIsXA(false)
+                    .build();
+        }
 
-        responseObserver.onNext(sessionInfoBuilder.build());
+        responseObserver.onNext(sessionInfo);
 
         this.dbNameMap.put(connHash, DatabaseUtils.resolveDbName(connectionDetails.getUrl()));
 
