@@ -1576,22 +1576,11 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
      * Convert protobuf Xid to javax.transaction.xa.Xid.
      */
     private javax.transaction.xa.Xid convertXid(com.openjproxy.grpc.XidProto xidProto) {
-        return new javax.transaction.xa.Xid() {
-            @Override
-            public int getFormatId() {
-                return xidProto.getFormatId();
-            }
-
-            @Override
-            public byte[] getGlobalTransactionId() {
-                return xidProto.getGlobalTransactionId().toByteArray();
-            }
-
-            @Override
-            public byte[] getBranchQualifier() {
-                return xidProto.getBranchQualifier().toByteArray();
-            }
-        };
+        return new XidImpl(
+                xidProto.getFormatId(),
+                xidProto.getGlobalTransactionId().toByteArray(),
+                xidProto.getBranchQualifier().toByteArray()
+        );
     }
 
     /**
