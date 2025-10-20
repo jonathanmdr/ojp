@@ -64,8 +64,6 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-        volumes:
-          - ./.github/postgres:/docker-entrypoint-initdb.d:ro
 
       #TODO maybe put proprietary DBs in separated workflows, seem to be insufficient memory in github to run all at once
       #oracle:
@@ -124,6 +122,17 @@ jobs:
       #    - 50000:50000
 
     steps:
+      - name: Wait for Postgres
+        run: |
+          until pg_isready -h localhost -U testuser; do sleep 1; done
+
+      - name: Enable prepared transactions
+        run: |
+          PGPASSWORD=testpassword psql -h localhost -U testuser -d defaultdb \
+            -c "ALTER SYSTEM SET max_prepared_transactions = 100;"
+          PGPASSWORD=testpassword psql -h localhost -U testuser -d defaultdb \
+            -c "SELECT pg_reload_conf();"
+
       - name: Git checkout
         uses: actions/checkout@v4
         with:
