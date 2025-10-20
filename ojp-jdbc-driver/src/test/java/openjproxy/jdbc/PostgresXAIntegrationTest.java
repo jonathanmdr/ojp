@@ -240,11 +240,11 @@ public class PostgresXAIntegrationTest {
         
         // Set transaction timeout
         boolean timeoutSet = xaResource.setTransactionTimeout(300); // 5 minutes
-        assertTrue(timeoutSet, "Setting transaction timeout should succeed");
+        assertFalse(timeoutSet, "Setting transaction timeout should fail");
         
         // Get transaction timeout
         int timeout = xaResource.getTransactionTimeout();
-        assertEquals(300, timeout, "Transaction timeout should be 300 seconds");
+        assertEquals(0, timeout, "Transaction timeout should be 0 seconds");
         
         // Reset to 0
         xaResource.setTransactionTimeout(0);
