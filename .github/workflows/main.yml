@@ -64,6 +64,8 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+        volumes:
+          - ./.github/postgres:/docker-entrypoint-initdb.d
 
       #TODO maybe put proprietary DBs in separated workflows, seem to be insufficient memory in github to run all at once
       #oracle:
