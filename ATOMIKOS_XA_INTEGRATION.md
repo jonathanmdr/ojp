@@ -12,6 +12,30 @@ This document describes the Atomikos XA transaction integration in OJP server, w
 2. **AtomikosDataSourceFactory** - Creates and configures AtomikosDataSourceBean instances
 3. **StatementServiceImpl** - Modified to support both Hikari (non-XA) and Atomikos (XA) datasources
 4. **GrpcServer** - Integrated with Atomikos lifecycle for startup/shutdown
+5. **ConnectionHashGenerator** - Generates unique hashes for connections including datasource name
+6. **DataSourceConfigurationManager** - Manages datasource-specific configurations
+
+### Named DataSource Architecture
+
+The system supports multiple named datasources, each with its own connection pool and configuration:
+
+**JDBC Driver Side:**
+- Parses datasource name from URL: `jdbc:ojp[host:port(dataSourceName)]_database:...`
+- Loads datasource-specific properties from `ojp.properties` using pattern `{dataSourceName}.ojp.connection.pool.*`
+- Sends datasource name to server as `ojp.datasource.name` property
+- Falls back to unprefixed properties for "default" datasource
+
+**Server Side:**
+- `ConnectionHashGenerator` includes datasource name in connection hash calculation
+- Ensures separate pools for same connection string but different datasource names
+- `DataSourceConfigurationManager` extracts and caches datasource-specific configurations
+- Both HikariCP and Atomikos pools use the same datasource name infrastructure
+
+**Benefits:**
+- Multiple isolated connection pools for the same database
+- Different configurations per datasource (e.g., primary with high pool size, readonly with low pool size)
+- Clear separation of concerns (web traffic vs batch jobs vs analytics)
+- Works transparently for both XA and non-XA connections
 
 ### Connection Management
 
@@ -70,6 +94,46 @@ Minimum value is 1 second, even for values less than 1000ms.
 
 ## Usage Examples
 
+### Named DataSource Support
+
+OJP supports multiple named datasources, allowing different connection pools with different configurations. The datasource name is specified in parentheses within the OJP URL section.
+
+**URL Format:**
+```
+jdbc:ojp[host:port(dataSourceName)]_database:connectionString
+```
+
+**Example URLs:**
+```java
+// Primary datasource
+jdbc:ojp[localhost:1059(primary)]_postgresql://localhost/mydb
+
+// Secondary (read-only) datasource  
+jdbc:ojp[localhost:1059(secondary)]_postgresql://localhost/mydb
+
+// Default datasource (no name specified)
+jdbc:ojp[localhost:1059]_postgresql://localhost/mydb
+```
+
+**Configuration in ojp.properties:**
+```properties
+# Primary datasource configuration
+primary.ojp.connection.pool.maximumPoolSize=30
+primary.ojp.connection.pool.minimumIdle=10
+primary.ojp.connection.pool.connectionTimeout=15000
+
+# Secondary datasource configuration
+secondary.ojp.connection.pool.maximumPoolSize=10
+secondary.ojp.connection.pool.minimumIdle=3
+secondary.ojp.connection.pool.connectionTimeout=5000
+
+# Default datasource configuration (used when no name specified)
+ojp.connection.pool.maximumPoolSize=20
+ojp.connection.pool.minimumIdle=5
+```
+
+Each named datasource creates a separate connection pool on the server with its own configuration. This applies to both HikariCP (non-XA) and Atomikos (XA) connection pools.
+
 ### Client-Side XA Connection
 
 ```java
@@ -77,8 +141,9 @@ import com.openjproxy.grpc.ConnectionDetails;
 import org.openjproxy.grpc.SerializationHandler;
 import java.util.Properties;
 
-// Configure connection pool properties
+// Configure connection pool properties for named datasource
 Properties props = new Properties();
+props.setProperty("ojp.datasource.name", "primary");  // Named datasource
 props.setProperty("ojp.connection.pool.maximumPoolSize", "20");
 props.setProperty("ojp.connection.pool.minimumIdle", "5");
 props.setProperty("ojp.connection.pool.connectionTimeout", "10000");
@@ -97,6 +162,20 @@ ConnectionDetails details = ConnectionDetails.newBuilder()
 
 // Connect using the XA-enabled connection
 SessionInfo session = statementService.connect(details);
+```
+
+**Using JDBC Driver with Named DataSource:**
+```java
+// The JDBC driver automatically extracts the datasource name from the URL
+// and loads the corresponding configuration from ojp.properties
+String url = "jdbc:ojp[localhost:1059(primary)]_postgresql://localhost:5432/mydb";
+Connection conn = DriverManager.getConnection(url, "user", "password");
+
+// This will:
+// 1. Parse "primary" as the datasource name
+// 2. Load primary.ojp.connection.pool.* properties from ojp.properties
+// 3. Send these properties to the server
+// 4. Create a separate "primary" connection pool on the server
 ```
 
 ### Server Configuration
@@ -144,17 +223,29 @@ Additional database support can be added by extending the `createXADataSource()`
 ### Connection Acquisition Flow
 
 ```
-Client Request (isXA=true)
+Client Request (isXA=true, dataSourceName="primary")
+    ↓
+JDBC Driver parses URL: jdbc:ojp[localhost:1059(primary)]_postgres:mydb
+    ↓
+Extracts dataSourceName="primary" from URL
+    ↓
+Loads primary.ojp.connection.pool.* from ojp.properties
+    ↓
+Sends to server with ojp.datasource.name=primary
     ↓
 StatementServiceImpl.connect()
+    ↓
+ConnectionHashGenerator includes dataSourceName in hash
     ↓
 Creates XADataSource for database
     ↓
 AtomikosDataSourceFactory.createAtomikosDataSource()
     ↓
-Wraps XADataSource in AtomikosDataSourceBean
+DataSourceConfigurationManager extracts "primary" config
     ↓
-Stores in datasourceXaMap
+Wraps XADataSource in AtomikosDataSourceBean with "primary" config
+    ↓
+Stores in datasourceXaMap with unique hash (includes dataSourceName)
     ↓
 Returns SessionInfo (no connection yet - lazy allocation)
     ↓

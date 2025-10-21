@@ -181,4 +181,72 @@ public class AtomikosIntegrationTest {
                 DataSourceConfigurationManager.getConfiguration(props1);
         assertNotSame(config1, config3, "After clearing cache, new instance should be created");
     }
+
+    @Test
+    public void testAtomikosDataSourceWithNamedDataSource() throws Exception {
+        // Test that Atomikos correctly uses datasource name from properties
+        Properties primaryProperties = new Properties();
+        primaryProperties.setProperty(CommonConstants.DATASOURCE_NAME_PROPERTY, "primary");
+        primaryProperties.setProperty(CommonConstants.MAXIMUM_POOL_SIZE_PROPERTY, "30");
+        primaryProperties.setProperty(CommonConstants.MINIMUM_IDLE_PROPERTY, "8");
+        
+        byte[] serializedProperties = SerializationHandler.serialize(primaryProperties);
+        
+        ConnectionDetails connectionDetails = ConnectionDetails.newBuilder()
+                .setUrl("jdbc:h2:mem:testprimary")
+                .setUser("test")
+                .setPassword("test")
+                .setIsXA(true)
+                .setProperties(ByteString.copyFrom(serializedProperties))
+                .build();
+
+        org.h2.jdbcx.JdbcDataSource xaDataSource = new org.h2.jdbcx.JdbcDataSource();
+        xaDataSource.setURL("jdbc:h2:mem:testprimary");
+
+        // Create Atomikos DataSource with named datasource
+        AtomikosDataSourceBean atomikosDS = AtomikosDataSourceFactory.createAtomikosDataSource(
+                xaDataSource, connectionDetails, "TEST_PRIMARY_XA_DS");
+
+        // Verify that configuration was applied from the "primary" datasource properties
+        assertEquals(30, atomikosDS.getMaxPoolSize(), "Max pool size should be from 'primary' datasource config");
+        assertEquals(8, atomikosDS.getMinPoolSize(), "Min pool size should be from 'primary' datasource config");
+        
+        // Test connection acquisition to ensure it works
+        Connection conn = null;
+        try {
+            conn = atomikosDS.getConnection();
+            assertNotNull(conn, "Connection should not be null");
+            assertFalse(conn.isClosed(), "Connection should not be closed");
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
+            atomikosDS.close();
+        }
+    }
+
+    @Test
+    public void testMultipleNamedDataSources() throws Exception {
+        // Test that different datasource names create separate configurations
+        Properties primaryProps = new Properties();
+        primaryProps.setProperty(CommonConstants.DATASOURCE_NAME_PROPERTY, "primary");
+        primaryProps.setProperty(CommonConstants.MAXIMUM_POOL_SIZE_PROPERTY, "25");
+        
+        Properties secondaryProps = new Properties();
+        secondaryProps.setProperty(CommonConstants.DATASOURCE_NAME_PROPERTY, "secondary");
+        secondaryProps.setProperty(CommonConstants.MAXIMUM_POOL_SIZE_PROPERTY, "15");
+        
+        // Get configurations
+        DataSourceConfigurationManager.DataSourceConfiguration primaryConfig = 
+                DataSourceConfigurationManager.getConfiguration(primaryProps);
+        DataSourceConfigurationManager.DataSourceConfiguration secondaryConfig = 
+                DataSourceConfigurationManager.getConfiguration(secondaryProps);
+        
+        // Verify they are different instances with different values
+        assertNotSame(primaryConfig, secondaryConfig, "Different datasource names should create different configs");
+        assertEquals("primary", primaryConfig.getDataSourceName(), "Primary config should have 'primary' name");
+        assertEquals("secondary", secondaryConfig.getDataSourceName(), "Secondary config should have 'secondary' name");
+        assertEquals(25, primaryConfig.getMaximumPoolSize(), "Primary should have pool size 25");
+        assertEquals(15, secondaryConfig.getMaximumPoolSize(), "Secondary should have pool size 15");
+    }
 }
