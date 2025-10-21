@@ -92,6 +92,7 @@ If Docker is not available in your environment, you can build and run OJP Server
 - [OJP Server Configuration](documents/configuration/ojp-server-configuration.md) - Server startup options and runtime configuration.
 - [Slow query segregation feature](documents/designs/SLOW_QUERY_SEGREGATION.md) - Feature that prevent connection starvation by slow queries (or statements).
 - [Telemetry and Observability](documents/telemetry/README.md) - OpenTelemetry integration and monitoring setup.
+- [OJP Components](documents/OJPComponents.md) - Core modules that define OJP’s architecture, including the server, JDBC driver, and shared gRPC contracts.
     
 ---
 
@@ -126,6 +127,3 @@ Welcome to OJP! We appreciate your interest in contributing. This guide will hel
 <a href=https://github.com/switcherapi>
 <img width="180px" src="documents/images/switcherapi_grey.png" alt="Comunidade Brasil JUG" />
 </a>
-
-- [OJP Components](documents/OJPComponents.md)
-
