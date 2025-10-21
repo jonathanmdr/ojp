@@ -6,6 +6,7 @@ import io.grpc.health.v1.HealthCheckResponse;
 import io.grpc.netty.NettyServerBuilder;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import org.openjproxy.constants.CommonConstants;
+import org.openjproxy.grpc.server.pool.AtomikosLifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,16 @@ public class GrpcServer {
 
         // Load configuration
         ServerConfiguration config = new ServerConfiguration();
+        
+        // Initialize Atomikos transaction manager for XA support
+        try {
+            AtomikosLifecycle.start(config.isAtomikosLoggingEnabled(), config.getAtomikosLoggingDir());
+            logger.info("Atomikos transaction manager initialized");
+        } catch (Exception e) {
+            logger.error("Failed to initialize Atomikos transaction manager: {}", e.getMessage(), e);
+            // Continue without XA support - only XA connections will fail
+            logger.warn("Server will continue without XA transaction support");
+        }
         
         // Validate IP whitelist for server
         if (!IpWhitelistValidator.validateWhitelistRules(config.getAllowedIps())) {
@@ -85,6 +96,15 @@ public class GrpcServer {
                 server.shutdownNow();
                 Thread.currentThread().interrupt();
             }
+            
+            // Shutdown Atomikos transaction manager
+            try {
+                AtomikosLifecycle.stop();
+                logger.info("Atomikos transaction manager shutdown complete");
+            } catch (Exception e) {
+                logger.warn("Error shutting down Atomikos transaction manager: {}", e.getMessage());
+            }
+            
             logger.info("OJP gRPC Server shutdown complete");
         }));
 

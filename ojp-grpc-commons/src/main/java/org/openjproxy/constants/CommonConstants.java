@@ -39,4 +39,12 @@ public class CommonConstants {
     public static final long DEFAULT_IDLE_TIMEOUT = 600000;  // 10 minutes
     public static final long DEFAULT_MAX_LIFETIME = 1800000; // 30 minutes  
     public static final long DEFAULT_CONNECTION_TIMEOUT = 10000; // Reduced from 30s to 10s for faster failure
+    
+    // Atomikos XA configuration property keys
+    public static final String ATOMIKOS_LOGGING_DIR_PROPERTY = "ojp.jdbc.atomikos.logging.dir";
+    public static final String ATOMIKOS_LOGGING_ENABLED_PROPERTY = "ojp.jdbc.atomikos.logging.enabled";
+    
+    // Atomikos default values
+    public static final boolean DEFAULT_ATOMIKOS_LOGGING_ENABLED = false;
+    public static final String DEFAULT_ATOMIKOS_LOGGING_DIR = "./atomikos-logs";
 }

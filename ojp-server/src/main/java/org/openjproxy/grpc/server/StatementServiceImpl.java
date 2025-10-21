@@ -108,6 +108,7 @@ import static org.openjproxy.grpc.server.GrpcExceptionHandler.sendSQLExceptionMe
 public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceImplBase {
 
     private final Map<String, HikariDataSource> datasourceMap = new ConcurrentHashMap<>();
+    private final Map<String, com.atomikos.jdbc.AtomikosDataSourceBean> datasourceXaMap = new ConcurrentHashMap<>();
     private final SessionManager sessionManager;
     private final CircuitBreaker circuitBreaker;
     
@@ -131,6 +132,53 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         String connHash = ConnectionHashGenerator.hashConnectionDetails(connectionDetails);
         log.info("connect connHash = {}, isXA = {}", connHash, connectionDetails.getIsXA());
 
+        // Check if this is an XA connection request
+        if (connectionDetails.getIsXA()) {
+            // Handle XA connection - use Atomikos
+            com.atomikos.jdbc.AtomikosDataSourceBean atomikosDS = this.datasourceXaMap.get(connHash);
+            if (atomikosDS == null) {
+                try {
+                    // Create XADataSource for the database
+                    String url = UrlParser.parseUrl(connectionDetails.getUrl());
+                    javax.sql.XADataSource xaDataSource = createXADataSource(url, connectionDetails);
+                    
+                    // Create Atomikos DataSource wrapping the XADataSource
+                    String uniqueResourceName = "XA_DS_" + connHash;
+                    atomikosDS = org.openjproxy.grpc.server.pool.AtomikosDataSourceFactory.createAtomikosDataSource(
+                            xaDataSource, connectionDetails, uniqueResourceName);
+                    
+                    this.datasourceXaMap.put(connHash, atomikosDS);
+                    
+                    // Get pool size for slow query manager
+                    int poolSize = atomikosDS.getMaxPoolSize();
+                    createSlowQuerySegregationManagerForDatasource(connHash, poolSize);
+                    
+                    log.info("Created new AtomikosDataSourceBean with connHash: {}", connHash);
+                    
+                } catch (Exception e) {
+                    log.error("Failed to create XA datasource for connection hash {}: {}", connHash, e.getMessage(), e);
+                    SQLException sqlException = new SQLException("Failed to create XA datasource: " + e.getMessage(), e);
+                    sendSQLExceptionMetadata(sqlException, responseObserver);
+                    return;
+                }
+            }
+            
+            this.sessionManager.registerClientUUID(connHash, connectionDetails.getClientUUID());
+            
+            // For XA connections, return session info without creating a session yet (lazy allocation)
+            SessionInfo sessionInfo = SessionInfo.newBuilder()
+                    .setConnHash(connHash)
+                    .setClientUUID(connectionDetails.getClientUUID())
+                    .setIsXA(true)
+                    .build();
+            
+            responseObserver.onNext(sessionInfo);
+            this.dbNameMap.put(connHash, DatabaseUtils.resolveDbName(connectionDetails.getUrl()));
+            responseObserver.onCompleted();
+            return;
+        }
+        
+        // Handle non-XA connection - use HikariCP
         HikariDataSource ds = this.datasourceMap.get(connHash);
         if (ds == null) {
             try {
@@ -162,42 +210,12 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
 
         this.sessionManager.registerClientUUID(connHash, connectionDetails.getClientUUID());
 
-        SessionInfo sessionInfo;
-        if (connectionDetails.getIsXA()) {
-            // For XA connections, we need to get an XA connection directly from the underlying XADataSource
-            // HikariCP doesn't expose XADataSource interface, so we create XADataSource directly
-            try {
-                // For PostgreSQL/MySQL, we need to create an XADataSource and get XAConnection from it
-                // Determine database type from URL
-                String url = connectionDetails.getUrl();
-                javax.sql.XADataSource xaDataSource = createXADataSource(url, connectionDetails);
-                javax.sql.XAConnection xaConnection = xaDataSource.getXAConnection(
-                    connectionDetails.getUser(), 
-                    connectionDetails.getPassword()
-                );
-                Connection connection = xaConnection.getConnection();
-                
-                // Enable auto-commit for operations performed BEFORE xaStart
-                // This allows DDL/DML outside XA transactions to be committed automatically
-                // Once xaStart is called, the XAResource takes control of the transaction
-                connection.setAutoCommit(true);
-                
-                sessionInfo = sessionManager.createXASession(connectionDetails.getClientUUID(), connection, xaConnection);
-                log.debug("Created XA session: {}", sessionInfo.getSessionUUID());
-            } catch (Exception e) {
-                log.error("Failed to create XA session: {}", e.getMessage(), e);
-                SQLException sqlException = new SQLException("Failed to create XA session: " + e.getMessage(), e);
-                sendSQLExceptionMetadata(sqlException, responseObserver);
-                return;
-            }
-        } else {
-            // For regular connections, just return session info without creating a session yet
-            sessionInfo = SessionInfo.newBuilder()
-                    .setConnHash(connHash)
-                    .setClientUUID(connectionDetails.getClientUUID())
-                    .setIsXA(false)
-                    .build();
-        }
+        // For regular connections, just return session info without creating a session yet (lazy allocation)
+        SessionInfo sessionInfo = SessionInfo.newBuilder()
+                .setConnHash(connHash)
+                .setClientUUID(connectionDetails.getClientUUID())
+                .setIsXA(false)
+                .build();
 
         responseObserver.onNext(sessionInfo);
 
@@ -1181,6 +1199,7 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
     /**
      * Finds a suitable connection for the current sessionInfo.
      * If there is a connection already in the sessionInfo reuse it, if not get a fresh one from the data source.
+     * This method implements lazy connection allocation for both Hikari and Atomikos XA datasources.
      *
      * @param sessionInfo        - current sessionInfo object.
      * @param startSessionIfNone - if true will start a new sessionInfo if none exists.
@@ -1191,7 +1210,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         ConnectionSessionDTO.ConnectionSessionDTOBuilder dtoBuilder = ConnectionSessionDTO.builder();
         dtoBuilder.session(sessionInfo);
         Connection conn;
+        
         if (StringUtils.isNotEmpty(sessionInfo.getSessionUUID())) {
+            // Session already exists, reuse its connection
             conn = this.sessionManager.getConnection(sessionInfo);
             if (conn == null) {
                 throw new SQLException("Connection not found for this sessionInfo");
@@ -1201,27 +1222,55 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                 throw new SQLException("Connection is closed");
             }
         } else {
-            // Get the datasource for this connection hash
-            HikariDataSource dataSource = this.datasourceMap.get(sessionInfo.getConnHash());
-            if (dataSource == null) {
-                throw new SQLException("No datasource found for connection hash: " + sessionInfo.getConnHash());
-            }
+            // Lazy allocation: check if this is an XA or regular connection
+            String connHash = sessionInfo.getConnHash();
+            boolean isXA = sessionInfo.getIsXA();
             
-            try {
-                // Use enhanced connection acquisition with timeout protection
-                conn = ConnectionAcquisitionManager.acquireConnection(dataSource, sessionInfo.getConnHash());
-                log.debug("Successfully acquired connection from pool for hash: {}", sessionInfo.getConnHash());
-            } catch (SQLException e) {
-                log.error("Failed to acquire connection from pool for hash: {}. Error: {}",
-                    sessionInfo.getConnHash(), e.getMessage());
+            if (isXA) {
+                // XA connection - acquire from Atomikos datasource
+                com.atomikos.jdbc.AtomikosDataSourceBean atomikosDS = this.datasourceXaMap.get(connHash);
+                if (atomikosDS == null) {
+                    throw new SQLException("No XA datasource found for connection hash: " + connHash);
+                }
                 
-                // Re-throw the enhanced exception from ConnectionAcquisitionManager
-                throw e;
-            }
-            
-            if (startSessionIfNone) {
-                SessionInfo updatedSession = this.sessionManager.createSession(sessionInfo.getClientUUID(), conn);
-                dtoBuilder.session(updatedSession);
+                try {
+                    // Acquire connection from Atomikos pool
+                    conn = atomikosDS.getConnection();
+                    log.debug("Successfully acquired XA connection from Atomikos pool for hash: {}", connHash);
+                } catch (SQLException e) {
+                    log.error("Failed to acquire XA connection from Atomikos pool for hash: {}. Error: {}",
+                        connHash, e.getMessage());
+                    throw e;
+                }
+                
+                if (startSessionIfNone) {
+                    // Create a session for XA connection
+                    SessionInfo updatedSession = this.sessionManager.createSession(sessionInfo.getClientUUID(), conn);
+                    dtoBuilder.session(updatedSession);
+                }
+            } else {
+                // Regular connection - acquire from HikariCP datasource
+                HikariDataSource dataSource = this.datasourceMap.get(connHash);
+                if (dataSource == null) {
+                    throw new SQLException("No datasource found for connection hash: " + connHash);
+                }
+                
+                try {
+                    // Use enhanced connection acquisition with timeout protection
+                    conn = ConnectionAcquisitionManager.acquireConnection(dataSource, connHash);
+                    log.debug("Successfully acquired connection from Hikari pool for hash: {}", connHash);
+                } catch (SQLException e) {
+                    log.error("Failed to acquire connection from Hikari pool for hash: {}. Error: {}",
+                        connHash, e.getMessage());
+                    
+                    // Re-throw the enhanced exception from ConnectionAcquisitionManager
+                    throw e;
+                }
+                
+                if (startSessionIfNone) {
+                    SessionInfo updatedSession = this.sessionManager.createSession(sessionInfo.getClientUUID(), conn);
+                    dtoBuilder.session(updatedSession);
+                }
             }
         }
         dtoBuilder.connection(conn);
