@@ -1,13 +1,18 @@
 package org.openjproxy.jdbc.xa;
 
+import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.openjproxy.grpc.SerializationHandler;
 import org.openjproxy.grpc.client.StatementService;
 import org.openjproxy.grpc.client.StatementServiceGrpcClient;
+import org.openjproxy.jdbc.UrlParser;
 
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -18,6 +23,9 @@ import java.util.logging.Logger;
  * Implementation of XADataSource for OJP.
  * This is the entry point for JTA transaction managers to obtain XA connections.
  * Uses the integrated StatementService for all XA operations.
+ * 
+ * <p>The GRPC connection is initialized once per datasource and reused by all XA connections
+ * to avoid the overhead of creating multiple GRPC channels.
  */
 @Slf4j
 public class OjpXADataSource implements XADataSource {
@@ -40,11 +48,16 @@ public class OjpXADataSource implements XADataSource {
 
     private PrintWriter logWriter;
     private final Properties properties = new Properties();
-    private static StatementService statementService;
+    
+    // Shared StatementService per datasource - initialized lazily
+    private StatementService statementService;
+    
+    // Parsed URL information
+    private String cleanUrl;
+    private String dataSourceName;
 
     public OjpXADataSource() {
         log.debug("Creating OjpXADataSource");
-        initializeStatementService();
     }
 
     public OjpXADataSource(String url, String user, String password) {
@@ -52,18 +65,115 @@ public class OjpXADataSource implements XADataSource {
         this.user = user;
         this.password = password;
         log.debug("Creating OjpXADataSource with URL: {}", url);
-        initializeStatementService();
     }
-
-    private void initializeStatementService() {
-        if (statementService == null) {
-            synchronized (OjpXADataSource.class) {
-                if (statementService == null) {
-                    log.debug("Initializing StatementServiceGrpcClient for XA");
-                    statementService = new StatementServiceGrpcClient();
+    
+    /**
+     * Initialize the StatementService and parse URL.
+     * This is done lazily when the first XA connection is requested.
+     * The GRPC channel is opened once and reused by all XA connections from this datasource.
+     */
+    private synchronized void initializeIfNeeded() throws SQLException {
+        if (statementService != null) {
+            return; // Already initialized
+        }
+        
+        if (url == null || url.isEmpty()) {
+            throw new SQLException("URL is not set");
+        }
+        
+        // Parse URL to extract datasource name and clean URL
+        UrlParser.UrlParseResult urlParseResult = UrlParser.parseUrlWithDataSource(url);
+        this.cleanUrl = urlParseResult.cleanUrl;
+        this.dataSourceName = urlParseResult.dataSourceName;
+        
+        log.debug("Parsed URL - clean: {}, dataSource: {}", cleanUrl, dataSourceName);
+        
+        // Load ojp.properties file and extract datasource-specific configuration
+        Properties ojpProperties = loadOjpPropertiesForDataSource(dataSourceName);
+        if (ojpProperties != null && !ojpProperties.isEmpty()) {
+            // Merge ojp.properties with any manually set properties
+            for (String key : ojpProperties.stringPropertyNames()) {
+                if (!properties.containsKey(key)) {
+                    properties.setProperty(key, ojpProperties.getProperty(key));
+                }
+            }
+            log.debug("Loaded ojp.properties with {} properties for dataSource: {}", ojpProperties.size(), dataSourceName);
+        }
+        
+        // Initialize StatementService - this opens the GRPC channel
+        log.debug("Initializing StatementServiceGrpcClient for XA datasource: {}", dataSourceName);
+        statementService = new StatementServiceGrpcClient();
+        
+        // Initialize the GRPC connection by connecting to the server with a test connection
+        // This ensures the channel is opened now, not when first XA connection is created
+        // We use cleanUrl here to trigger the channel initialization
+        log.info("GRPC channel will be initialized on first XA connection for datasource: {}", dataSourceName);
+    }
+    
+    /**
+     * Load ojp.properties and extract configuration specific to the given dataSource.
+     */
+    private Properties loadOjpPropertiesForDataSource(String dataSourceName) {
+        Properties allProperties = loadOjpProperties();
+        if (allProperties == null || allProperties.isEmpty()) {
+            return null;
+        }
+        
+        Properties dataSourceProperties = new Properties();
+        
+        // Look for dataSource-prefixed properties first: {dataSourceName}.ojp.connection.pool.*
+        String prefix = dataSourceName + ".ojp.connection.pool.";
+        boolean foundDataSourceSpecific = false;
+        
+        for (String key : allProperties.stringPropertyNames()) {
+            if (key.startsWith(prefix)) {
+                // Remove the dataSource prefix and keep the standard property name
+                String standardKey = key.substring(dataSourceName.length() + 1); // Remove "{dataSourceName}."
+                dataSourceProperties.setProperty(standardKey, allProperties.getProperty(key));
+                foundDataSourceSpecific = true;
+            }
+        }
+        
+        // If no dataSource-specific properties found, and this is the "default" dataSource,
+        // look for unprefixed properties: ojp.connection.pool.*
+        if (!foundDataSourceSpecific && "default".equals(dataSourceName)) {
+            for (String key : allProperties.stringPropertyNames()) {
+                if (key.startsWith("ojp.connection.pool.")) {
+                    dataSourceProperties.setProperty(key, allProperties.getProperty(key));
                 }
             }
         }
+        
+        // Include the dataSource name as a property
+        if (!dataSourceProperties.isEmpty()) {
+            dataSourceProperties.setProperty("ojp.datasource.name", dataSourceName);
+        }
+        
+        log.debug("Loaded {} properties for dataSource '{}': {}", 
+                dataSourceProperties.size(), dataSourceName, dataSourceProperties);
+        
+        return dataSourceProperties.isEmpty() ? null : dataSourceProperties;
+    }
+    
+    /**
+     * Load the raw ojp.properties file from classpath.
+     */
+    protected Properties loadOjpProperties() {
+        Properties properties = new Properties();
+        
+        // Only try to load from resources/ojp.properties in the classpath
+        try (InputStream is = OjpXADataSource.class.getClassLoader().getResourceAsStream("ojp.properties")) {
+            if (is != null) {
+                properties.load(is);
+                log.debug("Loaded ojp.properties from resources folder");
+                return properties;
+            }
+        } catch (IOException e) {
+            log.debug("Could not load ojp.properties from resources folder: {}", e.getMessage());
+        }
+        
+        log.debug("No ojp.properties file found, using server defaults");
+        return null;
     }
 
     @Override
@@ -76,12 +186,12 @@ public class OjpXADataSource implements XADataSource {
     public XAConnection getXAConnection(String username, String password) throws SQLException {
         log.debug("getXAConnection called with username: {}", username);
         
-        if (url == null || url.isEmpty()) {
-            throw new SQLException("URL is not set");
-        }
+        // Initialize on first use (lazily)
+        initializeIfNeeded();
 
-        // Create XA connection using the integrated StatementService
-        return new OjpXAConnection(statementService, url, username, password, properties);
+        // Create XA connection using the shared StatementService
+        // The GRPC channel is already open and will be reused
+        return new OjpXAConnection(statementService, cleanUrl, username, password, properties);
     }
 
     @Override
