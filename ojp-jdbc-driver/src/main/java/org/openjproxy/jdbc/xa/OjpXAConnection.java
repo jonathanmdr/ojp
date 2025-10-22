@@ -21,12 +21,15 @@ import java.util.Properties;
 /**
  * Implementation of XAConnection that connects to the OJP server for XA operations.
  * Uses the integrated StatementService for connection management.
+ * 
+ * <p>The server-side session is created lazily when first needed (either when getting
+ * the XAResource or when getting a Connection), to avoid creating unnecessary sessions.
  */
 @Slf4j
 public class OjpXAConnection implements XAConnection {
 
     private final StatementService statementService;
-    private final SessionInfo sessionInfo;
+    private SessionInfo sessionInfo; // Lazily initialized
     private final String url;
     private final String user;
     private final String password;
@@ -36,14 +39,25 @@ public class OjpXAConnection implements XAConnection {
     private boolean closed = false;
     private final List<ConnectionEventListener> listeners = new ArrayList<>();
 
-    public OjpXAConnection(StatementService statementService, String url, String user, String password, Properties properties) throws SQLException {
+    public OjpXAConnection(StatementService statementService, String url, String user, String password, Properties properties) {
         log.debug("Creating OjpXAConnection for URL: {}", url);
         this.statementService = statementService;
         this.url = url;
         this.user = user;
         this.password = password;
         this.properties = properties;
-
+        // Session is created lazily when needed
+    }
+    
+    /**
+     * Lazily create the server-side session when first needed.
+     * This avoids creating sessions that may never be used.
+     */
+    private synchronized SessionInfo getOrCreateSession() throws SQLException {
+        if (sessionInfo != null) {
+            return sessionInfo;
+        }
+        
         try {
             // Connect to server with XA flag enabled
             ByteString propertiesBytes = ByteString.EMPTY;
@@ -62,10 +76,11 @@ public class OjpXAConnection implements XAConnection {
 
             this.sessionInfo = statementService.connect(connectionDetails);
             log.debug("XA connection established with session: {}", sessionInfo.getSessionUUID());
+            return sessionInfo;
 
         } catch (Exception e) {
-            log.error("Failed to create XA connection", e);
-            throw new SQLException("Failed to create XA connection", e);
+            log.error("Failed to create XA connection session", e);
+            throw new SQLException("Failed to create XA connection session", e);
         }
     }
 
@@ -74,7 +89,9 @@ public class OjpXAConnection implements XAConnection {
         log.debug("getXAResource called");
         checkClosed();
         if (xaResource == null) {
-            xaResource = new OjpXAResource(statementService, sessionInfo);
+            // Lazily create session when XAResource is first requested
+            SessionInfo session = getOrCreateSession();
+            xaResource = new OjpXAResource(statementService, session);
         }
         return xaResource;
     }
@@ -89,8 +106,11 @@ public class OjpXAConnection implements XAConnection {
             logicalConnection.close();
         }
         
+        // Lazily create session when Connection is first requested
+        SessionInfo session = getOrCreateSession();
+        
         // Create a new logical connection that uses the same XA session on the server
-        logicalConnection = new OjpXALogicalConnection(this, sessionInfo, url);
+        logicalConnection = new OjpXALogicalConnection(this, session, url);
         return logicalConnection;
     }
     
@@ -121,12 +141,14 @@ public class OjpXAConnection implements XAConnection {
             listener.connectionClosed(event);
         }
         
-        // Close XA session on server
-        try {
-            statementService.terminateSession(sessionInfo);
-        } catch (Exception e) {
-            log.error("Error closing XA session", e);
-            throw new SQLException("Error closing XA session", e);
+        // Close XA session on server (only if it was created)
+        if (sessionInfo != null) {
+            try {
+                statementService.terminateSession(sessionInfo);
+            } catch (Exception e) {
+                log.error("Error closing XA session", e);
+                throw new SQLException("Error closing XA session", e);
+            }
         }
     }
 
