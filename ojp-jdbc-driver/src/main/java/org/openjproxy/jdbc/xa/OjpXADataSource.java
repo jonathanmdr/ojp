@@ -100,14 +100,14 @@ public class OjpXADataSource implements XADataSource {
             log.debug("Loaded ojp.properties with {} properties for dataSource: {}", ojpProperties.size(), dataSourceName);
         }
         
-        // Initialize StatementService - this opens the GRPC channel
+        // Initialize StatementService - this will open the GRPC channel on first use
         log.debug("Initializing StatementServiceGrpcClient for XA datasource: {}", dataSourceName);
         statementService = new StatementServiceGrpcClient();
         
-        // Initialize the GRPC connection by connecting to the server with a test connection
-        // This ensures the channel is opened now, not when first XA connection is created
-        // We use cleanUrl here to trigger the channel initialization
-        log.info("GRPC channel will be initialized on first XA connection for datasource: {}", dataSourceName);
+        // The GRPC channel will be opened lazily on the first connect() call
+        // Since this StatementService instance is shared by all XA connections from this datasource,
+        // the channel is opened once and reused
+        log.info("StatementService initialized for datasource: {}. GRPC channel will open on first use.", dataSourceName);
     }
     
     /**
