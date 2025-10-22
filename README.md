@@ -93,7 +93,8 @@ If Docker is not available in your environment, you can build and run OJP Server
 - [Slow query segregation feature](documents/designs/SLOW_QUERY_SEGREGATION.md) - Feature that prevent connection starvation by slow queries (or statements).
 - [Telemetry and Observability](documents/telemetry/README.md) - OpenTelemetry integration and monitoring setup.
 - [OJP Components](documents/OJPComponents.md) - Core modules that define OJP’s architecture, including the server, JDBC driver, and shared gRPC contracts.
-    
+- [OJP Integration Tests](../ojp-framework-integration/README.md) - Integration tests of OJP with the main Java frameworks
+
 ---
 
 ## Vision
