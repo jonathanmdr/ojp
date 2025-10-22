@@ -108,7 +108,8 @@ import static org.openjproxy.grpc.server.GrpcExceptionHandler.sendSQLExceptionMe
 public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceImplBase {
 
     private final Map<String, HikariDataSource> datasourceMap = new ConcurrentHashMap<>();
-    private final Map<String, com.atomikos.jdbc.AtomikosDataSourceBean> datasourceXaMap = new ConcurrentHashMap<>();
+    // Map for storing XADataSources (native database XADataSource, not Atomikos)
+    private final Map<String, XADataSource> xaDataSourceMap = new ConcurrentHashMap<>();
     private final SessionManager sessionManager;
     private final CircuitBreaker circuitBreaker;
     
@@ -134,26 +135,17 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
 
         // Check if this is an XA connection request
         if (connectionDetails.getIsXA()) {
-            // Handle XA connection - use Atomikos
-            com.atomikos.jdbc.AtomikosDataSourceBean atomikosDS = this.datasourceXaMap.get(connHash);
-            if (atomikosDS == null) {
+            // Handle XA connection - create native XADataSource (pass-through approach)
+            XADataSource xaDataSource = this.xaDataSourceMap.get(connHash);
+            if (xaDataSource == null) {
                 try {
                     // Create XADataSource for the database
                     String url = UrlParser.parseUrl(connectionDetails.getUrl());
-                    javax.sql.XADataSource xaDataSource = createXADataSource(url, connectionDetails);
+                    xaDataSource = createXADataSource(url, connectionDetails);
                     
-                    // Create Atomikos DataSource wrapping the XADataSource
-                    String uniqueResourceName = "XA_DS_" + connHash;
-                    atomikosDS = org.openjproxy.grpc.server.pool.AtomikosDataSourceFactory.createAtomikosDataSource(
-                            xaDataSource, connectionDetails, uniqueResourceName);
+                    this.xaDataSourceMap.put(connHash, xaDataSource);
                     
-                    this.datasourceXaMap.put(connHash, atomikosDS);
-                    
-                    // Get pool size for slow query manager
-                    int poolSize = atomikosDS.getMaxPoolSize();
-                    createSlowQuerySegregationManagerForDatasource(connHash, poolSize);
-                    
-                    log.info("Created new AtomikosDataSourceBean with connHash: {}", connHash);
+                    log.info("Created new native XADataSource for XA pass-through with connHash: {}", connHash);
                     
                 } catch (Exception e) {
                     log.error("Failed to create XA datasource for connection hash {}: {}", connHash, e.getMessage(), e);
@@ -165,17 +157,29 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             
             this.sessionManager.registerClientUUID(connHash, connectionDetails.getClientUUID());
             
-            // For XA connections, return session info without creating a session yet (lazy allocation)
-            SessionInfo sessionInfo = SessionInfo.newBuilder()
-                    .setConnHash(connHash)
-                    .setClientUUID(connectionDetails.getClientUUID())
-                    .setIsXA(true)
-                    .build();
-            
-            responseObserver.onNext(sessionInfo);
-            this.dbNameMap.put(connHash, DatabaseUtils.resolveDbName(connectionDetails.getUrl()));
-            responseObserver.onCompleted();
-            return;
+            // For XA connections, create session with XAConnection immediately
+            // (This ensures XAResource is available for client's JTA transaction manager)
+            try {
+                XAConnection xaConnection = xaDataSource.getXAConnection();
+                Connection connection = xaConnection.getConnection();
+                
+                // Create session with XA support using sessionManager
+                SessionInfo sessionInfo = this.sessionManager.createXASession(
+                        connectionDetails.getClientUUID(), connection, xaConnection);
+                
+                log.info("Created XA session with UUID: {} for client: {}", 
+                        sessionInfo.getSessionUUID(), connectionDetails.getClientUUID());
+                
+                responseObserver.onNext(sessionInfo);
+                this.dbNameMap.put(connHash, DatabaseUtils.resolveDbName(connectionDetails.getUrl()));
+                responseObserver.onCompleted();
+                return;
+                
+            } catch (SQLException e) {
+                log.error("Failed to create XA connection for hash {}: {}", connHash, e.getMessage(), e);
+                sendSQLExceptionMetadata(e, responseObserver);
+                return;
+            }
         }
         
         // Handle non-XA connection - use HikariCP
@@ -1227,27 +1231,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             boolean isXA = sessionInfo.getIsXA();
             
             if (isXA) {
-                // XA connection - acquire from Atomikos datasource
-                com.atomikos.jdbc.AtomikosDataSourceBean atomikosDS = this.datasourceXaMap.get(connHash);
-                if (atomikosDS == null) {
-                    throw new SQLException("No XA datasource found for connection hash: " + connHash);
-                }
-                
-                try {
-                    // Acquire connection from Atomikos pool
-                    conn = atomikosDS.getConnection();
-                    log.debug("Successfully acquired XA connection from Atomikos pool for hash: {}", connHash);
-                } catch (SQLException e) {
-                    log.error("Failed to acquire XA connection from Atomikos pool for hash: {}. Error: {}",
-                        connHash, e.getMessage());
-                    throw e;
-                }
-                
-                if (startSessionIfNone) {
-                    // Create a session for XA connection
-                    SessionInfo updatedSession = this.sessionManager.createSession(sessionInfo.getClientUUID(), conn);
-                    dtoBuilder.session(updatedSession);
-                }
+                // XA connection - should already have a session created in connect()
+                // This shouldn't happen as XA sessions are created eagerly
+                throw new SQLException("XA session should already exist. Session UUID is missing.");
             } else {
                 // Regular connection - acquire from HikariCP datasource
                 HikariDataSource dataSource = this.datasourceMap.get(connHash);
