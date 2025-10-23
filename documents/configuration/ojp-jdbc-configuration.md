@@ -124,6 +124,8 @@ Connection backgroundConn = DriverManager.getConnection(
 - `ojp.connection.pool.maximumPoolSize=20` (default datasource)
 - `myApp.ojp.connection.pool.maximumPoolSize=50` (myApp datasource)
 
+**Important - XA Connection Pooling**: When using XA (distributed transaction) connections via `OjpXADataSource`, the connection pooling properties listed above are **NOT applied**. XA connections are managed directly by the native database XADataSource without HikariCP pooling. This is because XA connections must be handled differently to support the two-phase commit protocol. For XA connections, the server acts as a pass-through proxy, delegating XA operations directly to the database's XAResource.
+
 ### Example ojp.properties File
 
 ```properties
@@ -228,9 +230,15 @@ Connection defaultConn = DriverManager.getConnection(
 
 #### Disable Application-Level Connection Pooling
 
-When using OJP, **disable any existing connection pooling** in your application (such as HikariCP, C3P0, or DBCP2) since OJP handles connection pooling at the proxy level. This prevents double-pooling and ensures optimal performance.
+When using OJP with regular (non-XA) connections, **disable any existing connection pooling** in your application (such as HikariCP, C3P0, or DBCP2) since OJP handles connection pooling at the proxy level. This prevents double-pooling and ensures optimal performance.
 
-**Important**: OJP will not work properly if another connection pool is enabled on the application side. Make sure to disable all application-level connection pooling before using OJP.
+**Important**: OJP will not work properly if another connection pool is enabled on the application side for regular connections. Make sure to disable all application-level connection pooling before using OJP.
+
+**Exception - XA Connections**: When using `OjpXADataSource` for distributed transactions (XA mode), OJP does NOT apply HikariCP connection pooling. XA connections bypass pooling entirely and are managed directly by the native database XADataSource to support proper XA protocol semantics. Therefore:
+- Connection pool configuration properties (`maximumPoolSize`, `minimumIdle`, etc.) have **no effect** in XA mode
+- The server acts as a transparent pass-through proxy for XA operations
+- XA connections are created directly from the database driver's XADataSource
+- Client-side JTA transaction managers (like Atomikos or Narayana) control the distributed transaction lifecycle
 
 #### DataSource Isolation
 
