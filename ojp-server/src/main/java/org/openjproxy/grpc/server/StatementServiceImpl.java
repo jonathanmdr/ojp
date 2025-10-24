@@ -131,10 +131,21 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
     @Override
     public void connect(ConnectionDetails connectionDetails, StreamObserver<SessionInfo> responseObserver) {
         String connHash = ConnectionHashGenerator.hashConnectionDetails(connectionDetails);
-        log.info("connect connHash = {}, isXA = {}", connHash, connectionDetails.getIsXA());
+        int maxXaTransactions = connectionDetails.getMaxXaTransactions() > 0 ? 
+                connectionDetails.getMaxXaTransactions() : 
+                org.openjproxy.constants.CommonConstants.DEFAULT_MAX_XA_TRANSACTIONS;
+        log.info("connect connHash = {}, isXA = {}, maxXaTransactions = {}", 
+                connHash, connectionDetails.getIsXA(), maxXaTransactions);
 
         // Check if this is an XA connection request
         if (connectionDetails.getIsXA()) {
+            // Initialize or retrieve XA transaction limiter for this connection
+            XaTransactionLimiter xaLimiter = ((SessionManagerImpl) sessionManager)
+                    .getOrCreateXaLimiter(connHash, maxXaTransactions);
+            log.info("XA limiter for connHash {}: max={}, active={}/{}", 
+                    connHash, xaLimiter.getMaxTransactions(), 
+                    xaLimiter.getActiveTransactions(), xaLimiter.getMaxTransactions());
+            
             // Handle XA connection - create native XADataSource (pass-through approach)
             XADataSource xaDataSource = this.xaDataSourceMap.get(connHash);
             if (xaDataSource == null) {
@@ -144,6 +155,10 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
                     xaDataSource = createXADataSource(url, connectionDetails);
                     
                     this.xaDataSourceMap.put(connHash, xaDataSource);
+                    
+                    // Create slow query segregation manager for XA datasource
+                    // Use maxXaTransactions as the pool size for XA operations
+                    createSlowQuerySegregationManagerForDatasource(connHash, maxXaTransactions);
                     
                     log.info("Created new native XADataSource for XA pass-through with connHash: {}", connHash);
                     
@@ -1413,10 +1428,23 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         log.debug("xaStart: session={}, xid={}, flags={}", 
                 request.getSession().getSessionUUID(), request.getXid(), request.getFlags());
         
+        Session session = null;
+        XaTransactionLimiter xaLimiter = null;
+        boolean permitAcquired = false;
+        
         try {
-            Session session = sessionManager.getSession(request.getSession());
+            session = sessionManager.getSession(request.getSession());
             if (session == null || !session.isXA() || session.getXaResource() == null) {
                 throw new SQLException("Session is not an XA session");
+            }
+            
+            // Acquire XA transaction permit before starting
+            String connHash = session.getConnectionHash();
+            xaLimiter = ((SessionManagerImpl) sessionManager).getXaLimiter(connHash);
+            if (xaLimiter != null) {
+                xaLimiter.acquire(); // This will block or timeout if limit reached
+                permitAcquired = true;
+                log.debug("XA transaction permit acquired for session {}", session.getSessionUUID());
             }
             
             javax.transaction.xa.Xid xid = convertXid(request.getXid());
@@ -1431,6 +1459,12 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             responseObserver.onCompleted();
 
         } catch (Exception e) {
+            // If we acquired a permit but the start failed, release it
+            if (permitAcquired && xaLimiter != null) {
+                xaLimiter.release();
+                log.debug("Released XA transaction permit due to start failure");
+            }
+            
             log.error("Error in xaStart", e);
             SQLException sqlException = (e instanceof SQLException) ? (SQLException) e : new SQLException(e);
             sendSQLExceptionMetadata(sqlException, responseObserver);
@@ -1508,6 +1542,14 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             javax.transaction.xa.Xid xid = convertXid(request.getXid());
             session.getXaResource().commit(xid, request.getOnePhase());
             
+            // Release XA transaction permit after commit
+            String connHash = session.getConnectionHash();
+            XaTransactionLimiter xaLimiter = ((SessionManagerImpl) sessionManager).getXaLimiter(connHash);
+            if (xaLimiter != null) {
+                xaLimiter.release();
+                log.debug("Released XA transaction permit after commit for session {}", session.getSessionUUID());
+            }
+            
             com.openjproxy.grpc.XaResponse response = com.openjproxy.grpc.XaResponse.newBuilder()
                     .setSession(session.getSessionInfo())
                     .setSuccess(true)
@@ -1536,6 +1578,14 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             
             javax.transaction.xa.Xid xid = convertXid(request.getXid());
             session.getXaResource().rollback(xid);
+            
+            // Release XA transaction permit after rollback
+            String connHash = session.getConnectionHash();
+            XaTransactionLimiter xaLimiter = ((SessionManagerImpl) sessionManager).getXaLimiter(connHash);
+            if (xaLimiter != null) {
+                xaLimiter.release();
+                log.debug("Released XA transaction permit after rollback for session {}", session.getSessionUUID());
+            }
             
             com.openjproxy.grpc.XaResponse response = com.openjproxy.grpc.XaResponse.newBuilder()
                     .setSession(session.getSessionInfo())

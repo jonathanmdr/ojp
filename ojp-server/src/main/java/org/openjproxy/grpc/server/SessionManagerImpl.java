@@ -23,6 +23,8 @@ public class SessionManagerImpl implements SessionManager {
 
     private Map<String, String> connectionHashMap = new ConcurrentHashMap<>();
     private Map<String, Session> sessionMap = new ConcurrentHashMap<>();
+    // XA transaction limiters per connection hash
+    private Map<String, XaTransactionLimiter> xaLimiters = new ConcurrentHashMap<>();
 
     @Override
     public void registerClientUUID(String connectionHash, String clientUUID) {
@@ -187,5 +189,27 @@ public class SessionManagerImpl implements SessionManager {
     public Object getAttr(SessionInfo sessionInfo, String key) {
         Session session = this.sessionMap.get(sessionInfo.getSessionUUID());
         return session.getAttr(key);
+    }
+
+    /**
+     * Registers or retrieves an XA transaction limiter for a connection hash.
+     * 
+     * @param connectionHash The connection hash
+     * @param maxXaTransactions Maximum concurrent XA transactions
+     * @return The XA transaction limiter for this connection
+     */
+    public XaTransactionLimiter getOrCreateXaLimiter(String connectionHash, int maxXaTransactions) {
+        return xaLimiters.computeIfAbsent(connectionHash, 
+            hash -> new XaTransactionLimiter(maxXaTransactions));
+    }
+    
+    /**
+     * Gets the XA transaction limiter for a connection hash.
+     * 
+     * @param connectionHash The connection hash
+     * @return The XA transaction limiter, or null if not found
+     */
+    public XaTransactionLimiter getXaLimiter(String connectionHash) {
+        return xaLimiters.get(connectionHash);
     }
 }

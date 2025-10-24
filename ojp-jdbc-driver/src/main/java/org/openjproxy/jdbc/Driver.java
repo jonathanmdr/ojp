@@ -59,9 +59,22 @@ public class Driver implements java.sql.Driver {
         // Load ojp.properties file and extract datasource-specific configuration
         Properties ojpProperties = loadOjpPropertiesForDataSource(dataSourceName);
         ByteString propertiesBytes = ByteString.EMPTY;
+        int maxXaTransactions = org.openjproxy.constants.CommonConstants.DEFAULT_MAX_XA_TRANSACTIONS;
+        
         if (ojpProperties != null && !ojpProperties.isEmpty()) {
             propertiesBytes = ByteString.copyFrom(SerializationHandler.serialize(ojpProperties));
             log.debug("Loaded ojp.properties with {} properties for dataSource: {}", ojpProperties.size(), dataSourceName);
+            
+            // Extract maxXaTransactions if configured
+            String maxXaTransactionsStr = ojpProperties.getProperty(org.openjproxy.constants.CommonConstants.MAX_XA_TRANSACTIONS_PROPERTY);
+            if (maxXaTransactionsStr != null) {
+                try {
+                    maxXaTransactions = Integer.parseInt(maxXaTransactionsStr);
+                    log.debug("Using configured maxXaTransactions: {}", maxXaTransactions);
+                } catch (NumberFormatException e) {
+                    log.warn("Invalid maxXaTransactions value '{}', using default: {}", maxXaTransactionsStr, maxXaTransactions);
+                }
+            }
         }
         
         SessionInfo sessionInfo = statementService
@@ -71,6 +84,7 @@ public class Driver implements java.sql.Driver {
                         .setPassword((String) ((info.get(PASSWORD) != null) ? info.get(PASSWORD) : ""))
                         .setClientUUID(ClientUUID.getUUID())
                         .setProperties(propertiesBytes)
+                        .setMaxXaTransactions(maxXaTransactions)
                         .build()
                 );
         log.debug("Returning new Connection with sessionInfo: {}", sessionInfo);
