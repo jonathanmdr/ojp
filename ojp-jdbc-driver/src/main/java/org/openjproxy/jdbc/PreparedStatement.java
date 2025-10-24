@@ -879,6 +879,16 @@ public class PreparedStatement extends Statement implements java.sql.PreparedSta
         }
     }
 
+    /**
+     * Guarantees that the properties map has the sql statement set in this prepared statement.
+     */
+    @Override
+    public void setQueryTimeout(int seconds) throws SQLException {
+        log.debug("setQueryTimeout: {}", seconds);
+        checkClosed();
+        this.callProxy(CallType.CALL_SET, "QueryTimeout", Void.class, Arrays.asList(seconds));
+    }
+
     private CallResourceRequest.Builder newCallBuilder() throws SQLException {
         log.debug("newCallBuilder called");
         this.propertiesHaveSqlStatement();

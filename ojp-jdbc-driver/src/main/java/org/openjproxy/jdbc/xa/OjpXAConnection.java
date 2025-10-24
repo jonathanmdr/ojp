@@ -110,7 +110,7 @@ public class OjpXAConnection implements XAConnection {
         SessionInfo session = getOrCreateSession();
         
         // Verify session was created successfully
-        if (session == null || session.getSessionUUID() == null || session.getSessionUUID().isEmpty()) {
+        if (session == null) {
             log.error("Failed to create valid session - sessionInfo: {}", session);
             throw new SQLException("Failed to create XA connection session");
         }
