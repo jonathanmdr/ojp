@@ -85,6 +85,7 @@ public class GrpcServer {
                 server.shutdownNow();
                 Thread.currentThread().interrupt();
             }
+            
             logger.info("OJP gRPC Server shutdown complete");
         }));
 

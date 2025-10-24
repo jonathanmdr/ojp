@@ -2,7 +2,9 @@ package org.openjproxy.grpc.server.utils;
 
 import com.openjproxy.grpc.ConnectionDetails;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.Base64;
 import java.util.Properties;
 
 import static org.openjproxy.grpc.SerializationHandler.deserialize;
@@ -31,9 +33,10 @@ public class ConnectionHashGenerator {
             // Concatenate all parts at once: URL, user, password, and dataSource name
             String hashInput = connectionDetails.getUrl() + connectionDetails.getUser() + connectionDetails.getPassword()+
                     extractDataSourceName(connectionDetails);
-            
-            messageDigest.update(hashInput.getBytes());
-            return new String(messageDigest.digest());
+
+            byte[] full = messageDigest.digest(hashInput.getBytes(StandardCharsets.UTF_8));
+
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(full);
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate connection hash", e);
         }

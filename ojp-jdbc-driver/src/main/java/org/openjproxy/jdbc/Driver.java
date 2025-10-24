@@ -23,19 +23,6 @@ import static org.openjproxy.jdbc.Constants.USER;
 @Slf4j
 public class Driver implements java.sql.Driver {
 
-    /**
-     * Result class for URL parsing.
-     */
-    private static class UrlParseResult {
-        final String cleanUrl;
-        final String dataSourceName;
-        
-        UrlParseResult(String cleanUrl, String dataSourceName) {
-            this.cleanUrl = cleanUrl;
-            this.dataSourceName = dataSourceName;
-        }
-    }
-
     static {
         try {
             log.debug("Registering OpenJProxy Driver");
@@ -63,7 +50,7 @@ public class Driver implements java.sql.Driver {
         log.debug("connect: url={}, info={}", url, info);
         
         // Parse URL to extract dataSource name and clean URL
-        UrlParseResult urlParseResult = parseUrlWithDataSource(url);
+        UrlParser.UrlParseResult urlParseResult = UrlParser.parseUrlWithDataSource(url);
         String cleanUrl = urlParseResult.cleanUrl;
         String dataSourceName = urlParseResult.dataSourceName;
         
@@ -90,66 +77,11 @@ public class Driver implements java.sql.Driver {
         return new Connection(sessionInfo, statementService, DatabaseUtils.resolveDbName(cleanUrl));
     }
     
-    /**
-     * Parses the URL to extract dataSource parameter from the OJP section and return clean URL.
-     * 
-     * <p>Example transformations:
-     * <ul>
-     *   <li>Input: {@code jdbc:ojp[localhost:1059(webApp)]_postgresql://localhost/mydb}</li>
-     *   <li>Output: {@code jdbc:ojp[localhost:1059]_postgresql://localhost/mydb}, dataSource: "webApp"</li>
-     * </ul>
-     * <ul>
-     *   <li>Input: {@code jdbc:ojp[localhost:1059]_h2:mem:test}</li>
-     *   <li>Output: {@code jdbc:ojp[localhost:1059]_h2:mem:test}, dataSource: "default"</li>
-     * </ul>
-     * 
-     * @param url the original JDBC URL
-     * @return UrlParseResult containing the cleaned URL (with dataSource removed) and the extracted dataSource name
-     */
-    private UrlParseResult parseUrlWithDataSource(String url) {
-        if (url == null) {
-            return new UrlParseResult(url, "default");
-        }
-        
-        // Look for the OJP section: jdbc:ojp[host:port(dataSource)]_
-        if (!url.startsWith("jdbc:ojp[")) {
-            return new UrlParseResult(url, "default");
-        }
-        
-        int bracketStart = url.indexOf('[');
-        int bracketEnd = url.indexOf(']');
-        
-        if (bracketStart == -1 || bracketEnd == -1) {
-            return new UrlParseResult(url, "default");
-        }
-        
-        String ojpSection = url.substring(bracketStart + 1, bracketEnd);
-        
-        // Look for dataSource in parentheses: host:port(dataSource)
-        int parenStart = ojpSection.indexOf('(');
-        int parenEnd = ojpSection.lastIndexOf(')');
-        
-        String dataSourceName = "default";
-        String cleanOjpSection = ojpSection;
-        
-        if (parenStart != -1 && parenEnd != -1 && parenEnd > parenStart) {
-            // Extract dataSource name from parentheses and trim whitespace
-            dataSourceName = ojpSection.substring(parenStart + 1, parenEnd).trim();
-            // Remove the dataSource part from OJP section
-            cleanOjpSection = ojpSection.substring(0, parenStart);
-        }
-        
-        // Reconstruct the URL without the dataSource part
-        String cleanUrl = "jdbc:ojp[" + cleanOjpSection + "]" + url.substring(bracketEnd + 1);
-        
-        return new UrlParseResult(cleanUrl, dataSourceName);
-    }
-
     
     /**
      * Load ojp.properties and extract configuration specific to the given dataSource.
      */
-    private Properties loadOjpPropertiesForDataSource(String dataSourceName) {
+    protected Properties loadOjpPropertiesForDataSource(String dataSourceName) {
         Properties allProperties = loadOjpProperties();
         if (allProperties == null || allProperties.isEmpty()) {
             return null;

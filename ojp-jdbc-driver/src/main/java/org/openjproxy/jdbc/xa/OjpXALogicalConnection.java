@@ -55,10 +55,10 @@ class OjpXALogicalConnection extends Connection {
 
     @Override
     public void setAutoCommit(boolean autoCommit) throws SQLException {
-        if (autoCommit) {
-            throw new SQLException("Cannot enable auto-commit on XA connection");
-        }
-        // Allow setting to false (no-op for XA connections which are always non-auto-commit)
+        // XA connections ignore auto-commit settings as they are controlled by XA protocol
+        // This is required for compatibility with transaction managers like Atomikos
+        // that may call setAutoCommit(true) during connection lifecycle management
+        log.debug("setAutoCommit({}) called on XA connection - ignored (XA protocol controls transaction)", autoCommit);
     }
 
     @Override
