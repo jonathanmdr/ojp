@@ -1,5 +1,6 @@
 package org.openjproxy.grpc.server;
 
+import org.openjproxy.grpc.GrpcChannelFactory;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.health.v1.HealthCheckRequest;
@@ -41,9 +42,7 @@ class GrpcServerHealthTest {
         System.setProperty("ojp.prometheus.port", String.valueOf(testPrometheusPort));
 
         // Create client channel
-        channel = ManagedChannelBuilder.forAddress("localhost", testPort)
-                .usePlaintext()
-                .build();
+        channel = GrpcChannelFactory.createChannel("localhost", testPort);
 
         // Create health check stub
         healthStub = HealthGrpc.newBlockingStub(channel);
