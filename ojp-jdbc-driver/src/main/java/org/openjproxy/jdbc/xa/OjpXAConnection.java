@@ -109,6 +109,14 @@ public class OjpXAConnection implements XAConnection {
         // Lazily create session when Connection is first requested
         SessionInfo session = getOrCreateSession();
         
+        // Verify session was created successfully
+        if (session == null || session.getSessionUUID() == null || session.getSessionUUID().isEmpty()) {
+            log.error("Failed to create valid session - sessionInfo: {}", session);
+            throw new SQLException("Failed to create XA connection session");
+        }
+        
+        log.debug("Creating logical connection for session: {}", session.getSessionUUID());
+        
         // Create a new logical connection that uses the same XA session on the server
         logicalConnection = new OjpXALogicalConnection(this, session, url);
         return logicalConnection;
