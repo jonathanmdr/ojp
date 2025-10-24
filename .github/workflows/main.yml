@@ -152,10 +152,7 @@ jobs:
       - name: Build (ojp-server)
         run: mvn clean install -DskipTests  -Dgpg.skip=true
 
-      - name: Test (ojp-server)
-        run: mvn test -pl ojp-server
-
-      - name: Run (ojp-server)
+      - name: Test and Run (ojp-server)
         run: mvn verify -pl ojp-server -Prun-ojp-server > /tmp/ojp-server.log 2>&1 &
 
       - name: Wait for ojp-server to start
