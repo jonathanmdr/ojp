@@ -31,6 +31,8 @@ public class CommonConstants {
     public static final String IDLE_TIMEOUT_PROPERTY = "ojp.connection.pool.idleTimeout";
     public static final String MAX_LIFETIME_PROPERTY = "ojp.connection.pool.maxLifetime";
     public static final String CONNECTION_TIMEOUT_PROPERTY = "ojp.connection.pool.connectionTimeout";
+    public static final String MAX_XA_TRANSACTIONS_PROPERTY = "ojp.xa.maxTransactions";
+    public static final String XA_START_TIMEOUT_PROPERTY = "ojp.xa.startTimeoutMillis";
 
     // HikariCP default connection pool settings - optimized for high concurrency
     // ISSUE #29 FIX: Updated these values to prevent indefinite blocking under high load
@@ -39,4 +41,8 @@ public class CommonConstants {
     public static final long DEFAULT_IDLE_TIMEOUT = 600000;  // 10 minutes
     public static final long DEFAULT_MAX_LIFETIME = 1800000; // 30 minutes  
     public static final long DEFAULT_CONNECTION_TIMEOUT = 10000; // Reduced from 30s to 10s for faster failure
+    
+    // XA Transaction settings
+    public static final int DEFAULT_MAX_XA_TRANSACTIONS = 50;  // Maximum concurrent XA transactions
+    public static final long DEFAULT_XA_START_TIMEOUT_MILLIS = 60000;  // 60 seconds timeout for acquiring XA slot
 }
