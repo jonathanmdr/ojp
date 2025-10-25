@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: openjproxy.jdbc.Db2ResultSetTest
--------------------------------------------------------------------------------
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 5, Time elapsed: 0.036 s -- in openjproxy.jdbc.Db2ResultSetTest

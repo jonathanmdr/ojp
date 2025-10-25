@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: openjproxy.jdbc.Db2DatabaseMetaDataExtensiveTests
--------------------------------------------------------------------------------
-Tests run: 7, Failures: 0, Errors: 0, Skipped: 7, Time elapsed: 0.065 s -- in openjproxy.jdbc.Db2DatabaseMetaDataExtensiveTests

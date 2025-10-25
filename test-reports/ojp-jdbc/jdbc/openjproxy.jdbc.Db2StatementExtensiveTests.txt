@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: openjproxy.jdbc.Db2StatementExtensiveTests
--------------------------------------------------------------------------------
-Tests run: 32, Failures: 0, Errors: 0, Skipped: 32, Time elapsed: 0.133 s -- in openjproxy.jdbc.Db2StatementExtensiveTests

@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: openjproxy.jdbc.OraclePreparedStatementExtensiveTests
--------------------------------------------------------------------------------
-Tests run: 11, Failures: 0, Errors: 0, Skipped: 11, Time elapsed: 0.025 s -- in openjproxy.jdbc.OraclePreparedStatementExtensiveTests
