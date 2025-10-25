@@ -1,126 +1,157 @@
 package org.openjproxy.grpc.server;
 
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.openjproxy.constants.CommonConstants;
 
 import java.sql.SQLException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Manages concurrent XA transaction limits using a Semaphore.
- * Enforces a maximum number of active XA transactions at any given time.
+ * Limits the number of concurrent XA transactions using a fair semaphore.
+ * <p>
+ * Key properties:
+ * <ul>
+ *   <li>Instance-scoped (no static shared state).</li>
+ *   <li>Fair semaphore to reduce starvation under contention.</li>
+ *   <li>Guards against double-release so permits never exceed {@code maxTransactions}.</li>
+ *   <li>Accurate metrics for total acquired/rejected and active count.</li>
+ * </ul>
  */
-@Slf4j
-public class XaTransactionLimiter {
-    
+public final class XaTransactionLimiter {
+
+    private static final String SQLSTATE_LIMIT_REACHED = "XA001";
+
     private final Semaphore semaphore;
-    @Getter
     private final int maxTransactions;
-    private final long startTimeoutMillis;
-    private final AtomicInteger activeTransactions = new AtomicInteger(0);
-    private final AtomicInteger totalAcquired = new AtomicInteger(0);
-    private final AtomicInteger totalRejected = new AtomicInteger(0);
-    
+    private final long acquireTimeoutMs;
+
+    private final AtomicInteger active = new AtomicInteger(0);
+    private final AtomicLong totalAcquired = new AtomicLong(0);
+    private final AtomicLong totalRejected = new AtomicLong(0);
+
     /**
-     * Creates a new XA transaction limiter.
-     * 
-     * @param maxTransactions Maximum number of concurrent XA transactions
-     * @param startTimeoutMillis Timeout in milliseconds for acquiring a transaction slot (default: 60000)
-     */
-    public XaTransactionLimiter(int maxTransactions, long startTimeoutMillis) {
-        this.maxTransactions = maxTransactions;
-        this.startTimeoutMillis = startTimeoutMillis;
-        this.semaphore = new Semaphore(maxTransactions, true); // fair semaphore
-        log.info("XaTransactionLimiter initialized with maxTransactions={}, startTimeout={}ms", 
-                maxTransactions, startTimeoutMillis);
-    }
-    
-    /**
-     * Creates a new XA transaction limiter with default timeout.
-     * 
-     * @param maxTransactions Maximum number of concurrent XA transactions
+     * Create a limiter with a max and default timeout from {@link CommonConstants}.
      */
     public XaTransactionLimiter(int maxTransactions) {
-        this(maxTransactions, CommonConstants.DEFAULT_XA_START_TIMEOUT_MILLIS);
+        this(maxTransactions, getDefaultTimeoutFromConstants());
     }
-    
+
     /**
-     * Acquires a permit to start an XA transaction.
-     * Blocks up to the configured timeout if no permits are available.
-     * 
-     * @throws SQLException if unable to acquire a permit within the timeout
+     * Create a limiter with a max and an explicit acquire timeout (milliseconds).
+     */
+    public XaTransactionLimiter(int maxTransactions, long acquireTimeoutMs) {
+        if (maxTransactions <= 0) {
+            throw new IllegalArgumentException("maxTransactions must be > 0");
+        }
+        if (acquireTimeoutMs < 0) {
+            throw new IllegalArgumentException("acquireTimeoutMs must be >= 0");
+        }
+        this.maxTransactions = maxTransactions;
+        this.acquireTimeoutMs = acquireTimeoutMs;
+        // Use a fair semaphore to keep acquisition order predictable under load.
+        this.semaphore = new Semaphore(maxTransactions, true);
+    }
+
+    /**
+     * Acquire a permit, waiting up to the configured timeout.
+     *
+     * @throws SQLException when the limit is reached and the acquire times out,
+     *                      or the thread is interrupted while waiting.
      */
     public void acquire() throws SQLException {
+        final boolean acquired;
         try {
-            boolean acquired = semaphore.tryAcquire(startTimeoutMillis, TimeUnit.MILLISECONDS);
-            if (!acquired) {
-                totalRejected.incrementAndGet();
-                log.warn("XA transaction limit reached. Max: {}, Active: {}, Timeout after {}ms", 
-                        maxTransactions, activeTransactions.get(), startTimeoutMillis);
-                throw new SQLException(
-                    String.format("XA transaction limit reached. Maximum %d concurrent XA transactions allowed. " +
-                                "Unable to acquire slot after %dms timeout.", 
-                                maxTransactions, startTimeoutMillis),
-                    "XA001"  // Custom SQL state for XA limit reached
-                );
+            if (acquireTimeoutMs == 0L) {
+                acquired = semaphore.tryAcquire(); // non-blocking
+            } else {
+                acquired = semaphore.tryAcquire(acquireTimeoutMs, TimeUnit.MILLISECONDS);
             }
-            activeTransactions.incrementAndGet();
-            totalAcquired.incrementAndGet();
-            log.debug("XA transaction permit acquired. Active: {}/{}", activeTransactions.get(), maxTransactions);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
             totalRejected.incrementAndGet();
-            log.error("Interrupted while waiting for XA transaction permit", e);
-            throw new SQLException("Interrupted while waiting for XA transaction permit", "XA002", e);
+            throw new SQLException("Interrupted while acquiring XA transaction permit", SQLSTATE_LIMIT_REACHED, ie);
         }
+
+        if (!acquired) {
+            totalRejected.incrementAndGet();
+            throw new SQLException(
+                    "XA transaction limit reached (max=" + maxTransactions + ", timeout=" + acquireTimeoutMs + "ms)",
+                    SQLSTATE_LIMIT_REACHED
+            );
+        }
+
+        // Bookkeeping after a successful acquire.
+        active.incrementAndGet();
+        totalAcquired.incrementAndGet();
     }
-    
+
     /**
-     * Releases a permit after an XA transaction ends.
-     * Should always be called in a finally block to ensure permit is released.
+     * Release a permit. Extra releases are ignored and never increase the semaphore
+     * beyond {@code maxTransactions}.
      */
     public void release() {
-        semaphore.release();
-        int active = activeTransactions.decrementAndGet();
-        log.debug("XA transaction permit released. Active: {}/{}", active, maxTransactions);
+        // Only release if we actually hold an active permit.
+        int current = active.get();
+        if (current > 0) {
+            // First, reduce the active count.
+            active.decrementAndGet();
+            // Then, return a permit to the semaphore, but clamp to the configured maximum.
+            // This prevents over-release from inflating availablePermits beyond max.
+            if (semaphore.availablePermits() < maxTransactions) {
+                semaphore.release();
+            }
+        } else {
+            // Ignore double/extra releases; optionally log if you have a logger.
+            // e.g., log.warn("Extra release() call ignored");
+        }
     }
-    
-    /**
-     * Gets the current number of active XA transactions.
-     * 
-     * @return Number of currently active XA transactions
-     */
+
+    // ----- Metrics & Introspection -----
+
+    public int getMaxTransactions() {
+        return maxTransactions;
+    }
+
+    /** Number of permits currently held (concurrent active transactions). */
     public int getActiveTransactions() {
-        return activeTransactions.get();
+        return active.get();
     }
-    
-    /**
-     * Gets the total number of successfully acquired XA transaction permits.
-     * 
-     * @return Total acquired count
-     */
-    public int getTotalAcquired() {
+
+    /** Number of permits currently available to acquire. */
+    public int getAvailablePermits() {
+        // Since we clamp releases, this will always be in [0, maxTransactions].
+        return semaphore.availablePermits();
+    }
+
+    /** Total successful acquire attempts since construction. */
+    public long getTotalAcquired() {
         return totalAcquired.get();
     }
-    
-    /**
-     * Gets the total number of rejected XA transaction attempts (timeouts).
-     * 
-     * @return Total rejected count
-     */
-    public int getTotalRejected() {
+
+    /** Total rejected (timed-out or interrupted) acquire attempts since construction. */
+    public long getTotalRejected() {
         return totalRejected.get();
     }
-    
-    /**
-     * Gets the number of available permits.
-     * 
-     * @return Number of available XA transaction slots
-     */
-    public int getAvailablePermits() {
-        return semaphore.availablePermits();
+
+    @Override
+    public String toString() {
+        return "XaTransactionLimiter{" +
+                "max=" + maxTransactions +
+                ", active=" + active.get() +
+                ", availablePermits=" + semaphore.availablePermits() +
+                ", totalAcquired=" + totalAcquired.get() +
+                ", totalRejected=" + totalRejected.get() +
+                ", timeoutMs=" + acquireTimeoutMs +
+                '}';
+    }
+
+    // ----- Helpers -----
+
+    private static long getDefaultTimeoutFromConstants() {
+        // Keep this adapter minimal so tests don't depend on a specific constant name.
+        // Replace with your actual constant if different.
+        return CommonConstants.DEFAULT_XA_START_TIMEOUT_MILLIS;
     }
 }
