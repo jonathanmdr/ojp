@@ -49,6 +49,12 @@ ojp.connection.pool.maximumPoolSize=20
 ojp.connection.pool.minimumIdle=5
 ojp.connection.pool.idleTimeout=600000
 ```
+#### Default Maximum Inbound Message Size Configuration 
+
+```properties
+# Default Maximum Inbound Message Size Configuration 
+ojp.grpc.maxInboundMessageSize=16777216  
+```
 
 ### How to Use DataSources
 
