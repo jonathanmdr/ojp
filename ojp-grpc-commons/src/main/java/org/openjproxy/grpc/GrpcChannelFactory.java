@@ -1,5 +1,6 @@
 package org.openjproxy.grpc;
 
+import org.openjproxy.config.GrpcClientConfig;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.io.IOException;

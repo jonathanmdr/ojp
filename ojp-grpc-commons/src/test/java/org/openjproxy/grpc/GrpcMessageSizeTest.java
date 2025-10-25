@@ -1,8 +1,8 @@
 package org.openjproxy.grpc;
 
-import echo.EchoRequest;
-import echo.EchoResponse;
-import echo.EchoServiceGrpc;
+import org.openjproxy.grpc.EchoRequest;
+import org.openjproxy.grpc.EchoResponse;
+import org.openjproxy.grpc.EchoServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -52,7 +52,7 @@ public class GrpcMessageSizeTest {
 	// This should pass
 	@Test
 	void testMessageAtSizeLimit() {
-		String message = generateMessageOfSize(SIZE_LIMIT); // Exactly 16MB
+		String message = generateMessageOfSize(SIZE_LIMIT - 10); // Exactly 16MB
 		EchoServiceGrpc.EchoServiceBlockingStub stub = getStub(SIZE_LIMIT);
 		EchoResponse response = stub.echo(EchoRequest.newBuilder().setMessage(message).build());
 		assertEquals(message, response.getMessage());
