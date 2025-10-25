@@ -144,7 +144,7 @@ jobs:
           cache: maven
 
       - name: Build and Install (ojp-grpc-commons)
-        run: mvn clean install -pl ojp-grpc-commons -DskipTests -Dgpg.skip=true
+        run: mvn clean install -pl ojp-grpc-commons -am -DskipTests -Dgpg.skip=true
 
       - name: Test (ojp-grpc-commons)
         run: mvn test -pl ojp-grpc-commons -Dgpg.skip=true
@@ -164,6 +164,9 @@ jobs:
           java-version: ${{ matrix.java-version }}
           distribution: 'temurin'
           cache: maven
+
+      - name: Build (ojp-grpc-commons) with JDK ${{ matrix.java-version }}
+        run: mvn clean install -pl ojp-grpc-commons -am -DskipTests -Dgpg.skip=true
 
       - name: Build (ojp-jdbc-driver)
         run: mvn clean install -pl ojp-jdbc-driver -DskipTests -Dgpg.skip=true
