@@ -32,6 +32,7 @@ public class CommonConstants {
     public static final String MAX_LIFETIME_PROPERTY = "ojp.connection.pool.maxLifetime";
     public static final String CONNECTION_TIMEOUT_PROPERTY = "ojp.connection.pool.connectionTimeout";
     public static final String MAX_XA_TRANSACTIONS_PROPERTY = "ojp.xa.maxTransactions";
+    public static final String XA_START_TIMEOUT_PROPERTY = "ojp.xa.startTimeoutMillis";
 
     // HikariCP default connection pool settings - optimized for high concurrency
     // ISSUE #29 FIX: Updated these values to prevent indefinite blocking under high load

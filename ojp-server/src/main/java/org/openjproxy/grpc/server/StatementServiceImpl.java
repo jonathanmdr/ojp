@@ -131,17 +131,51 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
     @Override
     public void connect(ConnectionDetails connectionDetails, StreamObserver<SessionInfo> responseObserver) {
         String connHash = ConnectionHashGenerator.hashConnectionDetails(connectionDetails);
-        int maxXaTransactions = connectionDetails.getMaxXaTransactions() > 0 ? 
-                connectionDetails.getMaxXaTransactions() : 
-                org.openjproxy.constants.CommonConstants.DEFAULT_MAX_XA_TRANSACTIONS;
-        log.info("connect connHash = {}, isXA = {}, maxXaTransactions = {}", 
-                connHash, connectionDetails.getIsXA(), maxXaTransactions);
+        
+        // Extract maxXaTransactions from properties
+        int maxXaTransactions = org.openjproxy.constants.CommonConstants.DEFAULT_MAX_XA_TRANSACTIONS;
+        long xaStartTimeoutMillis = org.openjproxy.constants.CommonConstants.DEFAULT_XA_START_TIMEOUT_MILLIS;
+        
+        if (!connectionDetails.getProperties().isEmpty()) {
+            try {
+                Properties clientProperties = deserialize(connectionDetails.getProperties().toByteArray(), Properties.class);
+                
+                // Extract maxXaTransactions if configured
+                String maxXaTransactionsStr = clientProperties.getProperty(
+                        org.openjproxy.constants.CommonConstants.MAX_XA_TRANSACTIONS_PROPERTY);
+                if (maxXaTransactionsStr != null) {
+                    try {
+                        maxXaTransactions = Integer.parseInt(maxXaTransactionsStr);
+                        log.debug("Using configured maxXaTransactions: {}", maxXaTransactions);
+                    } catch (NumberFormatException e) {
+                        log.warn("Invalid maxXaTransactions value '{}', using default: {}", maxXaTransactionsStr, maxXaTransactions);
+                    }
+                }
+                
+                // Extract xaStartTimeoutMillis if configured
+                String xaStartTimeoutStr = clientProperties.getProperty(
+                        org.openjproxy.constants.CommonConstants.XA_START_TIMEOUT_PROPERTY);
+                if (xaStartTimeoutStr != null) {
+                    try {
+                        xaStartTimeoutMillis = Long.parseLong(xaStartTimeoutStr);
+                        log.debug("Using configured xaStartTimeoutMillis: {}", xaStartTimeoutMillis);
+                    } catch (NumberFormatException e) {
+                        log.warn("Invalid xaStartTimeoutMillis value '{}', using default: {}", xaStartTimeoutStr, xaStartTimeoutMillis);
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to deserialize client properties for XA config, using defaults: {}", e.getMessage());
+            }
+        }
+        
+        log.info("connect connHash = {}, isXA = {}, maxXaTransactions = {}, xaStartTimeout = {}ms", 
+                connHash, connectionDetails.getIsXA(), maxXaTransactions, xaStartTimeoutMillis);
 
         // Check if this is an XA connection request
         if (connectionDetails.getIsXA()) {
             // Initialize or retrieve XA transaction limiter for this connection
             XaTransactionLimiter xaLimiter = ((SessionManagerImpl) sessionManager)
-                    .getOrCreateXaLimiter(connHash, maxXaTransactions);
+                    .getOrCreateXaLimiter(connHash, maxXaTransactions, xaStartTimeoutMillis);
             log.info("XA limiter for connHash {}: max={}, active={}/{}", 
                     connHash, xaLimiter.getMaxTransactions(), 
                     xaLimiter.getActiveTransactions(), xaLimiter.getMaxTransactions());

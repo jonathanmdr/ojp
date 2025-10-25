@@ -61,21 +61,8 @@ public class OjpXAConnection implements XAConnection {
         try {
             // Connect to server with XA flag enabled
             ByteString propertiesBytes = ByteString.EMPTY;
-            int maxXaTransactions = org.openjproxy.constants.CommonConstants.DEFAULT_MAX_XA_TRANSACTIONS;
-            
             if (properties != null && !properties.isEmpty()) {
                 propertiesBytes = ByteString.copyFrom(SerializationHandler.serialize(properties));
-                
-                // Extract maxXaTransactions if configured
-                String maxXaTransactionsStr = properties.getProperty(org.openjproxy.constants.CommonConstants.MAX_XA_TRANSACTIONS_PROPERTY);
-                if (maxXaTransactionsStr != null) {
-                    try {
-                        maxXaTransactions = Integer.parseInt(maxXaTransactionsStr);
-                        log.debug("Using configured maxXaTransactions: {}", maxXaTransactions);
-                    } catch (NumberFormatException e) {
-                        log.warn("Invalid maxXaTransactions value '{}', using default: {}", maxXaTransactionsStr, maxXaTransactions);
-                    }
-                }
             }
 
             ConnectionDetails connectionDetails = ConnectionDetails.newBuilder()
@@ -85,7 +72,6 @@ public class OjpXAConnection implements XAConnection {
                     .setClientUUID(ClientUUID.getUUID())
                     .setProperties(propertiesBytes)
                     .setIsXA(true)  // Mark this as an XA connection
-                    .setMaxXaTransactions(maxXaTransactions)
                     .build();
 
             this.sessionInfo = statementService.connect(connectionDetails);

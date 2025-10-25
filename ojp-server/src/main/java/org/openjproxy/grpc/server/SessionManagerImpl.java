@@ -196,11 +196,12 @@ public class SessionManagerImpl implements SessionManager {
      * 
      * @param connectionHash The connection hash
      * @param maxXaTransactions Maximum concurrent XA transactions
+     * @param startTimeoutMillis Timeout in milliseconds for acquiring a transaction slot
      * @return The XA transaction limiter for this connection
      */
-    public XaTransactionLimiter getOrCreateXaLimiter(String connectionHash, int maxXaTransactions) {
+    public XaTransactionLimiter getOrCreateXaLimiter(String connectionHash, int maxXaTransactions, long startTimeoutMillis) {
         return xaLimiters.computeIfAbsent(connectionHash, 
-            hash -> new XaTransactionLimiter(maxXaTransactions));
+            hash -> new XaTransactionLimiter(maxXaTransactions, startTimeoutMillis));
     }
     
     /**

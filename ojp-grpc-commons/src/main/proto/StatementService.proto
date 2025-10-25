@@ -9,7 +9,6 @@ message ConnectionDetails {
     string clientUUID = 4;
     bytes properties = 6;
     bool isXA = 7;  // Flag to indicate XA connection
-    int32 maxXaTransactions = 8;  // Maximum concurrent XA transactions (default: 50)
 }
 
 enum DbName {
