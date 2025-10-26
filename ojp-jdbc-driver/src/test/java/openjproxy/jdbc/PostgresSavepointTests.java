@@ -2,6 +2,7 @@ package openjproxy.jdbc;
 
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
@@ -13,13 +14,22 @@ import java.sql.Savepoint;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
-public class SavepointTests {
+public class PostgresSavepointTests {
 
+    private static boolean isTestDisabled;
     private Connection connection;
+
+    @BeforeAll
+    public static void checkTestConfiguration() {
+      isTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresTests", "false"));
+    }
 
     @SneakyThrows
     public void setUp(String driverClass, String url, String user, String pwd) throws SQLException {
+        assumeFalse(isTestDisabled, "PostgreSQL tests are disabled");
+
         connection = DriverManager.getConnection(url, user, pwd);
         connection.setAutoCommit(false);
         connection.createStatement().execute(
