@@ -6,6 +6,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import org.openjproxy.jdbc.xa.OjpXADataSource;
 import javax.sql.XAConnection;
+import openjproxy.jdbc.testutil.TestDBUtils;
+import openjproxy.jdbc.testutil.TestDBUtils.ConnectionResult;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -38,18 +40,8 @@ public class Db2BinaryStreamIntegrationTest {
     public void createAndReadingBinaryStreamSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
         assumeFalse(isTestDisabled, "Skipping DB2 tests");
 
-        Connection conn;
-        XAConnection xaConn = null;
-        if (isXA) {
-            OjpXADataSource xaDataSource = new OjpXADataSource();
-            xaDataSource.setUrl(url);
-            xaDataSource.setUser(user);
-            xaDataSource.setPassword(pwd);
-            xaConn = xaDataSource.getXAConnection(user, pwd);
-            conn = xaConn.getConnection();
-        } else {
-            conn = DriverManager.getConnection(url, user, pwd);
-        }
+        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
+        Connection conn = connResult.getConnection();
 
         // Set schema explicitly to avoid "object not found" errors
         try (Statement schemaStmt = conn.createStatement()) {
@@ -107,8 +99,7 @@ public class Db2BinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        if (xaConn != null) xaConn.close();
-        conn.close();
+        connResult.close();
     }
 
     @ParameterizedTest
@@ -116,18 +107,8 @@ public class Db2BinaryStreamIntegrationTest {
     public void createAndReadingLargeBinaryStreamSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
         assumeFalse(isTestDisabled, "Skipping DB2 tests");
 
-        Connection conn;
-        XAConnection xaConn = null;
-        if (isXA) {
-            OjpXADataSource xaDataSource = new OjpXADataSource();
-            xaDataSource.setUrl(url);
-            xaDataSource.setUser(user);
-            xaDataSource.setPassword(pwd);
-            xaConn = xaDataSource.getXAConnection(user, pwd);
-            conn = xaConn.getConnection();
-        } else {
-            conn = DriverManager.getConnection(url, user, pwd);
-        }
+        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
+        Connection conn = connResult.getConnection();
 
         System.out.println("Testing DB2 large binary stream for url -> " + url);
 
@@ -169,8 +150,7 @@ public class Db2BinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        if (xaConn != null) xaConn.close();
-        conn.close();
+        connResult.close();
     }
 
     @ParameterizedTest
@@ -178,18 +158,8 @@ public class Db2BinaryStreamIntegrationTest {
     public void testDb2SpecificBinaryHandling(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
         assumeFalse(isTestDisabled, "Skipping DB2 tests");
 
-        Connection conn;
-        XAConnection xaConn = null;
-        if (isXA) {
-            OjpXADataSource xaDataSource = new OjpXADataSource();
-            xaDataSource.setUrl(url);
-            xaDataSource.setUser(user);
-            xaDataSource.setPassword(pwd);
-            xaConn = xaDataSource.getXAConnection(user, pwd);
-            conn = xaConn.getConnection();
-        } else {
-            conn = DriverManager.getConnection(url, user, pwd);
-        }
+        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
+        Connection conn = connResult.getConnection();
 
         System.out.println("Testing DB2-specific binary handling for url -> " + url);
 
@@ -241,7 +211,6 @@ public class Db2BinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        if (xaConn != null) xaConn.close();
-        conn.close();
+        connResult.close();
     }
 }

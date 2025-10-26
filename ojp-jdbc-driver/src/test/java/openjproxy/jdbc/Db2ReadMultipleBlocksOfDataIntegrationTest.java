@@ -6,6 +6,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import org.openjproxy.jdbc.xa.OjpXADataSource;
 import javax.sql.XAConnection;
+import openjproxy.jdbc.testutil.TestDBUtils;
+import openjproxy.jdbc.testutil.TestDBUtils.ConnectionResult;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -33,18 +35,8 @@ public class Db2ReadMultipleBlocksOfDataIntegrationTest {
     public void multiplePagesOfRowsResultSetSuccessful(int totalRecords, String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "Skipping DB2 tests");
         
-        Connection conn;
-        XAConnection xaConn = null;
-        if (isXA) {
-            OjpXADataSource xaDataSource = new OjpXADataSource();
-            xaDataSource.setUrl(url);
-            xaDataSource.setUser(user);
-            xaDataSource.setPassword(pwd);
-            xaConn = xaDataSource.getXAConnection(user, pwd);
-            conn = xaConn.getConnection();
-        } else {
-            conn = DriverManager.getConnection(url, user, pwd);
-        }
+        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
+        Connection conn = connResult.getConnection();
 
         // Set schema explicitly to avoid "object not found" errors
         try (java.sql.Statement schemaStmt = conn.createStatement()) {
@@ -88,8 +80,7 @@ public class Db2ReadMultipleBlocksOfDataIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        if (xaConn != null) xaConn.close();
-        conn.close();
+        connResult.close();
     }
 
     @ParameterizedTest
@@ -97,18 +88,8 @@ public class Db2ReadMultipleBlocksOfDataIntegrationTest {
     public void testDb2LargeDataSetPagination(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "Skipping DB2 tests");
         
-        Connection conn;
-        XAConnection xaConn = null;
-        if (isXA) {
-            OjpXADataSource xaDataSource = new OjpXADataSource();
-            xaDataSource.setUrl(url);
-            xaDataSource.setUser(user);
-            xaDataSource.setPassword(pwd);
-            xaConn = xaDataSource.getXAConnection(user, pwd);
-            conn = xaConn.getConnection();
-        } else {
-            conn = DriverManager.getConnection(url, user, pwd);
-        }
+        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
+        Connection conn = connResult.getConnection();
 
         System.out.println("Testing DB2 large dataset pagination for url -> " + url);
 
@@ -165,8 +146,7 @@ public class Db2ReadMultipleBlocksOfDataIntegrationTest {
         page2.close();
         psPage1.close();
         psPage2.close();
-        if (xaConn != null) xaConn.close();
-        conn.close();
+        connResult.close();
     }
 
     @ParameterizedTest
@@ -174,18 +154,8 @@ public class Db2ReadMultipleBlocksOfDataIntegrationTest {
     public void testDb2ResultSetScrolling(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "Skipping DB2 tests");
         
-        Connection conn;
-        XAConnection xaConn = null;
-        if (isXA) {
-            OjpXADataSource xaDataSource = new OjpXADataSource();
-            xaDataSource.setUrl(url);
-            xaDataSource.setUser(user);
-            xaDataSource.setPassword(pwd);
-            xaConn = xaDataSource.getXAConnection(user, pwd);
-            conn = xaConn.getConnection();
-        } else {
-            conn = DriverManager.getConnection(url, user, pwd);
-        }
+        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
+        Connection conn = connResult.getConnection();
 
         System.out.println("Testing DB2 ResultSet scrolling for url -> " + url);
 
@@ -240,8 +210,7 @@ public class Db2ReadMultipleBlocksOfDataIntegrationTest {
 
         scrollableRs.close();
         scrollableStmt.close();
-        if (xaConn != null) xaConn.close();
-        conn.close();
+        connResult.close();
     }
 
     @ParameterizedTest
@@ -249,18 +218,8 @@ public class Db2ReadMultipleBlocksOfDataIntegrationTest {
     public void testDb2MultipleDataTypes(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "Skipping DB2 tests");
         
-        Connection conn;
-        XAConnection xaConn = null;
-        if (isXA) {
-            OjpXADataSource xaDataSource = new OjpXADataSource();
-            xaDataSource.setUrl(url);
-            xaDataSource.setUser(user);
-            xaDataSource.setPassword(pwd);
-            xaConn = xaDataSource.getXAConnection(user, pwd);
-            conn = xaConn.getConnection();
-        } else {
-            conn = DriverManager.getConnection(url, user, pwd);
-        }
+        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
+        Connection conn = connResult.getConnection();
 
         System.out.println("Testing DB2 multiple data types in large result set for url -> " + url);
 
@@ -315,7 +274,6 @@ public class Db2ReadMultipleBlocksOfDataIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        if (xaConn != null) xaConn.close();
-        conn.close();
+        connResult.close();
     }
 }

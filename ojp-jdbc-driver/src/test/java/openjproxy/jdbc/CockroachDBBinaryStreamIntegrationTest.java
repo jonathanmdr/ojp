@@ -6,6 +6,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import org.openjproxy.jdbc.xa.OjpXADataSource;
 import javax.sql.XAConnection;
+import openjproxy.jdbc.testutil.TestDBUtils;
+import openjproxy.jdbc.testutil.TestDBUtils.ConnectionResult;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -37,18 +39,8 @@ public class CockroachDBBinaryStreamIntegrationTest {
     public void createAndReadingBinaryStreamSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
         assumeFalse(isTestDisabled, "Skipping CockroachDB tests");
 
-        Connection conn;
-        XAConnection xaConn = null;
-        if (isXA) {
-            OjpXADataSource xaDataSource = new OjpXADataSource();
-            xaDataSource.setUrl(url);
-            xaDataSource.setUser(user);
-            xaDataSource.setPassword(pwd);
-            xaConn = xaDataSource.getXAConnection(user, pwd);
-            conn = xaConn.getConnection();
-        } else {
-            conn = DriverManager.getConnection(url, user, pwd);
-        }
+        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
+        Connection conn = connResult.getConnection();
 
         System.out.println("Testing CockroachDB binary stream for url -> " + url);
 
@@ -101,8 +93,7 @@ public class CockroachDBBinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        if (xaConn != null) xaConn.close();
-        conn.close();
+        connResult.close();
     }
 
     @ParameterizedTest
@@ -110,18 +101,8 @@ public class CockroachDBBinaryStreamIntegrationTest {
     public void createAndReadingLargeBinaryStreamSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
         assumeFalse(isTestDisabled, "Skipping CockroachDB tests");
 
-        Connection conn;
-        XAConnection xaConn = null;
-        if (isXA) {
-            OjpXADataSource xaDataSource = new OjpXADataSource();
-            xaDataSource.setUrl(url);
-            xaDataSource.setUser(user);
-            xaDataSource.setPassword(pwd);
-            xaConn = xaDataSource.getXAConnection(user, pwd);
-            conn = xaConn.getConnection();
-        } else {
-            conn = DriverManager.getConnection(url, user, pwd);
-        }
+        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
+        Connection conn = connResult.getConnection();
 
         System.out.println("Testing CockroachDB large binary stream for url -> " + url);
 
@@ -166,8 +147,7 @@ public class CockroachDBBinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        if (xaConn != null) xaConn.close();
-        conn.close();
+        connResult.close();
     }
 
     @ParameterizedTest
@@ -175,18 +155,8 @@ public class CockroachDBBinaryStreamIntegrationTest {
     public void testBinaryStreamWithNullValues(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
         assumeFalse(isTestDisabled, "Skipping CockroachDB tests");
 
-        Connection conn;
-        XAConnection xaConn = null;
-        if (isXA) {
-            OjpXADataSource xaDataSource = new OjpXADataSource();
-            xaDataSource.setUrl(url);
-            xaDataSource.setUser(user);
-            xaDataSource.setPassword(pwd);
-            xaConn = xaDataSource.getXAConnection(user, pwd);
-            conn = xaConn.getConnection();
-        } else {
-            conn = DriverManager.getConnection(url, user, pwd);
-        }
+        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
+        Connection conn = connResult.getConnection();
 
         System.out.println("Testing CockroachDB binary stream with NULL values for url -> " + url);
 
@@ -237,7 +207,6 @@ public class CockroachDBBinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        if (xaConn != null) xaConn.close();
-        conn.close();
+        connResult.close();
     }
 }

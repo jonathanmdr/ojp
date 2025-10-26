@@ -8,6 +8,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import org.openjproxy.jdbc.xa.OjpXADataSource;
 import javax.sql.XAConnection;
+import openjproxy.jdbc.testutil.TestDBUtils;
+import openjproxy.jdbc.testutil.TestDBUtils.ConnectionResult;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -84,18 +86,8 @@ public class BasicCrudIntegrationTest {
             tablePrefix = "cockroachdb_";
         }
 
-        Connection conn;
-        XAConnection xaConn = null;
-        if (isXA) {
-            OjpXADataSource xaDataSource = new OjpXADataSource();
-            xaDataSource.setUrl(url);
-            xaDataSource.setUser(user);
-            xaDataSource.setPassword(pwd);
-            xaConn = xaDataSource.getXAConnection(user, pwd);
-            conn = xaConn.getConnection();
-        } else {
-            conn = DriverManager.getConnection(url, user, pwd);
-        }
+        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
+        Connection conn = connResult.getConnection();
 
         // Set schema for DB2 connections to avoid "object not found" errors
         if (url.toLowerCase().contains("db2")) {
@@ -150,10 +142,7 @@ public class BasicCrudIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        conn.close();
-        if (xaConn != null) {
-            xaConn.close();
-        }
+        connResult.close();
     }
 
 }
