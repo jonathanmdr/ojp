@@ -35,7 +35,8 @@ public class OracleMultipleTypesIntegrationTest {
     public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, ParseException {
         assumeFalse(isTestDisabled, "Oracle tests are disabled");
         
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        TestDBUtils.ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
+        Connection conn = connResult.getConnection();
 
         System.out.println("Testing for url -> " + url);
 
@@ -134,7 +135,7 @@ public class OracleMultipleTypesIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        conn.close();
+        connResult.close();
     }
 
     @ParameterizedTest
@@ -142,7 +143,8 @@ public class OracleMultipleTypesIntegrationTest {
     public void testOracleSpecificTypes(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "Oracle tests are disabled");
         
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        TestDBUtils.ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
+        Connection conn = connResult.getConnection();
 
         System.out.println("Testing Oracle-specific types for url -> " + url);
 
@@ -189,7 +191,7 @@ public class OracleMultipleTypesIntegrationTest {
         resultSet.close();
         psSelect.close();
         psInsert.close();
-        conn.close();
+        connResult.close();
     }
 
     @ParameterizedTest
@@ -197,7 +199,8 @@ public class OracleMultipleTypesIntegrationTest {
     public void testOracleNumberTypes(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "Oracle tests are disabled");
         
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        TestDBUtils.ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
+        Connection conn = connResult.getConnection();
 
         System.out.println("Testing Oracle NUMBER types for url -> " + url);
 
@@ -243,7 +246,7 @@ public class OracleMultipleTypesIntegrationTest {
         resultSet.close();
         psSelect.close();
         psInsert.close();
-        conn.close();
+        connResult.close();
     }
 
     /**
