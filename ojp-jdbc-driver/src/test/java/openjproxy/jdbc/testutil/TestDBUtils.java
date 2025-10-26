@@ -33,6 +33,7 @@ public class TestDBUtils {
         private final boolean isXA;
         private XAResource xaResource;
         private Xid currentXid;
+        private boolean xaTransactionStarted = false;
 
         public ConnectionResult(Connection connection, XAConnection xaConnection) {
             this.connection = connection;
@@ -60,6 +61,24 @@ public class TestDBUtils {
         }
 
         /**
+         * Starts XA transaction if this is an XA connection and transaction not already started.
+         * Should be called after setAutoCommit(false) for XA connections.
+         */
+        public void startXATransactionIfNeeded() throws SQLException {
+            if (isXA && !xaTransactionStarted) {
+                try {
+                    if (!connection.getAutoCommit()) {
+                        currentXid = new SimpleXid();
+                        xaResource.start(currentXid, XAResource.TMNOFLAGS);
+                        xaTransactionStarted = true;
+                    }
+                } catch (Exception e) {
+                    throw new SQLException("Failed to start XA transaction", e);
+                }
+            }
+        }
+
+        /**
          * Commits the transaction using the appropriate method based on connection type.
          * For XA connections, uses XAResource.commit(). For regular connections, uses Connection.commit().
          */
@@ -68,22 +87,44 @@ public class TestDBUtils {
                 // For XA connections, don't call connection.commit() - it's not allowed
                 // Instead, manage via XAResource if autocommit is off
                 try {
-                    if (!connection.getAutoCommit()) {
-                        if (currentXid == null) {
-                            // Start a new XA transaction if not already started
-                            currentXid = new SimpleXid();
-                            xaResource.start(currentXid, XAResource.TMNOFLAGS);
-                        }
+                    if (!connection.getAutoCommit() && xaTransactionStarted) {
                         // End and commit the XA transaction
                         xaResource.end(currentXid, XAResource.TMSUCCESS);
                         xaResource.commit(currentXid, true);
-                        currentXid = null; // Reset for next transaction
+                        currentXid = null;
+                        xaTransactionStarted = false;
+                        // Start a new transaction for subsequent operations
+                        startXATransactionIfNeeded();
                     }
                 } catch (Exception e) {
+                    xaTransactionStarted = false;
+                    currentXid = null;
                     throw new SQLException("Failed to commit XA transaction", e);
                 }
             } else {
                 connection.commit();
+            }
+        }
+
+        /**
+         * Rolls back the transaction.
+         */
+        public void rollback() throws SQLException {
+            if (isXA) {
+                try {
+                    if (!connection.getAutoCommit() && xaTransactionStarted) {
+                        xaResource.end(currentXid, XAResource.TMFAIL);
+                        xaResource.rollback(currentXid);
+                        currentXid = null;
+                        xaTransactionStarted = false;
+                    }
+                } catch (Exception e) {
+                    xaTransactionStarted = false;
+                    currentXid = null;
+                    throw new SQLException("Failed to rollback XA transaction", e);
+                }
+            } else {
+                connection.rollback();
             }
         }
 
@@ -157,7 +198,11 @@ public class TestDBUtils {
             xaDataSource.setPassword(password);
             XAConnection xaConnection = xaDataSource.getXAConnection(user, password);
             Connection connection = xaConnection.getConnection();
-            return new ConnectionResult(connection, xaConnection);
+            ConnectionResult result = new ConnectionResult(connection, xaConnection);
+            // For XA connections, set autocommit to false and start transaction immediately
+            connection.setAutoCommit(false);
+            result.startXATransactionIfNeeded();
+            return result;
         } else {
             Connection connection = DriverManager.getConnection(url, user, password);
             return new ConnectionResult(connection, null);

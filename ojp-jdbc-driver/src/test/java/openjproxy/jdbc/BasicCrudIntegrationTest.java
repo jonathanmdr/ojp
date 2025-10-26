@@ -89,6 +89,11 @@ public class BasicCrudIntegrationTest {
         ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
         Connection conn = connResult.getConnection();
 
+        // For non-XA connections, set autocommit to false for explicit transaction control
+        if (!isXA) {
+            conn.setAutoCommit(false);
+        }
+
         // Set schema for DB2 connections to avoid "object not found" errors
         if (url.toLowerCase().contains("db2")) {
             try (java.sql.Statement schemaStmt = conn.createStatement()) {
@@ -106,16 +111,24 @@ public class BasicCrudIntegrationTest {
 
         try {
             executeUpdate(conn, "drop table " + tableName);
+            connResult.commit();
         } catch (Exception e) {
-            //Does not matter
+            //Does not matter - table might not exist
+            try {
+                connResult.rollback();
+            } catch (Exception ex) {
+                // Ignore rollback errors
+            }
         }
 
         executeUpdate(conn, "create table " + tableName + "(" +
                 "id INT NOT NULL," +
                 "title VARCHAR(50) NOT NULL" +
                 ")");
+        connResult.commit();
 
         executeUpdate(conn, " insert into " + tableName + " (id, title) values (1, 'TITLE_1')");
+        connResult.commit();
 
         java.sql.PreparedStatement psSelect = conn.prepareStatement("select * from " + tableName + " where id = ?");
         psSelect.setInt(1, 1);
@@ -127,6 +140,7 @@ public class BasicCrudIntegrationTest {
         Assert.assertEquals("TITLE_1", title);
 
         executeUpdate(conn, "update " + tableName + " set title='TITLE_1_UPDATED'");
+        connResult.commit();
 
         ResultSet resultSetUpdated = psSelect.executeQuery();
         resultSetUpdated.next();
@@ -135,13 +149,23 @@ public class BasicCrudIntegrationTest {
         Assert.assertEquals(1, idUpdated);
         Assert.assertEquals("TITLE_1_UPDATED", titleUpdated);
 
-        executeUpdate(conn, " delete from " + tablePrefix + "basic_crud_test where id=1 and title='TITLE_1_UPDATED'");
+        executeUpdate(conn, " delete from " + tableName + " where id=1 and title='TITLE_1_UPDATED'");
+        connResult.commit();
 
         ResultSet resultSetAfterDeletion = psSelect.executeQuery();
         Assert.assertFalse(resultSetAfterDeletion.next());
 
         resultSet.close();
         psSelect.close();
+        
+        // Clean up - drop the test table
+        try {
+            executeUpdate(conn, "drop table " + tableName);
+            connResult.commit();
+        } catch (Exception e) {
+            // Ignore cleanup errors
+        }
+        
         connResult.close();
     }
 
