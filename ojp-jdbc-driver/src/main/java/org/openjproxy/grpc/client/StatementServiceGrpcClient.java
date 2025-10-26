@@ -22,6 +22,7 @@ import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import org.openjproxy.constants.CommonConstants;
 import org.openjproxy.grpc.dto.Parameter;
+import org.openjproxy.grpc.GrpcChannelFactory;
 import org.openjproxy.jdbc.Connection;
 import org.openjproxy.jdbc.LobGrpcIterator;
 
@@ -80,9 +81,7 @@ public class StatementServiceGrpcClient implements StatementService {
 
             //Once channel is open it remains open and is shared among all requests.
             String target = DNS_PREFIX + host + COLON + port;
-            ManagedChannel channel = ManagedChannelBuilder.forTarget(target)
-                    .usePlaintext()
-                    .build();
+            ManagedChannel channel = GrpcChannelFactory.createChannel(target);
 
             this.statemetServiceBlockingStub = StatementServiceGrpc.newBlockingStub(channel);
             this.statemetServiceStub = StatementServiceGrpc.newStub(channel);
