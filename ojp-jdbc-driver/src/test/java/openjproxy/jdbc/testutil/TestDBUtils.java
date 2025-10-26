@@ -3,6 +3,8 @@ package openjproxy.jdbc.testutil;
 import org.openjproxy.jdbc.xa.OjpXADataSource;
 
 import javax.sql.XAConnection;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -28,10 +30,21 @@ public class TestDBUtils {
     public static class ConnectionResult {
         private final Connection connection;
         private final XAConnection xaConnection;
+        private final boolean isXA;
+        private XAResource xaResource;
+        private Xid currentXid;
 
         public ConnectionResult(Connection connection, XAConnection xaConnection) {
             this.connection = connection;
             this.xaConnection = xaConnection;
+            this.isXA = (xaConnection != null);
+            if (isXA) {
+                try {
+                    this.xaResource = xaConnection.getXAResource();
+                } catch (SQLException e) {
+                    throw new RuntimeException("Failed to get XAResource", e);
+                }
+            }
         }
 
         public Connection getConnection() {
@@ -40,6 +53,38 @@ public class TestDBUtils {
 
         public XAConnection getXaConnection() {
             return xaConnection;
+        }
+
+        public boolean isXA() {
+            return isXA;
+        }
+
+        /**
+         * Commits the transaction using the appropriate method based on connection type.
+         * For XA connections, uses XAResource.commit(). For regular connections, uses Connection.commit().
+         */
+        public void commit() throws SQLException {
+            if (isXA) {
+                // For XA connections, don't call connection.commit() - it's not allowed
+                // Instead, manage via XAResource if autocommit is off
+                try {
+                    if (!connection.getAutoCommit()) {
+                        if (currentXid == null) {
+                            // Start a new XA transaction if not already started
+                            currentXid = new SimpleXid();
+                            xaResource.start(currentXid, XAResource.TMNOFLAGS);
+                        }
+                        // End and commit the XA transaction
+                        xaResource.end(currentXid, XAResource.TMSUCCESS);
+                        xaResource.commit(currentXid, true);
+                        currentXid = null; // Reset for next transaction
+                    }
+                } catch (Exception e) {
+                    throw new SQLException("Failed to commit XA transaction", e);
+                }
+            } else {
+                connection.commit();
+            }
         }
 
         /**
@@ -60,6 +105,35 @@ public class TestDBUtils {
             } catch (Exception e) {
                 // Ignore
             }
+        }
+    }
+
+    /**
+     * Simple Xid implementation for XA transactions in tests.
+     */
+    private static class SimpleXid implements Xid {
+        private static int counter = 0;
+        private final int id;
+
+        public SimpleXid() {
+            synchronized (SimpleXid.class) {
+                this.id = counter++;
+            }
+        }
+
+        @Override
+        public int getFormatId() {
+            return 1;
+        }
+
+        @Override
+        public byte[] getGlobalTransactionId() {
+            return ("gtx" + id).getBytes();
+        }
+
+        @Override
+        public byte[] getBranchQualifier() {
+            return ("btx" + id).getBytes();
         }
     }
 

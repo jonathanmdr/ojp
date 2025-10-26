@@ -66,7 +66,7 @@ public class BinaryStreamIntegrationTest {
         psInsert.setBinaryStream(2, inputStream2, 5);
         psInsert.executeUpdate();
 
-        conn.commit();
+        connResult.commit();
 
         PreparedStatement psSelect = conn.prepareStatement("select val_blob1, val_blob2 from binary_stream_test_blob ");
         ResultSet resultSet = psSelect.executeQuery();

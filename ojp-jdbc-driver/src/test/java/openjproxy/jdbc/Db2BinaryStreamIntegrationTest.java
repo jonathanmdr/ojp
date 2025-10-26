@@ -76,7 +76,7 @@ public class Db2BinaryStreamIntegrationTest {
         psInsert.setBinaryStream(2, inputStream2, 7);
         psInsert.executeUpdate();
 
-        conn.commit();
+        connResult.commit();
 
         PreparedStatement psSelect = conn.prepareStatement("select val_varbinary1, val_varbinary2 from DB2INST1.db2_binary_stream_test ");
         ResultSet resultSet = psSelect.executeQuery();
