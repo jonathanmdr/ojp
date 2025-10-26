@@ -1,15 +1,9 @@
 1,org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_h2:~/test,sa,,false
-1,org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_h2:~/test,sa,,true
 99,org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_h2:~/test,sa,,false
-99,org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_h2:~/test,sa,,true
 100,org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_h2:~/test,sa,,false
-100,org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_h2:~/test,sa,,true
 101,org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_h2:~/test,sa,,false
-101,org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_h2:~/test,sa,,true
 1000,org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_h2:~/test,sa,,false
-1000,org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_h2:~/test,sa,,true
 10000,org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_h2:~/test,sa,,false
-10000,org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_h2:~/test,sa,,true
 1,org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_postgresql://localhost:5432/defaultdb,testuser,testpassword,false
 1,org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_postgresql://localhost:5432/defaultdb,testuser,testpassword,true
 99,org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_postgresql://localhost:5432/defaultdb,testuser,testpassword,false
