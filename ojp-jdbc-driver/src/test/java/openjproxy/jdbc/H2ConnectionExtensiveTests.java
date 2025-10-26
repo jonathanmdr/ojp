@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class H2ConnectionExtensiveTests {
 
     private Connection connection;
-    private XAConnection xaConnection;
+    private XAConnection xaConnectionection;
 
     @SneakyThrows
     public void setUp(String driverClass, String url, String user, String password, boolean isXA) throws SQLException {
@@ -144,6 +144,7 @@ public class H2ConnectionExtensiveTests {
     public void testClose(String driverClass, String url, String user, String password, boolean isXA) throws SQLException {
         this.setUp(driverClass, url, user, password, isXA);
         assertEquals(false, connection.isClosed());
+        if (xaConnectionection != null) xaConnectionection.close();
         connection.close();
         assertEquals(true, connection.isClosed());
     }

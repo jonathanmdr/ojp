@@ -22,7 +22,7 @@ public class MySQLStatementExtensiveTests {
     private static boolean isMySQLTestDisabled;
     private static boolean isMariaDBTestDisabled;
     private Connection connection;
-    private XAConnection xaConnection;
+    private XAConnection xaConnectionection;
     private Statement statement;
 
     @BeforeAll

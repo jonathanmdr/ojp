@@ -34,7 +34,7 @@ public class H2PreparedStatementExtensiveTests {
 
     private Connection connection;
     private PreparedStatement ps;
-    private XAConnection xaConnection;
+    private XAConnection xaConnectionection;
 
     public void setUp(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
         if (isXA) {
@@ -42,8 +42,8 @@ public class H2PreparedStatementExtensiveTests {
             xaDataSource.setUrl(url);
             xaDataSource.setUser(user);
             xaDataSource.setPassword(password);
-            xaConnection = xaDataSource.getXAConnection(user, password);
-            connection = xaConnection.getConnection();
+            xaConnectionection = xaDataSource.getXAConnection(user, password);
+            connection = xaConnectionection.getConnection();
         } else {
             connection = DriverManager.getConnection(url, user, password);
         }
@@ -65,7 +65,7 @@ public class H2PreparedStatementExtensiveTests {
     public void tearDown() throws Exception {
         if (ps != null) ps.close();
         if (connection != null) connection.close();
-        if (xaConnection != null) xaConnection.close();
+        if (xaConnectionection != null) xaConnectionection.close();
     }
 
     @ParameterizedTest

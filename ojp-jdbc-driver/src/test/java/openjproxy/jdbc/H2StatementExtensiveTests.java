@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class H2StatementExtensiveTests {
 
     private Connection connection;
-    private XAConnection xaConnection;
+    private XAConnection xaConnectionection;
     private Statement statement;
 
     public void setUp(String driverClass, String url, String user, String password, boolean isXA) throws Exception {

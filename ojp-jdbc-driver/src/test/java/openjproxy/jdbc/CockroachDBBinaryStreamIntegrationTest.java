@@ -37,7 +37,18 @@ public class CockroachDBBinaryStreamIntegrationTest {
     public void createAndReadingBinaryStreamSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
         assumeFalse(isTestDisabled, "Skipping CockroachDB tests");
 
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        Connection conn;
+        XAConnection xaConn = null;
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(pwd);
+            xaConn = xaDataSource.getXAConnection(user, pwd);
+            conn = xaConn.getConnection();
+        } else {
+            conn = DriverManager.getConnection(url, user, pwd);
+        }
 
         System.out.println("Testing CockroachDB binary stream for url -> " + url);
 
@@ -90,6 +101,7 @@ public class CockroachDBBinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
+        if (xaConn != null) xaConn.close();
         conn.close();
     }
 
@@ -98,7 +110,18 @@ public class CockroachDBBinaryStreamIntegrationTest {
     public void createAndReadingLargeBinaryStreamSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
         assumeFalse(isTestDisabled, "Skipping CockroachDB tests");
 
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        Connection conn;
+        XAConnection xaConn = null;
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(pwd);
+            xaConn = xaDataSource.getXAConnection(user, pwd);
+            conn = xaConn.getConnection();
+        } else {
+            conn = DriverManager.getConnection(url, user, pwd);
+        }
 
         System.out.println("Testing CockroachDB large binary stream for url -> " + url);
 
@@ -143,6 +166,7 @@ public class CockroachDBBinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
+        if (xaConn != null) xaConn.close();
         conn.close();
     }
 
@@ -151,7 +175,18 @@ public class CockroachDBBinaryStreamIntegrationTest {
     public void testBinaryStreamWithNullValues(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
         assumeFalse(isTestDisabled, "Skipping CockroachDB tests");
 
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        Connection conn;
+        XAConnection xaConn = null;
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(pwd);
+            xaConn = xaDataSource.getXAConnection(user, pwd);
+            conn = xaConn.getConnection();
+        } else {
+            conn = DriverManager.getConnection(url, user, pwd);
+        }
 
         System.out.println("Testing CockroachDB binary stream with NULL values for url -> " + url);
 
@@ -202,6 +237,7 @@ public class CockroachDBBinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
+        if (xaConn != null) xaConn.close();
         conn.close();
     }
 }

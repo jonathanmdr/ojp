@@ -33,7 +33,18 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
     public void testCockroachDBMultiplePagesOfRows(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "Skipping CockroachDB tests");
         
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        Connection conn;
+        XAConnection xaConn = null;
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(pwd);
+            xaConn = xaDataSource.getXAConnection(user, pwd);
+            conn = xaConn.getConnection();
+        } else {
+            conn = DriverManager.getConnection(url, user, pwd);
+        }
 
         int totalRecords = 1000;
         System.out.println("Testing CockroachDB retrieving " + totalRecords + " records from url -> " + url);
@@ -73,6 +84,7 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
 
         resultSet.close();
         psSelect.close();
+        if (xaConn != null) xaConn.close();
         conn.close();
     }
 
@@ -81,7 +93,18 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
     public void testCockroachDBLargeDataSetPagination(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "Skipping CockroachDB tests");
         
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        Connection conn;
+        XAConnection xaConn = null;
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(pwd);
+            xaConn = xaDataSource.getXAConnection(user, pwd);
+            conn = xaConn.getConnection();
+        } else {
+            conn = DriverManager.getConnection(url, user, pwd);
+        }
 
         System.out.println("Testing CockroachDB large dataset pagination for url -> " + url);
 
@@ -132,6 +155,7 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
         }
 
         executeUpdate(conn, "DROP TABLE cockroachdb_pagination_test");
+        if (xaConn != null) xaConn.close();
         conn.close();
     }
 
@@ -140,7 +164,18 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
     public void testCockroachDBLargeResultSetWithVariousTypes(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "Skipping CockroachDB tests");
         
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        Connection conn;
+        XAConnection xaConn = null;
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(pwd);
+            xaConn = xaDataSource.getXAConnection(user, pwd);
+            conn = xaConn.getConnection();
+        } else {
+            conn = DriverManager.getConnection(url, user, pwd);
+        }
 
         System.out.println("Testing CockroachDB large result set with various types for url -> " + url);
 
@@ -193,6 +228,7 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
         resultSet.close();
         psSelect.close();
         executeUpdate(conn, "DROP TABLE cockroachdb_large_types_test");
+        if (xaConn != null) xaConn.close();
         conn.close();
     }
 
@@ -201,7 +237,18 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
     public void testCockroachDBFetchSizePerformance(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "Skipping CockroachDB tests");
         
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        Connection conn;
+        XAConnection xaConn = null;
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(pwd);
+            xaConn = xaDataSource.getXAConnection(user, pwd);
+            conn = xaConn.getConnection();
+        } else {
+            conn = DriverManager.getConnection(url, user, pwd);
+        }
 
         System.out.println("Testing CockroachDB fetch size performance for url -> " + url);
 
@@ -246,6 +293,7 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
         }
 
         executeUpdate(conn, "DROP TABLE cockroachdb_fetch_size_test");
+        if (xaConn != null) xaConn.close();
         conn.close();
     }
 }

@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 public class Db2ResultSetTest {
 
     private Connection connection;
-    private XAConnection xaConnection;
+    private XAConnection xaConnectionection;
     private Statement statement;
     private ResultSet resultSet;
 
@@ -95,6 +95,7 @@ public class Db2ResultSetTest {
             statement.close();
         }
         if (connection != null) {
+        if (xaConnectionection != null) xaConnectionection.close();
             connection.close();
         }
     }

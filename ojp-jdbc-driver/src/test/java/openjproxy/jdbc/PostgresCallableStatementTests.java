@@ -35,7 +35,7 @@ public class PostgresCallableStatementTests {
     private static boolean isTestDisabled;
 
     private Connection connection;
-    private XAConnection xaConnection;
+    private XAConnection xaConnectionection;
     private CallableStatement callableStatement;
 
     @BeforeAll
@@ -89,7 +89,7 @@ public class PostgresCallableStatementTests {
     public void tearDown() throws Exception {
         if (callableStatement != null) callableStatement.close();
         if (connection != null) connection.close();
-        if (xaConnection != null) xaConnection.close();
+        if (xaConnectionection != null) xaConnectionection.close();
     }
 
     @ParameterizedTest

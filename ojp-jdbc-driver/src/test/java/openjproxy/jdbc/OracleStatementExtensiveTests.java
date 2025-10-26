@@ -30,7 +30,7 @@ public class OracleStatementExtensiveTests {
     private static boolean isTestDisabled;
 
     private Connection connection;
-    private XAConnection xaConnection;
+    private XAConnection xaConnectionection;
     private Statement statement;
 
     @BeforeAll

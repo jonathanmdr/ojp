@@ -18,7 +18,7 @@ public class Db2ResultSetMetaDataExtensiveTests {
 
     private static boolean isTestDisabled;
     private Connection connection;
-    private XAConnection xaConnection;
+    private XAConnection xaConnectionection;
     private Statement statement;
     private ResultSet resultSet;
     private ResultSetMetaData metaData;
@@ -82,6 +82,7 @@ public class Db2ResultSetMetaDataExtensiveTests {
         }
         try {
             if (connection != null && !connection.isClosed()) {
+        if (xaConnectionection != null) xaConnectionection.close();
                 connection.close();
             }
         } catch (SQLException e) {

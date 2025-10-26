@@ -38,7 +38,18 @@ public class Db2MultipleTypesIntegrationTest {
     public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, ParseException, UnsupportedEncodingException {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
 
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        Connection conn;
+        XAConnection xaConn = null;
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(pwd);
+            xaConn = xaDataSource.getXAConnection(user, pwd);
+            conn = xaConn.getConnection();
+        } else {
+            conn = DriverManager.getConnection(url, user, pwd);
+        }
 
         // Set schema explicitly to avoid "object not found" errors
         try (java.sql.Statement schemaStmt = conn.createStatement()) {
@@ -128,6 +139,7 @@ public class Db2MultipleTypesIntegrationTest {
 
         resultSet.close();
         psSelect.close();
+        if (xaConn != null) xaConn.close();
         conn.close();
     }
 
@@ -136,7 +148,18 @@ public class Db2MultipleTypesIntegrationTest {
     public void testDb2SpecificTypes(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
         
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        Connection conn;
+        XAConnection xaConn = null;
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(pwd);
+            xaConn = xaDataSource.getXAConnection(user, pwd);
+            conn = xaConn.getConnection();
+        } else {
+            conn = DriverManager.getConnection(url, user, pwd);
+        }
 
         System.out.println("Testing DB2-specific types for url -> " + url);
 
@@ -182,6 +205,7 @@ public class Db2MultipleTypesIntegrationTest {
         resultSet.close();
         psSelect.close();
         psInsert.close();
+        if (xaConn != null) xaConn.close();
         conn.close();
     }
 
@@ -190,7 +214,18 @@ public class Db2MultipleTypesIntegrationTest {
     public void testDb2NumericTypes(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
         
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        Connection conn;
+        XAConnection xaConn = null;
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(pwd);
+            xaConn = xaDataSource.getXAConnection(user, pwd);
+            conn = xaConn.getConnection();
+        } else {
+            conn = DriverManager.getConnection(url, user, pwd);
+        }
 
         // Set schema explicitly to avoid "object not found" errors
         try (java.sql.Statement schemaStmt = conn.createStatement()) {
@@ -249,6 +284,7 @@ public class Db2MultipleTypesIntegrationTest {
         resultSet.close();
         psSelect.close();
         psInsert.close();
+        if (xaConn != null) xaConn.close();
         conn.close();
     }
 
@@ -257,7 +293,18 @@ public class Db2MultipleTypesIntegrationTest {
     public void testDb2DateTimeTypes(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
         
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        Connection conn;
+        XAConnection xaConn = null;
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(pwd);
+            xaConn = xaDataSource.getXAConnection(user, pwd);
+            conn = xaConn.getConnection();
+        } else {
+            conn = DriverManager.getConnection(url, user, pwd);
+        }
 
         System.out.println("Testing DB2 date/time types for url -> " + url);
 
@@ -301,6 +348,7 @@ public class Db2MultipleTypesIntegrationTest {
         resultSet.close();
         psSelect.close();
         psInsert.close();
+        if (xaConn != null) xaConn.close();
         conn.close();
     }
 

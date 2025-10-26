@@ -17,7 +17,7 @@ public class CockroachDBResultSetMetaDataExtensiveTests {
 
     private static boolean isTestDisabled;
     private Connection connection;
-    private XAConnection xaConnection;
+    private XAConnection xaConnectionection;
     private ResultSetMetaData metaData;
 
     @BeforeAll
@@ -56,7 +56,7 @@ public class CockroachDBResultSetMetaDataExtensiveTests {
     @AfterEach
     public void tearDown() throws Exception {
         if (connection != null) connection.close();
-        if (xaConnection != null) xaConnection.close();
+        if (xaConnectionection != null) xaConnectionection.close();
     }
 
     @ParameterizedTest

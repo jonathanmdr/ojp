@@ -33,7 +33,7 @@ public class CockroachDBPreparedStatementExtensiveTests {
     private static boolean isTestDisabled;
 
     private Connection connection;
-    private XAConnection xaConnection;
+    private XAConnection xaConnectionection;
     private PreparedStatement ps;
 
     @BeforeAll

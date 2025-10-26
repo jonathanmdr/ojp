@@ -31,7 +31,7 @@ public class MySQLMariaDBConnectionExtensiveTests {
     private static boolean isMySQLTestDisabled;
     private static boolean isMariaDBTestDisabled;
     private Connection connection;
-    private XAConnection xaConnection;
+    private XAConnection xaConnectionection;
 
     @BeforeAll
     public static void checkTestConfiguration() {

@@ -23,7 +23,7 @@ public class ReadMultipleBlocksOfDataIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_postgres_connections_with_record_counts.csv")
-    public void multiplePagesOfRowsResultSetSuccessful(int totalRecords, String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
+    public void multiplePagesOfRowsResultSetSuccessful(int totalRecords, String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         if (isPostgresTestDisabled && url.contains("postgresql")) {
             return;
         }

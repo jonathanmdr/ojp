@@ -22,7 +22,7 @@ public class OracleSavepointTests {
 
     private static boolean isTestDisabled;
     private Connection connection;
-    private XAConnection xaConnection;
+    private XAConnection xaConnectionection;
 
     @BeforeAll
     public static void checkTestConfiguration() {
@@ -53,7 +53,7 @@ public class OracleSavepointTests {
     @AfterEach
     public void tearDown() throws Exception {
         if (connection != null) connection.close();
-        if (xaConnection != null) xaConnection.close();
+        if (xaConnectionection != null) xaConnectionection.close();
     }
 
     @ParameterizedTest

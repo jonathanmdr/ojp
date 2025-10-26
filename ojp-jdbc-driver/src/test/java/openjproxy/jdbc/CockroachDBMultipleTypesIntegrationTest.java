@@ -35,7 +35,18 @@ public class CockroachDBMultipleTypesIntegrationTest {
     public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, ParseException {
         assumeFalse(isTestDisabled, "CockroachDB tests are disabled");
         
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        Connection conn;
+        XAConnection xaConn = null;
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(pwd);
+            xaConn = xaDataSource.getXAConnection(user, pwd);
+            conn = xaConn.getConnection();
+        } else {
+            conn = DriverManager.getConnection(url, user, pwd);
+        }
 
         System.out.println("Testing for url -> " + url);
 
@@ -129,6 +140,7 @@ public class CockroachDBMultipleTypesIntegrationTest {
 
         resultSet.close();
         psSelect.close();
+        if (xaConn != null) xaConn.close();
         conn.close();
     }
 
@@ -137,7 +149,18 @@ public class CockroachDBMultipleTypesIntegrationTest {
     public void testCockroachDBSpecificTypes(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "CockroachDB tests are disabled");
         
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        Connection conn;
+        XAConnection xaConn = null;
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(pwd);
+            xaConn = xaDataSource.getXAConnection(user, pwd);
+            conn = xaConn.getConnection();
+        } else {
+            conn = DriverManager.getConnection(url, user, pwd);
+        }
 
         System.out.println("Testing CockroachDB-specific types for url -> " + url);
 
@@ -175,6 +198,7 @@ public class CockroachDBMultipleTypesIntegrationTest {
         resultSet.close();
         psSelect.close();
         psInsert.close();
+        if (xaConn != null) xaConn.close();
         conn.close();
     }
 

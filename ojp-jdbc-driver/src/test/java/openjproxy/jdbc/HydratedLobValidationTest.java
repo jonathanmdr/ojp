@@ -28,10 +28,20 @@ public class HydratedLobValidationTest {
 
     private String tableName;
     private Connection conn;
+    private XAConnection xaConnectionection;
 
     public void setUp(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         this.tableName = "hydrated_lob_test";
-        conn = DriverManager.getConnection(url, user, pwd);
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(pwd);
+            xaConnectionection = xaDataSource.getXAConnection(user, pwd);
+            conn = xaConnectionection.getConnection();
+        } else {
+            conn = DriverManager.getConnection(url, user, pwd);
+        }
         
         try {
             executeUpdate(conn, "DROP TABLE " + tableName);
@@ -49,7 +59,7 @@ public class HydratedLobValidationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_connection.csv")
-    public void testHydratedLobBehavior(String driverClass, String url, String user, String pwd) 
+    public void testHydratedLobBehavior(String driverClass, String url, String user, String pwd, boolean isXA) 
             throws SQLException, ClassNotFoundException, IOException {
         setUp(driverClass, url, user, pwd, isXA);
 
@@ -122,6 +132,7 @@ public class HydratedLobValidationTest {
         psInsert.close();
         
         executeUpdate(conn, "DROP TABLE " + tableName);
+        if (xaConnectionection != null) xaConnectionection.close();
         conn.close();
         
         System.out.println("Hydrated LOB validation completed successfully");
@@ -129,7 +140,7 @@ public class HydratedLobValidationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_connection.csv")
-    public void testHydratedBinaryStreamBehavior(String driverClass, String url, String user, String pwd) 
+    public void testHydratedBinaryStreamBehavior(String driverClass, String url, String user, String pwd, boolean isXA) 
             throws SQLException, ClassNotFoundException, IOException {
         setUp(driverClass, url, user, pwd, isXA);
 
@@ -170,6 +181,7 @@ public class HydratedLobValidationTest {
         psInsert.close();
         
         executeUpdate(conn, "DROP TABLE " + tableName);
+        if (xaConnectionection != null) xaConnectionection.close();
         conn.close();
         
         System.out.println("Hydrated binary stream validation completed successfully");

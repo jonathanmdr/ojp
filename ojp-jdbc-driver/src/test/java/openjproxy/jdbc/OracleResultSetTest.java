@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 public class OracleResultSetTest {
 
     private Connection connection;
-    private XAConnection xaConnection;
+    private XAConnection xaConnectionection;
     private Statement statement;
     private ResultSet resultSet;
 
@@ -86,7 +86,7 @@ public class OracleResultSetTest {
         if (resultSet != null) resultSet.close();
         if (statement != null) statement.close();
         if (connection != null) connection.close();
-        if (xaConnection != null) xaConnection.close();
+        if (xaConnectionection != null) xaConnectionection.close();
     }
 
     @ParameterizedTest

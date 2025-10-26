@@ -32,7 +32,7 @@ public class MySQLPreparedStatementExtensiveTests {
     private static boolean isMySQLTestDisabled;
     private static boolean isMariaDBTestDisabled;
     private Connection connection;
-    private XAConnection xaConnection;
+    private XAConnection xaConnectionection;
     private PreparedStatement ps;
 
     @BeforeAll

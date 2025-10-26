@@ -30,7 +30,7 @@ public class OracleReadMultipleBlocksOfDataIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections_with_record_counts.csv")
-    public void multiplePagesOfRowsResultSetSuccessful(int totalRecords, String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
+    public void multiplePagesOfRowsResultSetSuccessful(int totalRecords, String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "Skipping Oracle tests");
         
         Connection conn = DriverManager.getConnection(url, user, pwd);

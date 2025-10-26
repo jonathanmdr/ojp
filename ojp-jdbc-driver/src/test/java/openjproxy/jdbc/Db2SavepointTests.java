@@ -22,7 +22,7 @@ public class Db2SavepointTests {
 
     private static boolean isTestDisabled;
     private Connection connection;
-    private XAConnection xaConnection;
+    private XAConnection xaConnectionection;
 
     @BeforeAll
     public static void checkTestConfiguration() {
@@ -65,6 +65,7 @@ public class Db2SavepointTests {
             } catch (SQLException e) {
                 // Ignore
             }
+        if (xaConnectionection != null) xaConnectionection.close();
             connection.close();
         }
     }
