@@ -1,6 +1,10 @@
 package openjproxy.jdbc.testutil;
 
+import org.openjproxy.jdbc.xa.OjpXADataSource;
+
+import javax.sql.XAConnection;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -16,6 +20,75 @@ import static org.junit.jupiter.api.Assertions.fail;
  * while allowing database-specific customizations.
  */
 public class TestDBUtils {
+
+    /**
+     * Result holder for connection creation that includes both Connection and XAConnection.
+     * When isXA is false, only connection is populated and xaConnection is null.
+     */
+    public static class ConnectionResult {
+        private final Connection connection;
+        private final XAConnection xaConnection;
+
+        public ConnectionResult(Connection connection, XAConnection xaConnection) {
+            this.connection = connection;
+            this.xaConnection = xaConnection;
+        }
+
+        public Connection getConnection() {
+            return connection;
+        }
+
+        public XAConnection getXaConnection() {
+            return xaConnection;
+        }
+
+        /**
+         * Closes both connection and xaConnection if they exist.
+         */
+        public void close() {
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (Exception e) {
+                // Ignore
+            }
+            try {
+                if (xaConnection != null) {
+                    xaConnection.close();
+                }
+            } catch (Exception e) {
+                // Ignore
+            }
+        }
+    }
+
+    /**
+     * Creates a database connection based on the isXA flag.
+     * If isXA is true, creates an XA connection using OjpXADataSource.
+     * If isXA is false, creates a standard JDBC connection using DriverManager.
+     *
+     * @param url The JDBC URL
+     * @param user The database user
+     * @param password The database password
+     * @param isXA Whether to create an XA connection
+     * @return ConnectionResult containing the Connection and optionally XAConnection
+     * @throws SQLException if connection creation fails
+     */
+    public static ConnectionResult createConnection(String url, String user, String password, boolean isXA) throws SQLException {
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(password);
+            XAConnection xaConnection = xaDataSource.getXAConnection(user, password);
+            Connection connection = xaConnection.getConnection();
+            return new ConnectionResult(connection, xaConnection);
+        } else {
+            Connection connection = DriverManager.getConnection(url, user, password);
+            return new ConnectionResult(connection, null);
+        }
+    }
 
     /**
      * Enum representing different SQL syntax variations for database-specific operations.
