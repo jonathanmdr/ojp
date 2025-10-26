@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.openjproxy.jdbc.xa.OjpXADataSource;
+import javax.sql.XAConnection;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -39,7 +41,7 @@ public class BasicCrudIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_postgres_mysql_mariadb_oracle_sqlserver_connections.csv")
-    public void crudTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
+    public void crudTestSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         // Skip PostgreSQL tests if disabled
         if (url.toLowerCase().contains("postgresql") && isPostgresTestDisabled) {
             Assumptions.assumeFalse(true, "Skipping Postgres tests");
@@ -82,7 +84,18 @@ public class BasicCrudIntegrationTest {
             tablePrefix = "cockroachdb_";
         }
 
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        Connection conn;
+        XAConnection xaConn = null;
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(pwd);
+            xaConn = xaDataSource.getXAConnection(user, pwd);
+            conn = xaConn.getConnection();
+        } else {
+            conn = DriverManager.getConnection(url, user, pwd);
+        }
 
         // Set schema for DB2 connections to avoid "object not found" errors
         if (url.toLowerCase().contains("db2")) {
@@ -138,6 +151,9 @@ public class BasicCrudIntegrationTest {
         resultSet.close();
         psSelect.close();
         conn.close();
+        if (xaConn != null) {
+            xaConn.close();
+        }
     }
 
 }

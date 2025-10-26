@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.openjproxy.jdbc.xa.OjpXADataSource;
+import javax.sql.XAConnection;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -29,7 +31,7 @@ public class ConcurrencyTimeoutTest {
     @SneakyThrows
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_connection.csv")
-    public void testConcurrencyWithTimeout(String driverClass, String url, String user, String password) throws SQLException {
+    public void testConcurrencyWithTimeout(String driverClass, String url, String user, String password, boolean isXA) throws SQLException {
 
         successfulOperations.set(0);
         failedOperations.set(0);

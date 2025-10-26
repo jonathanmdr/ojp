@@ -4,6 +4,8 @@ import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.openjproxy.jdbc.xa.OjpXADataSource;
+import javax.sql.XAConnection;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -34,7 +36,7 @@ public class Db2BlobIntegrationTest {
         isTestDisabled = !Boolean.parseBoolean(System.getProperty("enableDb2Tests", "false"));
     }
 
-    public void setUp(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
+    public void setUp(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
         
         this.tableName = "DB2INST1.db2_blob_test";
@@ -59,8 +61,8 @@ public class Db2BlobIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2BlobCreationAndRetrieval(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
-        setUp(driverClass, url, user, pwd);
+    public void testDb2BlobCreationAndRetrieval(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
+        setUp(driverClass, url, user, pwd, isXA);
 
         System.out.println("Testing DB2 BLOB creation and retrieval for url -> " + url);
 
@@ -103,8 +105,8 @@ public class Db2BlobIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2BlobPerformance(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
-        setUp(driverClass, url, user, pwd);
+    public void testDb2BlobPerformance(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
+        setUp(driverClass, url, user, pwd, isXA);
 
         System.out.println("Testing DB2 BLOB performance for url -> " + url);
 

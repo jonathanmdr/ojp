@@ -4,6 +4,8 @@ import openjproxy.jdbc.testutil.TestDBUtils;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.openjproxy.jdbc.xa.OjpXADataSource;
+import javax.sql.XAConnection;
 
 import java.sql.*;
 
@@ -12,7 +14,7 @@ public class H2DatabaseMetaDataExtensiveTests {
 
     private static Connection connection;
 
-    public void setUp(String driverClass, String url, String user, String password) throws Exception {
+    public void setUp(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
         connection = DriverManager.getConnection(url, user, password);
         TestDBUtils.createBasicTestTable(connection, "h2_db_metadata_test", TestDBUtils.SqlSyntax.H2, true);
     }
@@ -24,8 +26,8 @@ public class H2DatabaseMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_connection.csv")
-    public void allDatabaseMetaDataMethodsShouldWorkAndBeAsserted(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void allDatabaseMetaDataMethodsShouldWorkAndBeAsserted(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         DatabaseMetaData meta = connection.getMetaData();
 
         // 1–5

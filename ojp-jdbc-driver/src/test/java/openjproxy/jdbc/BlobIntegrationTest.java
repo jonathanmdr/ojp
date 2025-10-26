@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.openjproxy.jdbc.xa.OjpXADataSource;
+import javax.sql.XAConnection;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -34,7 +36,7 @@ public class BlobIntegrationTest {
         isOracleTestEnabled = Boolean.parseBoolean(System.getProperty("enableOracleTests", "false"));
     }
 
-    public void setUp(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
+    public void setUp(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
 
         this.tableName = "blob_test_blob";
         if (url.toLowerCase().contains("mysql")) {
@@ -55,8 +57,8 @@ public class BlobIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_mysql_mariadb_oracle_connections.csv")
-    public void createAndReadingBLOBsSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
-        this.setUp(driverClass, url, user, pwd);
+    public void createAndReadingBLOBsSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
+        this.setUp(driverClass, url, user, pwd, isXA);
         System.out.println("Testing for url -> " + url);
 
         try {
@@ -129,8 +131,8 @@ public class BlobIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_mysql_mariadb_oracle_connections.csv")
-    public void creatingAndReadingLargeBLOBsSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, IOException, ClassNotFoundException {
-        this.setUp(driverClass, url, user, pwd);
+    public void creatingAndReadingLargeBLOBsSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, IOException, ClassNotFoundException {
+        this.setUp(driverClass, url, user, pwd, isXA);
         System.out.println("Testing for url -> " + url);
 
         try {

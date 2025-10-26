@@ -1,2 +1,4 @@
-org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_h2:~/test,sa,
-org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_oracle:thin:@localhost:1521/XEPDB1,testuser,testpassword
+org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_h2:~/test,sa,,false
+org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_h2:~/test,sa,,true
+org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_oracle:thin:@localhost:1521/XEPDB1,testuser,testpassword,false
+org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_oracle:thin:@localhost:1521/XEPDB1,testuser,testpassword,true

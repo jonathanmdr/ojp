@@ -5,6 +5,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.openjproxy.jdbc.xa.OjpXADataSource;
+import javax.sql.XAConnection;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
@@ -31,6 +33,7 @@ public class CockroachDBPreparedStatementExtensiveTests {
     private static boolean isTestDisabled;
 
     private Connection connection;
+    private XAConnection xaConnection;
     private PreparedStatement ps;
 
     @BeforeAll
@@ -38,7 +41,7 @@ public class CockroachDBPreparedStatementExtensiveTests {
         isTestDisabled = Boolean.parseBoolean(System.getProperty("disableCockroachDBTests", "false"));
     }
 
-    public void setUp(String driverClass, String url, String user, String password) throws Exception {
+    public void setUp(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
         assumeFalse(isTestDisabled, "CockroachDB tests are disabled");
         
         connection = DriverManager.getConnection(url, user, password);
@@ -64,8 +67,8 @@ public class CockroachDBPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testBasicParameterSetting(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testBasicParameterSetting(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         ps = connection.prepareStatement("INSERT INTO cockroachdb_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
         
         ps.setInt(1, 1);
@@ -89,8 +92,8 @@ public class CockroachDBPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testNullParameterHandling(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testNullParameterHandling(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         ps = connection.prepareStatement("INSERT INTO cockroachdb_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
         
         ps.setInt(1, 2);
@@ -117,8 +120,8 @@ public class CockroachDBPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testNumericParameterTypes(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testNumericParameterTypes(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         
         // Test BigDecimal
         Statement stmt = connection.createStatement();
@@ -145,8 +148,8 @@ public class CockroachDBPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testDateTimeParameterTypes(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testDateTimeParameterTypes(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         ps = connection.prepareStatement("INSERT INTO cockroachdb_prepared_stmt_test (id, name, dt) VALUES (?, ?, ?)");
         
         java.sql.Date sqlDate = new java.sql.Date(System.currentTimeMillis());
@@ -170,8 +173,8 @@ public class CockroachDBPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testLargeObjectHandling(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testLargeObjectHandling(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         ps = connection.prepareStatement("INSERT INTO cockroachdb_prepared_stmt_test (id, name, data, info) VALUES (?, ?, ?, ?)");
         
         byte[] testData = "This is test binary data".getBytes();
@@ -200,8 +203,8 @@ public class CockroachDBPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testBatchExecution(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testBatchExecution(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         ps = connection.prepareStatement("INSERT INTO cockroachdb_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
         
         ps.setInt(1, 10);
@@ -228,8 +231,8 @@ public class CockroachDBPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testClearParameters(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testClearParameters(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         ps = connection.prepareStatement("INSERT INTO cockroachdb_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
         
         ps.setInt(1, 20);
@@ -257,8 +260,8 @@ public class CockroachDBPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testExecuteQuery(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testExecuteQuery(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         
         // Insert test data first
         Statement stmt = connection.createStatement();
@@ -278,8 +281,8 @@ public class CockroachDBPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testExecute(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testExecute(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         ps = connection.prepareStatement("INSERT INTO cockroachdb_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
         
         ps.setInt(1, 40);
@@ -293,8 +296,8 @@ public class CockroachDBPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testMetadata(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testMetadata(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         ps = connection.prepareStatement("SELECT id, name, age FROM cockroachdb_prepared_stmt_test WHERE id = ?");
         
         java.sql.ResultSetMetaData rsmd = ps.getMetaData();
@@ -304,8 +307,8 @@ public class CockroachDBPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testParameterMetadata(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testParameterMetadata(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         ps = connection.prepareStatement("INSERT INTO cockroachdb_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
         
         java.sql.ParameterMetaData pmd = ps.getParameterMetaData();
@@ -317,8 +320,8 @@ public class CockroachDBPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testClose(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testClose(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         ps = connection.prepareStatement("SELECT * FROM cockroachdb_prepared_stmt_test WHERE id = ?");
         
         assertFalse(ps.isClosed());
@@ -328,8 +331,8 @@ public class CockroachDBPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testExecuteAfterCloseThrows(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testExecuteAfterCloseThrows(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         ps = connection.prepareStatement("SELECT * FROM cockroachdb_prepared_stmt_test WHERE id = ?");
         ps.close();
         

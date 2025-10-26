@@ -3,7 +3,9 @@ package openjproxy.jdbc;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.openjproxy.jdbc.xa.OjpXADataSource;
 
+import javax.sql.XAConnection;
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.math.BigDecimal;
@@ -32,9 +34,19 @@ public class H2PreparedStatementExtensiveTests {
 
     private Connection connection;
     private PreparedStatement ps;
+    private XAConnection xaConnection;
 
-    public void setUp(String driverClass, String url, String user, String password) throws Exception {
-        connection = DriverManager.getConnection(url, user, password);
+    public void setUp(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(password);
+            xaConnection = xaDataSource.getXAConnection(user, password);
+            connection = xaConnection.getConnection();
+        } else {
+            connection = DriverManager.getConnection(url, user, password);
+        }
         Statement stmt = connection.createStatement();
         try {
             stmt.execute("DROP TABLE h2_prepared_stmt_test");
@@ -53,12 +65,13 @@ public class H2PreparedStatementExtensiveTests {
     public void tearDown() throws Exception {
         if (ps != null) ps.close();
         if (connection != null) connection.close();
+        if (xaConnection != null) xaConnection.close();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_connection.csv")
-    public void testParameterSetters(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testParameterSetters(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
 
         ps = connection.prepareStatement("INSERT INTO h2_prepared_stmt_test (id, name, age, data, info, dt) VALUES (?, ?, ?, ?, ?, ?)");
 
@@ -131,8 +144,8 @@ public class H2PreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_connection.csv")
-    public void testExecutionAndBatchMethods(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testExecutionAndBatchMethods(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
 
         ps = connection.prepareStatement("INSERT INTO h2_prepared_stmt_test (id, name, age, data, info, dt) VALUES (?, ?, ?, ?, ?, ?)");
         ps.setInt(1, 10); ps.setString(2, "Test"); ps.setInt(3, 30);
@@ -171,8 +184,8 @@ public class H2PreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_connection.csv")
-    public void testMetaDataAndWarnings(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testMetaDataAndWarnings(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
 
         ps = connection.prepareStatement("SELECT * FROM h2_prepared_stmt_test WHERE id = ?");
         ps.setInt(1, 10);
@@ -187,8 +200,8 @@ public class H2PreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_connection.csv")
-    public void testStatementCommonMethods(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testStatementCommonMethods(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
 
         ps = connection.prepareStatement("SELECT * FROM h2_prepared_stmt_test WHERE id = ?");
         // Field size and max rows
@@ -237,8 +250,8 @@ public class H2PreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_connection.csv")
-    public void testStatementBatchAndConnection(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testStatementBatchAndConnection(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
 
         ps = connection.prepareStatement("SELECT * FROM h2_prepared_stmt_test WHERE id = ?");
         ps.clearBatch();
@@ -250,8 +263,8 @@ public class H2PreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_connection.csv")
-    public void testResultAndGeneratedKeysMethods(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testResultAndGeneratedKeysMethods(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
 
         PreparedStatement ps = connection.prepareStatement("INSERT INTO h2_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
         ps.setLong(1, 100);
@@ -300,8 +313,8 @@ public class H2PreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_connection.csv")
-    public void testStatementLargeAndDefaultMethods(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testStatementLargeAndDefaultMethods(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
 
         Statement stmt = connection.createStatement();
         // Large update/batch methods (may throw on H2)

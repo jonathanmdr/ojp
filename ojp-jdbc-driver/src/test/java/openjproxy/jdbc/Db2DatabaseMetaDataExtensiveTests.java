@@ -5,6 +5,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.openjproxy.jdbc.xa.OjpXADataSource;
+import javax.sql.XAConnection;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -25,6 +27,7 @@ public class Db2DatabaseMetaDataExtensiveTests {
 
     private static boolean isTestDisabled;
     private Connection connection;
+    private XAConnection xaConnection;
     private DatabaseMetaData metaData;
 
     @BeforeAll
@@ -33,7 +36,7 @@ public class Db2DatabaseMetaDataExtensiveTests {
     }
 
     @SneakyThrows
-    public void setUp(String driverClass, String url, String user, String pwd) throws SQLException {
+    public void setUp(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
         
         connection = DriverManager.getConnection(url, user, pwd);
@@ -78,8 +81,8 @@ public class Db2DatabaseMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2DatabaseInfo(String driverClass, String url, String user, String pwd) throws SQLException {
-        setUp(driverClass, url, user, pwd);
+    public void testDb2DatabaseInfo(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
+        setUp(driverClass, url, user, pwd, isXA);
 
         // Test basic database information
         String productName = metaData.getDatabaseProductName();
@@ -107,8 +110,8 @@ public class Db2DatabaseMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2TableMetaData(String driverClass, String url, String user, String pwd) throws SQLException {
-        setUp(driverClass, url, user, pwd);
+    public void testDb2TableMetaData(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
+        setUp(driverClass, url, user, pwd, isXA);
 
         // Test table information
         ResultSet tables = metaData.getTables(null, null, "DB2_METADATA_TEST", new String[]{"TABLE"});
@@ -126,8 +129,8 @@ public class Db2DatabaseMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2ColumnMetaData(String driverClass, String url, String user, String pwd) throws SQLException {
-        setUp(driverClass, url, user, pwd);
+    public void testDb2ColumnMetaData(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
+        setUp(driverClass, url, user, pwd, isXA);
 
         // Test column information
         ResultSet columns = metaData.getColumns(null, null, "DB2_METADATA_TEST", null);
@@ -192,8 +195,8 @@ public class Db2DatabaseMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2PrimaryKeyMetaData(String driverClass, String url, String user, String pwd) throws SQLException {
-        setUp(driverClass, url, user, pwd);
+    public void testDb2PrimaryKeyMetaData(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
+        setUp(driverClass, url, user, pwd, isXA);
 
         // Test primary key information
         ResultSet primaryKeys = metaData.getPrimaryKeys(null, null, "DB2_METADATA_TEST");
@@ -211,8 +214,8 @@ public class Db2DatabaseMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2IndexMetaData(String driverClass, String url, String user, String pwd) throws SQLException {
-        setUp(driverClass, url, user, pwd);
+    public void testDb2IndexMetaData(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
+        setUp(driverClass, url, user, pwd, isXA);
 
         // Test index information
         ResultSet indexes = metaData.getIndexInfo(null, null, "DB2_METADATA_TEST", false, false);
@@ -245,8 +248,8 @@ public class Db2DatabaseMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2DatabaseCapabilities(String driverClass, String url, String user, String pwd) throws SQLException {
-        setUp(driverClass, url, user, pwd);
+    public void testDb2DatabaseCapabilities(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
+        setUp(driverClass, url, user, pwd, isXA);
 
         // Test various database capabilities
         assertTrue(metaData.supportsTransactions());
@@ -273,8 +276,8 @@ public class Db2DatabaseMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2SqlKeywords(String driverClass, String url, String user, String pwd) throws SQLException {
-        setUp(driverClass, url, user, pwd);
+    public void testDb2SqlKeywords(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
+        setUp(driverClass, url, user, pwd, isXA);
 
         // Test SQL keywords
         String keywords = metaData.getSQLKeywords();

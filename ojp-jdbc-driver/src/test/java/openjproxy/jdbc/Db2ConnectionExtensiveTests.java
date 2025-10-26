@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.openjproxy.jdbc.xa.OjpXADataSource;
+import javax.sql.XAConnection;
 import openjproxy.jdbc.testutil.TestDBUtils;
 
 import java.sql.Connection;
@@ -34,7 +36,7 @@ public class Db2ConnectionExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2BasicConnection(String driverClass, String url, String user, String pwd) throws SQLException {
+    public void testDb2BasicConnection(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
         Assumptions.assumeFalse(!isDb2TestEnabled, "Skipping DB2 tests");
         
         log.info("Testing DB2 connection with URL: {}", url);
@@ -80,7 +82,7 @@ public class Db2ConnectionExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2DataTypes(String driverClass, String url, String user, String pwd) throws SQLException {
+    public void testDb2DataTypes(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
         Assumptions.assumeFalse(!isDb2TestEnabled, "Skipping DB2 tests");
         
         log.info("Testing DB2 data types with URL: {}", url);
@@ -135,7 +137,7 @@ public class Db2ConnectionExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2BooleanHandling(String driverClass, String url, String user, String pwd) throws SQLException {
+    public void testDb2BooleanHandling(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
         Assumptions.assumeFalse(!isDb2TestEnabled, "Skipping DB2 tests");
         
         log.info("Testing DB2 boolean handling with URL: {}", url);
@@ -185,7 +187,7 @@ public class Db2ConnectionExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2NullVsEmptyString(String driverClass, String url, String user, String pwd) throws SQLException {
+    public void testDb2NullVsEmptyString(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
         Assumptions.assumeFalse(!isDb2TestEnabled, "Skipping DB2 tests");
         
         log.info("Testing DB2 NULL vs empty string handling with URL: {}", url);

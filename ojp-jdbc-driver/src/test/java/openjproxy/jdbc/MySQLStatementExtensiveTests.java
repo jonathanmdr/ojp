@@ -6,6 +6,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.openjproxy.jdbc.xa.OjpXADataSource;
+import javax.sql.XAConnection;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -20,6 +22,7 @@ public class MySQLStatementExtensiveTests {
     private static boolean isMySQLTestDisabled;
     private static boolean isMariaDBTestDisabled;
     private Connection connection;
+    private XAConnection xaConnection;
     private Statement statement;
 
     @BeforeAll
@@ -28,7 +31,7 @@ public class MySQLStatementExtensiveTests {
         isMariaDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableMariaDBTests", "false"));
     }
 
-    public void setUp(String driverClass, String url, String user, String password) throws Exception {
+    public void setUp(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
         assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
         assumeFalse(isMariaDBTestDisabled, "MariaDB tests are disabled");
 
@@ -44,8 +47,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testExecuteQuery(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testExecuteQuery(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         ResultSet rs = statement.executeQuery("SELECT * FROM mysql_statement_test");
         Assert.assertNotNull(rs);
         Assert.assertTrue(rs.next());
@@ -54,8 +57,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testExecuteUpdate(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testExecuteUpdate(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         int rows = statement.executeUpdate("UPDATE mysql_statement_test SET name = 'Updated Alice' WHERE id = 1");
         Assert.assertEquals(1, rows);
 
@@ -67,8 +70,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testClose(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testClose(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         Assert.assertFalse(statement.isClosed());
         statement.close();
         Assert.assertTrue(statement.isClosed());
@@ -76,8 +79,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testMaxFieldSize(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testMaxFieldSize(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         int orig = statement.getMaxFieldSize();
         if (url.toLowerCase().contains("mysql"))
             Assert.assertTrue(orig > 0);
@@ -92,8 +95,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testMaxRows(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testMaxRows(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         Assert.assertEquals(0, statement.getMaxRows());
         statement.setMaxRows(10);
         Assert.assertEquals(10, statement.getMaxRows());
@@ -103,8 +106,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testQueryTimeout(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testQueryTimeout(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         Assert.assertEquals(0, statement.getQueryTimeout());
         statement.setQueryTimeout(30);
         Assert.assertEquals(30, statement.getQueryTimeout());
@@ -114,8 +117,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testWarnings(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testWarnings(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         // Initial warnings might be null
         statement.getWarnings();
         statement.clearWarnings();
@@ -124,8 +127,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testExecute(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testExecute(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         boolean hasResultSet = statement.execute("SELECT * FROM mysql_statement_test");
         Assert.assertTrue(hasResultSet);
         
@@ -141,8 +144,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testGetResultSet(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testGetResultSet(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         statement.execute("SELECT * FROM mysql_statement_test");
         ResultSet rs = statement.getResultSet();
         Assert.assertNotNull(rs);
@@ -151,8 +154,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testGetUpdateCount(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testGetUpdateCount(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         statement.execute("UPDATE mysql_statement_test SET name = 'Test Update' WHERE id = 1");
         Assert.assertEquals(1, statement.getUpdateCount());
         
@@ -162,8 +165,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testGetMoreResults(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testGetMoreResults(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         statement.execute("SELECT * FROM mysql_statement_test");
         if (url.toLowerCase().contains("mysql"))
             Assert.assertFalse(statement.getMoreResults());
@@ -173,8 +176,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testFetchDirection(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testFetchDirection(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         Assert.assertEquals(ResultSet.FETCH_FORWARD, statement.getFetchDirection());
         statement.setFetchDirection(ResultSet.FETCH_FORWARD);
         Assert.assertEquals(ResultSet.FETCH_FORWARD, statement.getFetchDirection());
@@ -182,8 +185,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testFetchSize(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testFetchSize(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         int originalFetchSize = statement.getFetchSize();
         statement.setFetchSize(100);
         Assert.assertEquals(100, statement.getFetchSize());
@@ -192,16 +195,16 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testResultSetConcurrency(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testResultSetConcurrency(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         int concurrency = statement.getResultSetConcurrency();
         Assert.assertTrue(concurrency == ResultSet.CONCUR_READ_ONLY || concurrency == ResultSet.CONCUR_UPDATABLE);
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testResultSetType(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testResultSetType(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         int type = statement.getResultSetType();
         Assert.assertTrue(type == ResultSet.TYPE_FORWARD_ONLY || 
                    type == ResultSet.TYPE_SCROLL_INSENSITIVE || 
@@ -210,8 +213,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testAddBatch(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testAddBatch(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         statement.addBatch("INSERT INTO mysql_statement_test (id, name) VALUES (10, 'Batch1')");
         statement.addBatch("INSERT INTO mysql_statement_test (id, name) VALUES (11, 'Batch2')");
         statement.clearBatch();
@@ -224,15 +227,15 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testGetConnection(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testGetConnection(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         Assert.assertSame(connection, statement.getConnection());
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testGetGeneratedKeys(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testGetGeneratedKeys(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         
         // Create table with auto-increment
         statement.execute("CREATE TABLE mysql_auto_test (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100))");
@@ -249,8 +252,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testExecuteUpdateWithGeneratedKeys(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testExecuteUpdateWithGeneratedKeys(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         
         // Create table with auto-increment
         statement.execute("CREATE TABLE mysql_auto_test2 (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100))");
@@ -269,8 +272,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testResultSetHoldability(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testResultSetHoldability(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         int holdability = statement.getResultSetHoldability();
         Assert.assertTrue(holdability == ResultSet.HOLD_CURSORS_OVER_COMMIT || 
                    holdability == ResultSet.CLOSE_CURSORS_AT_COMMIT);
@@ -278,16 +281,16 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testCancel(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testCancel(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         // Test that cancel doesn't throw an exception
         statement.cancel();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testEscapeProcessing(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testEscapeProcessing(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         statement.setEscapeProcessing(true);
         statement.setEscapeProcessing(false);
         // Just verify these calls don't throw exceptions
@@ -295,8 +298,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testCursorName(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testCursorName(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         // MySQL may not support named cursors in all configurations
         if (url.toLowerCase().contains("mysql"))
             statement.setCursorName("test_cursor");
@@ -306,8 +309,8 @@ public class MySQLStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testPoolable(String driverClass, String url, String user, String password) throws Exception {
-        this.setUp(driverClass, url, user, password);
+    public void testPoolable(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        this.setUp(driverClass, url, user, password, isXA);
         boolean poolable = statement.isPoolable();
         statement.setPoolable(!poolable);
         if (url.toLowerCase().contains("mysql"))

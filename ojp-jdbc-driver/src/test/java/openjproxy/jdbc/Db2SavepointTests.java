@@ -5,6 +5,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.openjproxy.jdbc.xa.OjpXADataSource;
+import javax.sql.XAConnection;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -20,6 +22,7 @@ public class Db2SavepointTests {
 
     private static boolean isTestDisabled;
     private Connection connection;
+    private XAConnection xaConnection;
 
     @BeforeAll
     public static void checkTestConfiguration() {
@@ -27,7 +30,7 @@ public class Db2SavepointTests {
     }
 
     @SneakyThrows
-    public void setUp(String driverClass, String url, String user, String pwd) throws SQLException {
+    public void setUp(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
         
         connection = DriverManager.getConnection(url, user, pwd);
@@ -68,8 +71,8 @@ public class Db2SavepointTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2SavepointBasicOperations(String driverClass, String url, String user, String pwd) throws SQLException {
-        setUp(driverClass, url, user, pwd);
+    public void testDb2SavepointBasicOperations(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
+        setUp(driverClass, url, user, pwd, isXA);
 
         Statement stmt = connection.createStatement();
 
@@ -112,8 +115,8 @@ public class Db2SavepointTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2MultipleSavepoints(String driverClass, String url, String user, String pwd) throws SQLException {
-        setUp(driverClass, url, user, pwd);
+    public void testDb2MultipleSavepoints(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
+        setUp(driverClass, url, user, pwd, isXA);
 
         Statement stmt = connection.createStatement();
 
@@ -160,8 +163,8 @@ public class Db2SavepointTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2SavepointRelease(String driverClass, String url, String user, String pwd) throws SQLException {
-        setUp(driverClass, url, user, pwd);
+    public void testDb2SavepointRelease(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
+        setUp(driverClass, url, user, pwd, isXA);
 
         Statement stmt = connection.createStatement();
 
@@ -191,8 +194,8 @@ public class Db2SavepointTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2UnnamedSavepoint(String driverClass, String url, String user, String pwd) throws SQLException {
-        setUp(driverClass, url, user, pwd);
+    public void testDb2UnnamedSavepoint(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
+        setUp(driverClass, url, user, pwd, isXA);
 
         Statement stmt = connection.createStatement();
 
@@ -221,8 +224,8 @@ public class Db2SavepointTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2SavepointWithCommit(String driverClass, String url, String user, String pwd) throws SQLException {
-        setUp(driverClass, url, user, pwd);
+    public void testDb2SavepointWithCommit(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
+        setUp(driverClass, url, user, pwd, isXA);
 
         Statement stmt = connection.createStatement();
 

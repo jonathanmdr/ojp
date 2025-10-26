@@ -5,6 +5,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.openjproxy.jdbc.xa.OjpXADataSource;
+import javax.sql.XAConnection;
 
 import java.sql.*;
 
@@ -15,6 +17,7 @@ public class CockroachDBResultSetMetaDataExtensiveTests {
 
     private static boolean isTestDisabled;
     private Connection connection;
+    private XAConnection xaConnection;
     private ResultSetMetaData metaData;
 
     @BeforeAll
@@ -23,7 +26,7 @@ public class CockroachDBResultSetMetaDataExtensiveTests {
     }
 
     @SneakyThrows
-    public void setUp(String driverClass, String url, String user, String password) throws SQLException {
+    public void setUp(String driverClass, String url, String user, String password, boolean isXA) throws SQLException {
         assumeFalse(isTestDisabled, "CockroachDB tests are disabled");
         
         connection = DriverManager.getConnection(url, user, password);
@@ -53,12 +56,13 @@ public class CockroachDBResultSetMetaDataExtensiveTests {
     @AfterEach
     public void tearDown() throws Exception {
         if (connection != null) connection.close();
+        if (xaConnection != null) xaConnection.close();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testAllResultSetMetaDataMethods(String driverClass, String url, String user, String password) throws SQLException {
-        setUp(driverClass, url, user, password);
+    public void testAllResultSetMetaDataMethods(String driverClass, String url, String user, String password, boolean isXA) throws SQLException {
+        setUp(driverClass, url, user, password, isXA);
 
         // getColumnCount
         assertEquals(4, metaData.getColumnCount());
@@ -174,7 +178,7 @@ public class CockroachDBResultSetMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testResultSetMetaDataWithNullValues(String driverClass, String url, String user, String password) throws SQLException {
+    public void testResultSetMetaDataWithNullValues(String driverClass, String url, String user, String password, boolean isXA) throws SQLException {
         assumeFalse(isTestDisabled, "CockroachDB tests are disabled");
         
         connection = DriverManager.getConnection(url, user, password);
@@ -205,7 +209,7 @@ public class CockroachDBResultSetMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testResultSetMetaDataWithComplexTypes(String driverClass, String url, String user, String password) throws SQLException {
+    public void testResultSetMetaDataWithComplexTypes(String driverClass, String url, String user, String password, boolean isXA) throws SQLException {
         assumeFalse(isTestDisabled, "CockroachDB tests are disabled");
         
         connection = DriverManager.getConnection(url, user, password);

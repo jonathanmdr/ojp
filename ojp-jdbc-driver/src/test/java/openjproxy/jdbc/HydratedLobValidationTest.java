@@ -4,6 +4,8 @@ import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.openjproxy.jdbc.xa.OjpXADataSource;
+import javax.sql.XAConnection;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -27,7 +29,7 @@ public class HydratedLobValidationTest {
     private String tableName;
     private Connection conn;
 
-    public void setUp(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
+    public void setUp(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
         this.tableName = "hydrated_lob_test";
         conn = DriverManager.getConnection(url, user, pwd);
         
@@ -49,7 +51,7 @@ public class HydratedLobValidationTest {
     @CsvFileSource(resources = "/h2_connection.csv")
     public void testHydratedLobBehavior(String driverClass, String url, String user, String pwd) 
             throws SQLException, ClassNotFoundException, IOException {
-        setUp(driverClass, url, user, pwd);
+        setUp(driverClass, url, user, pwd, isXA);
 
         System.out.println("Testing hydrated LOB behavior for url -> " + url);
 
@@ -129,7 +131,7 @@ public class HydratedLobValidationTest {
     @CsvFileSource(resources = "/h2_connection.csv")
     public void testHydratedBinaryStreamBehavior(String driverClass, String url, String user, String pwd) 
             throws SQLException, ClassNotFoundException, IOException {
-        setUp(driverClass, url, user, pwd);
+        setUp(driverClass, url, user, pwd, isXA);
 
         System.out.println("Testing hydrated binary stream behavior for url -> " + url);
 
