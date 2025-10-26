@@ -132,8 +132,59 @@ public class XADataSourceFactory {
                     .getDeclaredConstructor()
                     .newInstance();
             
-            // Set URL using reflection
-            xaDS.getClass().getMethod("setURL", String.class).invoke(xaDS, url);
+            // Clean the URL - remove OJP wrapper if present
+            String cleanUrl = url;
+            if (cleanUrl.toLowerCase().contains("_oracle:")) {
+                cleanUrl = "jdbc:oracle:" + cleanUrl.substring(cleanUrl.toLowerCase().indexOf("_oracle:") + 8);
+            }
+            
+            // Parse Oracle connection URL to extract components
+            // Format: jdbc:oracle:thin:@host:port/service or jdbc:oracle:thin:@host:port:sid
+            if (cleanUrl.toLowerCase().startsWith("jdbc:oracle:thin:@")) {
+                String connectionPart = cleanUrl.substring("jdbc:oracle:thin:@".length());
+                
+                // Parse host:port/service or host:port:sid
+                String host = "localhost";
+                int port = 1521;
+                String serviceName = null;
+                
+                if (connectionPart.contains("/")) {
+                    // Service name format: host:port/service
+                    String[] parts = connectionPart.split("/");
+                    String[] hostPort = parts[0].split(":");
+                    host = hostPort[0];
+                    if (hostPort.length > 1) {
+                        port = Integer.parseInt(hostPort[1]);
+                    }
+                    serviceName = parts[1];
+                    
+                    // Set properties using reflection
+                    xaDS.getClass().getMethod("setServerName", String.class).invoke(xaDS, host);
+                    xaDS.getClass().getMethod("setPortNumber", int.class).invoke(xaDS, port);
+                    xaDS.getClass().getMethod("setServiceName", String.class).invoke(xaDS, serviceName);
+                    
+                } else if (connectionPart.contains(":")) {
+                    // SID format: host:port:sid
+                    String[] parts = connectionPart.split(":");
+                    host = parts[0];
+                    if (parts.length > 1) {
+                        port = Integer.parseInt(parts[1]);
+                    }
+                    if (parts.length > 2) {
+                        String sid = parts[2];
+                        xaDS.getClass().getMethod("setServerName", String.class).invoke(xaDS, host);
+                        xaDS.getClass().getMethod("setPortNumber", int.class).invoke(xaDS, port);
+                        xaDS.getClass().getMethod("setDatabaseName", String.class).invoke(xaDS, sid);
+                    }
+                } else {
+                    // Fallback: use URL directly
+                    xaDS.getClass().getMethod("setURL", String.class).invoke(xaDS, cleanUrl);
+                }
+            } else {
+                // Fallback: use URL directly
+                xaDS.getClass().getMethod("setURL", String.class).invoke(xaDS, cleanUrl);
+            }
+            
             xaDS.getClass().getMethod("setUser", String.class).invoke(xaDS, connectionDetails.getUser());
             xaDS.getClass().getMethod("setPassword", String.class).invoke(xaDS, connectionDetails.getPassword());
             
