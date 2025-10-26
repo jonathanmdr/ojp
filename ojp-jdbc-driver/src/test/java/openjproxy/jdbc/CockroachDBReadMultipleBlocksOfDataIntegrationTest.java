@@ -43,20 +43,38 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
 
         try {
             executeUpdate(conn, "DROP TABLE cockroachdb_read_blocks_test_multi");
+            connResult.commit();
         } catch (Exception e) {
-            //Does not matter
+            // Rollback if DROP fails (table doesn't exist)
+            try {
+                connResult.rollback();
+            } catch (Exception ex) {
+                // Ignore rollback errors
+            }
         }
+        
+        // Start new transaction for CREATE TABLE
+        connResult.startXATransactionIfNeeded();
         
         // Create table with CockroachDB-specific syntax
         executeUpdate(conn, "CREATE TABLE cockroachdb_read_blocks_test_multi(" +
                 "id INT NOT NULL PRIMARY KEY, " +
                 "title VARCHAR(50) NOT NULL)");
+        connResult.commit();
+        
+        // Start new transaction for INSERT operations
+        connResult.startXATransactionIfNeeded();
 
         for (int i = 0; i < totalRecords; i++) {
             executeUpdate(conn,
                     "INSERT INTO cockroachdb_read_blocks_test_multi (id, title) VALUES (" + i + ", 'COCKROACHDB_TITLE_" + i + "')"
             );
         }
+        
+        connResult.commit();
+        
+        // Start new transaction for SELECT
+        connResult.startXATransactionIfNeeded();
 
         java.sql.PreparedStatement psSelect = conn.prepareStatement("SELECT * FROM cockroachdb_read_blocks_test_multi ORDER BY id");
         ResultSet resultSet = psSelect.executeQuery();
@@ -91,9 +109,18 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
 
         try {
             executeUpdate(conn, "DROP TABLE cockroachdb_pagination_test");
+            connResult.commit();
         } catch (Exception e) {
-            //Does not matter
+            // Rollback if DROP fails (table doesn't exist)
+            try {
+                connResult.rollback();
+            } catch (Exception ex) {
+                // Ignore rollback errors
+            }
         }
+        
+        // Start new transaction for CREATE TABLE
+        connResult.startXATransactionIfNeeded();
         
         // Create table with CockroachDB-specific data types
         executeUpdate(conn, "CREATE TABLE cockroachdb_pagination_test(" +
@@ -101,6 +128,10 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
                 "name VARCHAR(100) NOT NULL, " +
                 "value DECIMAL(19,2), " +
                 "description TEXT)");
+        connResult.commit();
+        
+        // Start new transaction for INSERT operations
+        connResult.startXATransactionIfNeeded();
 
         // Insert 5000 records for pagination testing
         int totalRecords = 5000;
@@ -110,6 +141,11 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
                     "VALUES (" + i + ", 'Name_" + i + "', " + (i * 10.5) + ", 'Description for record " + i + "')"
             );
         }
+        
+        connResult.commit();
+        
+        // Start new transaction for SELECT
+        connResult.startXATransactionIfNeeded();
 
         // Test pagination with LIMIT and OFFSET
         int pageSize = 100;
@@ -151,9 +187,18 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
 
         try {
             executeUpdate(conn, "DROP TABLE cockroachdb_large_types_test");
+            connResult.commit();
         } catch (Exception e) {
-            //Does not matter
+            // Rollback if DROP fails (table doesn't exist)
+            try {
+                connResult.rollback();
+            } catch (Exception ex) {
+                // Ignore rollback errors
+            }
         }
+        
+        // Start new transaction for CREATE TABLE
+        connResult.startXATransactionIfNeeded();
         
         // Create table with various CockroachDB data types
         executeUpdate(conn, "CREATE TABLE cockroachdb_large_types_test(" +
@@ -165,6 +210,10 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
                 "text_val TEXT, " +
                 "bool_val BOOLEAN, " +
                 "timestamp_val TIMESTAMP)");
+        connResult.commit();
+        
+        // Start new transaction for INSERT operations
+        connResult.startXATransactionIfNeeded();
 
         // Insert 2000 records
         int totalRecords = 2000;
@@ -176,6 +225,11 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
                     "'Text value for record " + i + "', " + (i % 2 == 0) + ", CURRENT_TIMESTAMP)"
             );
         }
+        
+        connResult.commit();
+        
+        // Start new transaction for SELECT
+        connResult.startXATransactionIfNeeded();
 
         // Retrieve all records and verify
         java.sql.PreparedStatement psSelect = conn.prepareStatement(
@@ -213,13 +267,26 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
 
         try {
             executeUpdate(conn, "DROP TABLE cockroachdb_fetch_size_test");
+            connResult.commit();
         } catch (Exception e) {
-            //Does not matter
+            // Rollback if DROP fails (table doesn't exist)
+            try {
+                connResult.rollback();
+            } catch (Exception ex) {
+                // Ignore rollback errors
+            }
         }
+        
+        // Start new transaction for CREATE TABLE
+        connResult.startXATransactionIfNeeded();
         
         executeUpdate(conn, "CREATE TABLE cockroachdb_fetch_size_test(" +
                 "id SERIAL PRIMARY KEY, " +
                 "data VARCHAR(255))");
+        connResult.commit();
+        
+        // Start new transaction for INSERT operations
+        connResult.startXATransactionIfNeeded();
 
         // Insert 3000 records
         int totalRecords = 3000;
@@ -228,6 +295,11 @@ public class CockroachDBReadMultipleBlocksOfDataIntegrationTest {
                     "INSERT INTO cockroachdb_fetch_size_test (data) VALUES ('Data row " + i + "')"
             );
         }
+        
+        connResult.commit();
+        
+        // Start new transaction for SELECT operations
+        connResult.startXATransactionIfNeeded();
 
         // Test with different fetch sizes
         int[] fetchSizes = {10, 50, 100, 500};

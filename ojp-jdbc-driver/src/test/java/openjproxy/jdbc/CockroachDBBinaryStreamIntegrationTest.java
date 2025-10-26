@@ -168,14 +168,27 @@ public class CockroachDBBinaryStreamIntegrationTest {
 
         try {
             executeUpdate(conn, "DROP TABLE cockroachdb_binary_null_test");
+            connResult.commit();
         } catch (Exception e) {
-            //Ignore
+            // Rollback if DROP fails (table doesn't exist)
+            try {
+                connResult.rollback();
+            } catch (Exception ex) {
+                // Ignore rollback errors
+            }
         }
+        
+        // Start new transaction for CREATE TABLE
+        connResult.startXATransactionIfNeeded();
 
         executeUpdate(conn, "CREATE TABLE cockroachdb_binary_null_test(" +
                 " id INT PRIMARY KEY," +
                 " val_bytea BYTEA" +
                 ")");
+        connResult.commit();
+        
+        // Start new transaction for INSERT operations
+        connResult.startXATransactionIfNeeded();
 
         PreparedStatement psInsert = conn.prepareStatement(
                 "INSERT INTO cockroachdb_binary_null_test (id, val_bytea) VALUES (?, ?)"
@@ -191,6 +204,11 @@ public class CockroachDBBinaryStreamIntegrationTest {
         String testString = "Non-NULL data";
         psInsert.setBinaryStream(2, new ByteArrayInputStream(testString.getBytes()));
         psInsert.executeUpdate();
+        
+        connResult.commit();
+        
+        // Start new transaction for SELECT
+        connResult.startXATransactionIfNeeded();
 
         PreparedStatement psSelect = conn.prepareStatement("SELECT id, val_bytea FROM cockroachdb_binary_null_test ORDER BY id");
         ResultSet resultSet = psSelect.executeQuery();
