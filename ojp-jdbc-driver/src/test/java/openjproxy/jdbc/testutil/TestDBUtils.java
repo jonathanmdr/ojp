@@ -93,8 +93,6 @@ public class TestDBUtils {
                         xaResource.commit(currentXid, true);
                         currentXid = null;
                         xaTransactionStarted = false;
-                        // Start a new transaction for subsequent operations
-                        startXATransactionIfNeeded();
                     }
                 } catch (Exception e) {
                     xaTransactionStarted = false;
@@ -130,8 +128,22 @@ public class TestDBUtils {
 
         /**
          * Closes both connection and xaConnection if they exist.
+         * For XA connections, properly ends any active transaction before closing.
          */
         public void close() {
+            // For XA connections, end any active transaction before closing
+            if (isXA && xaTransactionStarted) {
+                try {
+                    xaResource.end(currentXid, XAResource.TMFAIL);
+                    xaResource.rollback(currentXid);
+                    xaTransactionStarted = false;
+                    currentXid = null;
+                } catch (Exception e) {
+                    // Log but don't throw - we're closing anyway
+                    System.err.println("Warning: Failed to rollback XA transaction during close: " + e.getMessage());
+                }
+            }
+            
             try {
                 if (connection != null) {
                     connection.close();

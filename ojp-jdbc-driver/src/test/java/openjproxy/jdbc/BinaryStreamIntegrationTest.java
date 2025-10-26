@@ -67,6 +67,9 @@ public class BinaryStreamIntegrationTest {
         psInsert.executeUpdate();
 
         connResult.commit();
+        
+        // Start new transaction for reading
+        connResult.startXATransactionIfNeeded();
 
         PreparedStatement psSelect = conn.prepareStatement("select val_blob1, val_blob2 from binary_stream_test_blob ");
         ResultSet resultSet = psSelect.executeQuery();

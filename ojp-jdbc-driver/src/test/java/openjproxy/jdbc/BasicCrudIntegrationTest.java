@@ -120,15 +120,24 @@ public class BasicCrudIntegrationTest {
                 // Ignore rollback errors
             }
         }
+        
+        // Start new transaction for next operation
+        connResult.startXATransactionIfNeeded();
 
         executeUpdate(conn, "create table " + tableName + "(" +
                 "id INT NOT NULL," +
                 "title VARCHAR(50) NOT NULL" +
                 ")");
         connResult.commit();
+        
+        // Start new transaction for next operation
+        connResult.startXATransactionIfNeeded();
 
         executeUpdate(conn, " insert into " + tableName + " (id, title) values (1, 'TITLE_1')");
         connResult.commit();
+        
+        // Start new transaction for next operation
+        connResult.startXATransactionIfNeeded();
 
         java.sql.PreparedStatement psSelect = conn.prepareStatement("select * from " + tableName + " where id = ?");
         psSelect.setInt(1, 1);
@@ -141,6 +150,9 @@ public class BasicCrudIntegrationTest {
 
         executeUpdate(conn, "update " + tableName + " set title='TITLE_1_UPDATED'");
         connResult.commit();
+        
+        // Start new transaction for next operation
+        connResult.startXATransactionIfNeeded();
 
         ResultSet resultSetUpdated = psSelect.executeQuery();
         resultSetUpdated.next();
@@ -151,6 +163,9 @@ public class BasicCrudIntegrationTest {
 
         executeUpdate(conn, " delete from " + tableName + " where id=1 and title='TITLE_1_UPDATED'");
         connResult.commit();
+        
+        // Start new transaction for next operation
+        connResult.startXATransactionIfNeeded();
 
         ResultSet resultSetAfterDeletion = psSelect.executeQuery();
         Assert.assertFalse(resultSetAfterDeletion.next());

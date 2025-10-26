@@ -71,6 +71,9 @@ public class CockroachDBBinaryStreamIntegrationTest {
         psInsert.executeUpdate();
 
         connResult.commit();
+        
+        // Start new transaction for reading
+        connResult.startXATransactionIfNeeded();
 
         PreparedStatement psSelect = conn.prepareStatement("SELECT val_bytea1, val_bytea2 FROM cockroachdb_binary_stream_test");
         ResultSet resultSet = psSelect.executeQuery();
@@ -133,6 +136,9 @@ public class CockroachDBBinaryStreamIntegrationTest {
         psInsert.executeUpdate();
 
         connResult.commit();
+        
+        // Start new transaction for reading
+        connResult.startXATransactionIfNeeded();
 
         PreparedStatement psSelect = conn.prepareStatement("SELECT val_bytea FROM cockroachdb_large_binary_stream_test");
         ResultSet resultSet = psSelect.executeQuery();
