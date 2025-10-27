@@ -5,8 +5,6 @@ import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -32,11 +30,10 @@ public class OracleMultipleTypesIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, ParseException {
+    public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, ParseException {
         assumeFalse(isTestDisabled, "Oracle tests are disabled");
         
-        TestDBUtils.ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
-        Connection conn = connResult.getConnection();
+        Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing for url -> " + url);
 
@@ -135,16 +132,15 @@ public class OracleMultipleTypesIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        connResult.close();
+        conn.close();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testOracleSpecificTypes(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
+    public void testOracleSpecificTypes(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "Oracle tests are disabled");
         
-        TestDBUtils.ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
-        Connection conn = connResult.getConnection();
+        Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing Oracle-specific types for url -> " + url);
 
@@ -191,16 +187,15 @@ public class OracleMultipleTypesIntegrationTest {
         resultSet.close();
         psSelect.close();
         psInsert.close();
-        connResult.close();
+        conn.close();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testOracleNumberTypes(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
+    public void testOracleNumberTypes(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "Oracle tests are disabled");
         
-        TestDBUtils.ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
-        Connection conn = connResult.getConnection();
+        Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing Oracle NUMBER types for url -> " + url);
 
@@ -246,7 +241,7 @@ public class OracleMultipleTypesIntegrationTest {
         resultSet.close();
         psSelect.close();
         psInsert.close();
-        connResult.close();
+        conn.close();
     }
 
     /**

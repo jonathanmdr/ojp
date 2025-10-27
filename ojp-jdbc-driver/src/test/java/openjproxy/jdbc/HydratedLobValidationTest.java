@@ -4,10 +4,6 @@ import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
-import openjproxy.jdbc.testutil.TestDBUtils;
-import openjproxy.jdbc.testutil.TestDBUtils.ConnectionResult;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -30,20 +26,10 @@ public class HydratedLobValidationTest {
 
     private String tableName;
     private Connection conn;
-    private XAConnection xaConnectionection;
 
-    public void setUp(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
+    public void setUp(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         this.tableName = "hydrated_lob_test";
-        if (isXA) {
-            OjpXADataSource xaDataSource = new OjpXADataSource();
-            xaDataSource.setUrl(url);
-            xaDataSource.setUser(user);
-            xaDataSource.setPassword(pwd);
-            xaConnectionection = xaDataSource.getXAConnection(user, pwd);
-            conn = xaConnectionection.getConnection();
-        } else {
-            conn = DriverManager.getConnection(url, user, pwd);
-        }
+        conn = DriverManager.getConnection(url, user, pwd);
         
         try {
             executeUpdate(conn, "DROP TABLE " + tableName);
@@ -61,9 +47,9 @@ public class HydratedLobValidationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_connection.csv")
-    public void testHydratedLobBehavior(String driverClass, String url, String user, String pwd, boolean isXA) 
+    public void testHydratedLobBehavior(String driverClass, String url, String user, String pwd) 
             throws SQLException, ClassNotFoundException, IOException {
-        setUp(driverClass, url, user, pwd, isXA);
+        setUp(driverClass, url, user, pwd);
 
         System.out.println("Testing hydrated LOB behavior for url -> " + url);
 
@@ -134,7 +120,6 @@ public class HydratedLobValidationTest {
         psInsert.close();
         
         executeUpdate(conn, "DROP TABLE " + tableName);
-        if (xaConnectionection != null) xaConnectionection.close();
         conn.close();
         
         System.out.println("Hydrated LOB validation completed successfully");
@@ -142,9 +127,9 @@ public class HydratedLobValidationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_connection.csv")
-    public void testHydratedBinaryStreamBehavior(String driverClass, String url, String user, String pwd, boolean isXA) 
+    public void testHydratedBinaryStreamBehavior(String driverClass, String url, String user, String pwd) 
             throws SQLException, ClassNotFoundException, IOException {
-        setUp(driverClass, url, user, pwd, isXA);
+        setUp(driverClass, url, user, pwd);
 
         System.out.println("Testing hydrated binary stream behavior for url -> " + url);
 
@@ -183,7 +168,6 @@ public class HydratedLobValidationTest {
         psInsert.close();
         
         executeUpdate(conn, "DROP TABLE " + tableName);
-        if (xaConnectionection != null) xaConnectionection.close();
         conn.close();
         
         System.out.println("Hydrated binary stream validation completed successfully");

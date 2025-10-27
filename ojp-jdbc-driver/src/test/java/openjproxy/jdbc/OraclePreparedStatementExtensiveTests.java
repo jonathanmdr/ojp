@@ -5,8 +5,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
@@ -36,7 +34,6 @@ public class OraclePreparedStatementExtensiveTests {
     private static boolean isTestDisabled;
 
     private Connection connection;
-    private XAConnection xaConnectionection;
     private PreparedStatement ps;
 
     @BeforeAll
@@ -44,7 +41,7 @@ public class OraclePreparedStatementExtensiveTests {
         isTestDisabled = !Boolean.parseBoolean(System.getProperty("enableOracleTests", "false"));
     }
 
-    public void setUp(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+    public void setUp(String driverClass, String url, String user, String password) throws Exception {
         assumeFalse(isTestDisabled, "Oracle tests are disabled");
         
         connection = DriverManager.getConnection(url, user, password);
@@ -70,8 +67,8 @@ public class OraclePreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testBasicParameterSetting(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testBasicParameterSetting(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         ps = connection.prepareStatement("INSERT INTO oracle_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
         
         ps.setInt(1, 1);
@@ -95,8 +92,8 @@ public class OraclePreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testNullParameterHandling(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testNullParameterHandling(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         ps = connection.prepareStatement("INSERT INTO oracle_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
         
         ps.setInt(1, 2);
@@ -123,8 +120,8 @@ public class OraclePreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testNumericParameterTypes(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testNumericParameterTypes(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         
         // Test BigDecimal
         Statement stmt = connection.createStatement();
@@ -151,8 +148,8 @@ public class OraclePreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testDateTimeParameterTypes(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testDateTimeParameterTypes(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         ps = connection.prepareStatement("INSERT INTO oracle_prepared_stmt_test (id, name, dt) VALUES (?, ?, ?)");
         
         java.sql.Date sqlDate = new java.sql.Date(System.currentTimeMillis());
@@ -176,8 +173,8 @@ public class OraclePreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testLargeObjectHandling(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testLargeObjectHandling(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         ps = connection.prepareStatement("INSERT INTO oracle_prepared_stmt_test (id, name, data, info) VALUES (?, ?, ?, ?)");
         
         byte[] testData = "This is test binary data".getBytes();
@@ -206,8 +203,8 @@ public class OraclePreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testStreamHandling(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testStreamHandling(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         ps = connection.prepareStatement("INSERT INTO oracle_prepared_stmt_test (id, name, data, info) VALUES (?, ?, ?, ?)");
         
         byte[] testData = "Stream binary data".getBytes();
@@ -226,8 +223,8 @@ public class OraclePreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testParameterMetaData(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testParameterMetaData(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         ps = connection.prepareStatement("INSERT INTO oracle_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
         
         // Basic parameter metadata operations
@@ -240,8 +237,8 @@ public class OraclePreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testBatchOperations(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testBatchOperations(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         ps = connection.prepareStatement("INSERT INTO oracle_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
         
         // Add multiple batches
@@ -268,8 +265,8 @@ public class OraclePreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testResultSetHandling(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testResultSetHandling(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         
         // Insert test data first
         ps = connection.prepareStatement("INSERT INTO oracle_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
@@ -298,8 +295,8 @@ public class OraclePreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testOracleSpecificTypes(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testOracleSpecificTypes(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         
         // Create table with Oracle-specific types
         Statement stmt = connection.createStatement();
@@ -342,8 +339,8 @@ public class OraclePreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testErrorHandling(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testErrorHandling(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         ps = connection.prepareStatement("INSERT INTO oracle_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
         
         // Test setting invalid parameter index - Oracle would throw an exception but as OJP delays the

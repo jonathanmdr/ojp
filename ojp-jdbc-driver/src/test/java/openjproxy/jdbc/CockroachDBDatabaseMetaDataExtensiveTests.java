@@ -4,8 +4,6 @@ import openjproxy.jdbc.testutil.TestDBUtils;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
 
 import java.sql.*;
 
@@ -21,7 +19,7 @@ public class CockroachDBDatabaseMetaDataExtensiveTests {
         isTestDisabled = Boolean.parseBoolean(System.getProperty("disableCockroachDBTests", "false"));
     }
 
-    public void setUp(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+    public void setUp(String driverClass, String url, String user, String password) throws Exception {
         assumeFalse(isTestDisabled, "CockroachDB tests are disabled");
         
         connection = DriverManager.getConnection(url, user, password);
@@ -35,8 +33,8 @@ public class CockroachDBDatabaseMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void allDatabaseMetaDataMethodsShouldWorkAndBeAsserted(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void allDatabaseMetaDataMethodsShouldWorkAndBeAsserted(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
 
         // 1–5: Basic database information
@@ -279,8 +277,8 @@ public class CockroachDBDatabaseMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testGetTypeInfo(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testGetTypeInfo(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
 
         ResultSet typeInfo = meta.getTypeInfo();
@@ -298,8 +296,8 @@ public class CockroachDBDatabaseMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testGetIndexInfo(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testGetIndexInfo(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
 
         ResultSet indexInfo = meta.getIndexInfo(null, null, "cockroachdb_db_metadata_test", false, false);
@@ -309,8 +307,8 @@ public class CockroachDBDatabaseMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testGetTablePrivileges(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testGetTablePrivileges(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
 
         ResultSet privileges = meta.getTablePrivileges(null, null, "cockroachdb_db_metadata_test");
@@ -320,8 +318,8 @@ public class CockroachDBDatabaseMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testGetSchemas(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testGetSchemas(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
 
         ResultSet schemas = meta.getSchemas();
@@ -339,8 +337,8 @@ public class CockroachDBDatabaseMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testGetCatalogs(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testGetCatalogs(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         DatabaseMetaData meta = connection.getMetaData();
 
         ResultSet catalogs = meta.getCatalogs();

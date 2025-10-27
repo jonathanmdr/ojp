@@ -4,8 +4,6 @@ import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -32,7 +30,7 @@ public class MySQLSpecificFeaturesIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void onDuplicateKeyUpdateTestSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
+    public void onDuplicateKeyUpdateTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
         assumeFalse(isMariaDBTestDisabled, "MariaDB tests are disabled");
 
@@ -77,7 +75,7 @@ public class MySQLSpecificFeaturesIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void selectForUpdateTestSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
+    public void selectForUpdateTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
         
         Connection conn = DriverManager.getConnection(url, user, pwd);
@@ -129,7 +127,7 @@ public class MySQLSpecificFeaturesIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void showTablesTestSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
+    public void showTablesTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
         
         Connection conn = DriverManager.getConnection(url, user, pwd);
@@ -166,7 +164,7 @@ public class MySQLSpecificFeaturesIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void autoIncrementAndLastInsertIdTestSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
+    public void autoIncrementAndLastInsertIdTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
         
         Connection conn = DriverManager.getConnection(url, user, pwd);
@@ -219,7 +217,7 @@ public class MySQLSpecificFeaturesIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void mysqlInformationSchemaTestSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
+    public void mysqlInformationSchemaTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
         
         Connection conn = DriverManager.getConnection(url, user, pwd);

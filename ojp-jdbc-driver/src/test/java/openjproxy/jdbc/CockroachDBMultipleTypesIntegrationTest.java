@@ -1,13 +1,10 @@
 package openjproxy.jdbc;
 
 import openjproxy.jdbc.testutil.TestDBUtils;
-import openjproxy.jdbc.testutil.TestDBUtils.ConnectionResult;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -33,11 +30,10 @@ public class CockroachDBMultipleTypesIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, ParseException {
+    public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, ParseException {
         assumeFalse(isTestDisabled, "CockroachDB tests are disabled");
         
-        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
-        Connection conn = connResult.getConnection();
+        Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing for url -> " + url);
 
@@ -131,16 +127,15 @@ public class CockroachDBMultipleTypesIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        connResult.close();
+        conn.close();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testCockroachDBSpecificTypes(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
+    public void testCockroachDBSpecificTypes(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "CockroachDB tests are disabled");
         
-        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
-        Connection conn = connResult.getConnection();
+        Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing CockroachDB-specific types for url -> " + url);
 
@@ -178,7 +173,7 @@ public class CockroachDBMultipleTypesIntegrationTest {
         resultSet.close();
         psSelect.close();
         psInsert.close();
-        connResult.close();
+        conn.close();
     }
 
     // Note: testCockroachDBIntervalType removed due to OJP driver limitation with PostgreSQL-specific types

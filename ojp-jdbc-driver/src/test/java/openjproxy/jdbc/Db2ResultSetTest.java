@@ -5,8 +5,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -30,7 +28,6 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 public class Db2ResultSetTest {
 
     private Connection connection;
-    private XAConnection xaConnectionection;
     private Statement statement;
     private ResultSet resultSet;
 
@@ -42,7 +39,7 @@ public class Db2ResultSetTest {
     }
 
     @SneakyThrows
-    public void setUp(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
+    public void setUp(String driverClass, String url, String user, String pwd) throws SQLException {
         assumeFalse(isTestDisabled, "Skipping DB2 tests");
 
         // Create DB2 database connection
@@ -95,15 +92,14 @@ public class Db2ResultSetTest {
             statement.close();
         }
         if (connection != null) {
-        if (xaConnectionection != null) xaConnectionection.close();
             connection.close();
         }
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2ResultSetNavigation(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, pwd, isXA);
+    public void testDb2ResultSetNavigation(String driverClass, String url, String user, String pwd) throws SQLException {
+        setUp(driverClass, url, user, pwd);
 
         resultSet = statement.executeQuery("SELECT id, name, age FROM DB2INST1.db2_resultset_test ORDER BY id");
 
@@ -161,8 +157,8 @@ public class Db2ResultSetTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2ResultSetDataTypes(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, pwd, isXA);
+    public void testDb2ResultSetDataTypes(String driverClass, String url, String user, String pwd) throws SQLException {
+        setUp(driverClass, url, user, pwd);
 
         resultSet = statement.executeQuery("SELECT * FROM DB2INST1.db2_resultset_test WHERE id = 1");
         assertTrue(resultSet.next());
@@ -190,8 +186,8 @@ public class Db2ResultSetTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2ResultSetMetaData(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, pwd, isXA);
+    public void testDb2ResultSetMetaData(String driverClass, String url, String user, String pwd) throws SQLException {
+        setUp(driverClass, url, user, pwd);
 
         resultSet = statement.executeQuery("SELECT * FROM DB2INST1.db2_resultset_test LIMIT 1");
         
@@ -218,8 +214,8 @@ public class Db2ResultSetTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2ResultSetConcurrency(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, pwd, isXA);
+    public void testDb2ResultSetConcurrency(String driverClass, String url, String user, String pwd) throws SQLException {
+        setUp(driverClass, url, user, pwd);
 
         resultSet = statement.executeQuery("SELECT * FROM DB2INST1.db2_resultset_test WHERE id = 1");
         assertTrue(resultSet.next());
@@ -234,8 +230,8 @@ public class Db2ResultSetTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2ResultSetWarnings(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, pwd, isXA);
+    public void testDb2ResultSetWarnings(String driverClass, String url, String user, String pwd) throws SQLException {
+        setUp(driverClass, url, user, pwd);
 
         resultSet = statement.executeQuery("SELECT * FROM DB2INST1.db2_resultset_test LIMIT 1");
         

@@ -5,8 +5,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
@@ -18,7 +16,6 @@ public class Db2ResultSetMetaDataExtensiveTests {
 
     private static boolean isTestDisabled;
     private Connection connection;
-    private XAConnection xaConnectionection;
     private Statement statement;
     private ResultSet resultSet;
     private ResultSetMetaData metaData;
@@ -29,7 +26,7 @@ public class Db2ResultSetMetaDataExtensiveTests {
     }
 
     @SneakyThrows
-    public void setUp(String driverClass, String url, String user, String password, boolean isXA) throws SQLException {
+    public void setUp(String driverClass, String url, String user, String password) throws SQLException {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
         
         connection = DriverManager.getConnection(url, user, password);
@@ -82,7 +79,6 @@ public class Db2ResultSetMetaDataExtensiveTests {
         }
         try {
             if (connection != null && !connection.isClosed()) {
-        if (xaConnectionection != null) xaConnectionection.close();
                 connection.close();
             }
         } catch (SQLException e) {
@@ -92,8 +88,8 @@ public class Db2ResultSetMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testAllResultSetMetaDataMethods(String driverClass, String url, String user, String password, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, password, isXA);
+    public void testAllResultSetMetaDataMethods(String driverClass, String url, String user, String password) throws SQLException {
+        setUp(driverClass, url, user, password);
 
         // getColumnCount
         assertEquals(4, metaData.getColumnCount());
@@ -238,7 +234,7 @@ public class Db2ResultSetMetaDataExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2SpecificDataTypes(String driverClass, String url, String user, String password, boolean isXA) throws SQLException {
+    public void testDb2SpecificDataTypes(String driverClass, String url, String user, String password) throws SQLException {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
         
         connection = DriverManager.getConnection(url, user, password);

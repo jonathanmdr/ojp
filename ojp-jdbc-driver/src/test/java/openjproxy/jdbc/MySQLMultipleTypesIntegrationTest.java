@@ -5,8 +5,6 @@ import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -34,7 +32,7 @@ public class MySQLMultipleTypesIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, ParseException {
+    public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, ParseException {
         assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
         assumeFalse(isMariaDBTestDisabled, "MariaDB tests are disabled");
 
@@ -122,7 +120,7 @@ public class MySQLMultipleTypesIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void mysqlSpecificTypesTestSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
+    public void mysqlSpecificTypesTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
         
         Connection conn = DriverManager.getConnection(url, user, pwd);

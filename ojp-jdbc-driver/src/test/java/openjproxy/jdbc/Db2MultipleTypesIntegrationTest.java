@@ -1,13 +1,10 @@
 package openjproxy.jdbc;
 
 import openjproxy.jdbc.testutil.TestDBUtils;
-import openjproxy.jdbc.testutil.TestDBUtils.ConnectionResult;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
@@ -36,11 +33,10 @@ public class Db2MultipleTypesIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, ParseException, UnsupportedEncodingException {
+    public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, ParseException, UnsupportedEncodingException {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
 
-        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
-        Connection conn = connResult.getConnection();
+        Connection conn = DriverManager.getConnection(url, user, pwd);
 
         // Set schema explicitly to avoid "object not found" errors
         try (java.sql.Statement schemaStmt = conn.createStatement()) {
@@ -130,16 +126,15 @@ public class Db2MultipleTypesIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        connResult.close();
+        conn.close();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2SpecificTypes(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
+    public void testDb2SpecificTypes(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
         
-        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
-        Connection conn = connResult.getConnection();
+        Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing DB2-specific types for url -> " + url);
 
@@ -185,16 +180,15 @@ public class Db2MultipleTypesIntegrationTest {
         resultSet.close();
         psSelect.close();
         psInsert.close();
-        connResult.close();
+        conn.close();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2NumericTypes(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
+    public void testDb2NumericTypes(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
         
-        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
-        Connection conn = connResult.getConnection();
+        Connection conn = DriverManager.getConnection(url, user, pwd);
 
         // Set schema explicitly to avoid "object not found" errors
         try (java.sql.Statement schemaStmt = conn.createStatement()) {
@@ -253,16 +247,15 @@ public class Db2MultipleTypesIntegrationTest {
         resultSet.close();
         psSelect.close();
         psInsert.close();
-        connResult.close();
+        conn.close();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2DateTimeTypes(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException {
+    public void testDb2DateTimeTypes(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
         
-        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
-        Connection conn = connResult.getConnection();
+        Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing DB2 date/time types for url -> " + url);
 
@@ -306,7 +299,7 @@ public class Db2MultipleTypesIntegrationTest {
         resultSet.close();
         psSelect.close();
         psInsert.close();
-        connResult.close();
+        conn.close();
     }
 
     /**

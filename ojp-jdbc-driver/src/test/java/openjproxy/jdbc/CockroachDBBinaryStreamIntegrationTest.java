@@ -4,10 +4,6 @@ import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
-import openjproxy.jdbc.testutil.TestDBUtils;
-import openjproxy.jdbc.testutil.TestDBUtils.ConnectionResult;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -36,11 +32,10 @@ public class CockroachDBBinaryStreamIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void createAndReadingBinaryStreamSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
+    public void createAndReadingBinaryStreamSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         assumeFalse(isTestDisabled, "Skipping CockroachDB tests");
 
-        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
-        Connection conn = connResult.getConnection();
+        Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing CockroachDB binary stream for url -> " + url);
 
@@ -70,10 +65,7 @@ public class CockroachDBBinaryStreamIntegrationTest {
         psInsert.setBinaryStream(2, inputStream2, 7);
         psInsert.executeUpdate();
 
-        connResult.commit();
-        
-        // Start new transaction for reading
-        connResult.startXATransactionIfNeeded();
+        conn.commit();
 
         PreparedStatement psSelect = conn.prepareStatement("SELECT val_bytea1, val_bytea2 FROM cockroachdb_binary_stream_test");
         ResultSet resultSet = psSelect.executeQuery();
@@ -96,16 +88,15 @@ public class CockroachDBBinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        connResult.close();
+        conn.close();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void createAndReadingLargeBinaryStreamSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
+    public void createAndReadingLargeBinaryStreamSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         assumeFalse(isTestDisabled, "Skipping CockroachDB tests");
 
-        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
-        Connection conn = connResult.getConnection();
+        Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing CockroachDB large binary stream for url -> " + url);
 
@@ -135,10 +126,7 @@ public class CockroachDBBinaryStreamIntegrationTest {
         psInsert.setBinaryStream(1, inputStream);
         psInsert.executeUpdate();
 
-        connResult.commit();
-        
-        // Start new transaction for reading
-        connResult.startXATransactionIfNeeded();
+        conn.commit();
 
         PreparedStatement psSelect = conn.prepareStatement("SELECT val_bytea FROM cockroachdb_large_binary_stream_test");
         ResultSet resultSet = psSelect.executeQuery();
@@ -153,42 +141,28 @@ public class CockroachDBBinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        connResult.close();
+        conn.close();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testBinaryStreamWithNullValues(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
+    public void testBinaryStreamWithNullValues(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         assumeFalse(isTestDisabled, "Skipping CockroachDB tests");
 
-        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
-        Connection conn = connResult.getConnection();
+        Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing CockroachDB binary stream with NULL values for url -> " + url);
 
         try {
             executeUpdate(conn, "DROP TABLE cockroachdb_binary_null_test");
-            connResult.commit();
         } catch (Exception e) {
-            // Rollback if DROP fails (table doesn't exist)
-            try {
-                connResult.rollback();
-            } catch (Exception ex) {
-                // Ignore rollback errors
-            }
+            //Ignore
         }
-        
-        // Start new transaction for CREATE TABLE
-        connResult.startXATransactionIfNeeded();
 
         executeUpdate(conn, "CREATE TABLE cockroachdb_binary_null_test(" +
                 " id INT PRIMARY KEY," +
                 " val_bytea BYTEA" +
                 ")");
-        connResult.commit();
-        
-        // Start new transaction for INSERT operations
-        connResult.startXATransactionIfNeeded();
 
         PreparedStatement psInsert = conn.prepareStatement(
                 "INSERT INTO cockroachdb_binary_null_test (id, val_bytea) VALUES (?, ?)"
@@ -204,11 +178,6 @@ public class CockroachDBBinaryStreamIntegrationTest {
         String testString = "Non-NULL data";
         psInsert.setBinaryStream(2, new ByteArrayInputStream(testString.getBytes()));
         psInsert.executeUpdate();
-        
-        connResult.commit();
-        
-        // Start new transaction for SELECT
-        connResult.startXATransactionIfNeeded();
 
         PreparedStatement psSelect = conn.prepareStatement("SELECT id, val_bytea FROM cockroachdb_binary_null_test ORDER BY id");
         ResultSet resultSet = psSelect.executeQuery();
@@ -231,6 +200,6 @@ public class CockroachDBBinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        connResult.close();
+        conn.close();
     }
 }

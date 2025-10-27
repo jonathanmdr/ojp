@@ -1,12 +1,9 @@
 package openjproxy.jdbc;
 
 import openjproxy.jdbc.testutil.TestDBUtils;
-import openjproxy.jdbc.testutil.TestDBUtils.ConnectionResult;
 import org.junit.Assert;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -26,9 +23,8 @@ public class H2MultipleTypesIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_connection.csv")
-    public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, ParseException {
-        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
-        Connection conn = connResult.getConnection();
+    public void typesCoverageTestSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, ParseException {
+        Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing for url -> " + url);
 
@@ -101,7 +97,7 @@ public class H2MultipleTypesIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        connResult.close();
+        conn.close();
     }
 
 }

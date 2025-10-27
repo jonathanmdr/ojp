@@ -4,10 +4,6 @@ import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
-import openjproxy.jdbc.testutil.TestDBUtils;
-import openjproxy.jdbc.testutil.TestDBUtils.ConnectionResult;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -37,11 +33,10 @@ public class Db2BinaryStreamIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void createAndReadingBinaryStreamSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
+    public void createAndReadingBinaryStreamSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         assumeFalse(isTestDisabled, "Skipping DB2 tests");
 
-        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
-        Connection conn = connResult.getConnection();
+        Connection conn = DriverManager.getConnection(url, user, pwd);
 
         // Set schema explicitly to avoid "object not found" errors
         try (Statement schemaStmt = conn.createStatement()) {
@@ -76,10 +71,7 @@ public class Db2BinaryStreamIntegrationTest {
         psInsert.setBinaryStream(2, inputStream2, 7);
         psInsert.executeUpdate();
 
-        connResult.commit();
-        
-        // Start new transaction for reading
-        connResult.startXATransactionIfNeeded();
+        conn.commit();
 
         PreparedStatement psSelect = conn.prepareStatement("select val_varbinary1, val_varbinary2 from DB2INST1.db2_binary_stream_test ");
         ResultSet resultSet = psSelect.executeQuery();
@@ -102,16 +94,15 @@ public class Db2BinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        connResult.close();
+        conn.close();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void createAndReadingLargeBinaryStreamSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
+    public void createAndReadingLargeBinaryStreamSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         assumeFalse(isTestDisabled, "Skipping DB2 tests");
 
-        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
-        Connection conn = connResult.getConnection();
+        Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing DB2 large binary stream for url -> " + url);
 
@@ -153,16 +144,15 @@ public class Db2BinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        connResult.close();
+        conn.close();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2SpecificBinaryHandling(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
+    public void testDb2SpecificBinaryHandling(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
         assumeFalse(isTestDisabled, "Skipping DB2 tests");
 
-        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
-        Connection conn = connResult.getConnection();
+        Connection conn = DriverManager.getConnection(url, user, pwd);
 
         System.out.println("Testing DB2-specific binary handling for url -> " + url);
 
@@ -214,6 +204,6 @@ public class Db2BinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        connResult.close();
+        conn.close();
     }
 }

@@ -7,8 +7,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
@@ -32,7 +30,6 @@ public class MySQLPreparedStatementExtensiveTests {
     private static boolean isMySQLTestDisabled;
     private static boolean isMariaDBTestDisabled;
     private Connection connection;
-    private XAConnection xaConnectionection;
     private PreparedStatement ps;
 
     @BeforeAll
@@ -41,7 +38,7 @@ public class MySQLPreparedStatementExtensiveTests {
         isMariaDBTestDisabled = Boolean.parseBoolean(System.getProperty("disableMariaDBTests", "false"));
     }
 
-    public void setUp(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+    public void setUp(String driverClass, String url, String user, String password) throws Exception {
         assumeFalse(isMySQLTestDisabled, "MySQL tests are disabled");
         assumeFalse(isMariaDBTestDisabled, "MariaDB tests are disabled");
 
@@ -69,8 +66,8 @@ public class MySQLPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testBasicParameterSetters(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testBasicParameterSetters(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
 
         ps = connection.prepareStatement("INSERT INTO mysql_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
 
@@ -93,8 +90,8 @@ public class MySQLPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testNumericParameterSetters(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testNumericParameterSetters(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
 
         ps = connection.prepareStatement("INSERT INTO mysql_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
 
@@ -122,8 +119,8 @@ public class MySQLPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testDateTimeParameterSetters(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testDateTimeParameterSetters(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
 
         ps = connection.prepareStatement("INSERT INTO mysql_prepared_stmt_test (id, name, dt, tm, ts) VALUES (?, ?, ?, ?, ?)");
 
@@ -151,8 +148,8 @@ public class MySQLPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testBinaryParameterSetters(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testBinaryParameterSetters(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
 
         ps = connection.prepareStatement("INSERT INTO mysql_prepared_stmt_test (id, name, data) VALUES (?, ?, ?)");
 
@@ -180,8 +177,8 @@ public class MySQLPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testTextParameterSetters(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testTextParameterSetters(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
 
         ps = connection.prepareStatement("INSERT INTO mysql_prepared_stmt_test (id, name, info) VALUES (?, ?, ?)");
 
@@ -208,8 +205,8 @@ public class MySQLPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testNullParameterSetters(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testNullParameterSetters(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
 
         ps = connection.prepareStatement("INSERT INTO mysql_prepared_stmt_test (id, name, age, data, info) VALUES (?, ?, ?, ?, ?)");
 
@@ -235,8 +232,8 @@ public class MySQLPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testExecuteQuery(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testExecuteQuery(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
 
         // Insert test data
         ps = connection.prepareStatement("INSERT INTO mysql_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
@@ -260,8 +257,8 @@ public class MySQLPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testExecuteUpdate(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testExecuteUpdate(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
 
         // Test INSERT
         ps = connection.prepareStatement("INSERT INTO mysql_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
@@ -284,8 +281,8 @@ public class MySQLPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testExecute(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testExecute(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
 
         // Test execute with query
         ps = connection.prepareStatement("SELECT COUNT(*) FROM mysql_prepared_stmt_test");
@@ -306,8 +303,8 @@ public class MySQLPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testBatch(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testBatch(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
 
         ps = connection.prepareStatement("INSERT INTO mysql_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
         
@@ -344,8 +341,8 @@ public class MySQLPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testClearParameters(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testClearParameters(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
 
         ps = connection.prepareStatement("INSERT INTO mysql_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
         ps.setInt(1, 90);
@@ -360,8 +357,8 @@ public class MySQLPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testMetaData(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testMetaData(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
 
         ps = connection.prepareStatement("SELECT id, name, age FROM mysql_prepared_stmt_test WHERE id = ?");
         ResultSetMetaData metaData = ps.getMetaData();
@@ -374,8 +371,8 @@ public class MySQLPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testParameterMetaData(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testParameterMetaData(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
 
         ps = connection.prepareStatement("INSERT INTO mysql_prepared_stmt_test (id, name, age) VALUES (?, ?, ?)");
         try {
@@ -391,8 +388,8 @@ public class MySQLPreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mysql_mariadb_connection.csv")
-    public void testGeneratedKeys(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testGeneratedKeys(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
 
         // Create table with auto-increment
         Statement stmt = connection.createStatement();

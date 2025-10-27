@@ -4,8 +4,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -28,7 +26,6 @@ public class Db2PreparedStatementExtensiveTests {
     private static boolean isTestDisabled;
 
     private Connection connection;
-    private XAConnection xaConnectionection;
     private PreparedStatement ps;
 
     @BeforeAll
@@ -36,7 +33,7 @@ public class Db2PreparedStatementExtensiveTests {
         isTestDisabled = !Boolean.parseBoolean(System.getProperty("enableDb2Tests", "false"));
     }
 
-    public void setUp(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+    public void setUp(String driverClass, String url, String user, String password) throws Exception {
         assumeFalse(isTestDisabled, "DB2 tests are disabled");
         
         connection = DriverManager.getConnection(url, user, password);
@@ -85,8 +82,8 @@ public class Db2PreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2PreparedStatementBasicOperations(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        setUp(driverClass, url, user, password, isXA);
+    public void testDb2PreparedStatementBasicOperations(String driverClass, String url, String user, String password) throws Exception {
+        setUp(driverClass, url, user, password);
 
         // Test INSERT operation
         ps = connection.prepareStatement("INSERT INTO DB2INST1.db2_prepared_stmt_test (id, name, age, salary, is_active) VALUES (?, ?, ?, ?, ?)");
@@ -138,8 +135,8 @@ public class Db2PreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2PreparedStatementDataTypes(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        setUp(driverClass, url, user, password, isXA);
+    public void testDb2PreparedStatementDataTypes(String driverClass, String url, String user, String password) throws Exception {
+        setUp(driverClass, url, user, password);
 
         // Test various data types
         ps = connection.prepareStatement("INSERT INTO DB2INST1.db2_prepared_stmt_test (id, name, age, salary, is_active, created_date) VALUES (?, ?, ?, ?, ?, ?)");
@@ -173,8 +170,8 @@ public class Db2PreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2PreparedStatementNullHandling(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        setUp(driverClass, url, user, password, isXA);
+    public void testDb2PreparedStatementNullHandling(String driverClass, String url, String user, String password) throws Exception {
+        setUp(driverClass, url, user, password);
 
         // Test NULL values
         ps = connection.prepareStatement("INSERT INTO DB2INST1.db2_prepared_stmt_test (id, name, age, salary, is_active) VALUES (?, ?, ?, ?, ?)");
@@ -209,8 +206,8 @@ public class Db2PreparedStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/db2_connection.csv")
-    public void testDb2PreparedStatementBatch(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        setUp(driverClass, url, user, password, isXA);
+    public void testDb2PreparedStatementBatch(String driverClass, String url, String user, String password) throws Exception {
+        setUp(driverClass, url, user, password);
 
         // Test batch operations
         ps = connection.prepareStatement("INSERT INTO DB2INST1.db2_prepared_stmt_test (id, name, age, salary, is_active) VALUES (?, ?, ?, ?, ?)");
