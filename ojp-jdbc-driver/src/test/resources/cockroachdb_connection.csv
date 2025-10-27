@@ -1,2 +1,1 @@
 org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_postgresql://localhost:26257/defaultdb?sslmode=disable,root,,false
-org.openjproxy.jdbc.Driver,jdbc:ojp[localhost:1059]_postgresql://localhost:26257/defaultdb?sslmode=disable,root,,true
