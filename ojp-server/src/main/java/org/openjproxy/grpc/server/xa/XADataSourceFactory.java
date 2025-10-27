@@ -121,6 +121,16 @@ public class XADataSourceFactory {
 
     /**
      * Creates an Oracle XADataSource.
+     * 
+     * NOTE: Oracle XA requires specific database privileges for the user:
+     * - GRANT SELECT ON sys.dba_pending_transactions TO user;
+     * - GRANT SELECT ON sys.pending_trans$ TO user;
+     * - GRANT SELECT ON sys.dba_2pc_pending TO user;
+     * - GRANT EXECUTE ON sys.dbms_system TO user;
+     * - GRANT FORCE ANY TRANSACTION TO user;
+     * 
+     * If the user doesn't have these privileges, XA operations will fail with ORA-6550 or similar errors.
+     * For testing/development, you can grant DBA role or execute: GRANT XA_RECOVER_ADMIN TO user;
      */
     private static XADataSource createOracleXADataSource(String url, ConnectionDetails connectionDetails) throws SQLException {
         try {
@@ -195,6 +205,21 @@ public class XADataSourceFactory {
             
             xaDS.getClass().getMethod("setUser", String.class).invoke(xaDS, connectionDetails.getUser());
             xaDS.getClass().getMethod("setPassword", String.class).invoke(xaDS, connectionDetails.getPassword());
+            
+            // Oracle XA requires specific properties to work correctly
+            // Set connection properties that enable XA support
+            try {
+                // Enable XA connection mode explicitly
+                java.util.Properties props = new java.util.Properties();
+                props.setProperty("user", connectionDetails.getUser());
+                props.setProperty("password", connectionDetails.getPassword());
+                // Oracle XA specific properties
+                props.setProperty("v$session.program", "OJP-XA");
+                
+                xaDS.getClass().getMethod("setConnectionProperties", java.util.Properties.class).invoke(xaDS, props);
+            } catch (Exception e) {
+                log.warn("Could not set connection properties on Oracle XADataSource: {}", e.getMessage());
+            }
             
             log.info("Created Oracle XADataSource for URL: {}", url);
             return xaDS;
