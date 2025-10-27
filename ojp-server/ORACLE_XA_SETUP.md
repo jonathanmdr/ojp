@@ -51,6 +51,17 @@ GRANT DBA TO your_user;
 
 **Solution**: Ensure the user has all required XA privileges.
 
+### ORA-24757: transaction branch does not exist
+
+**Cause**: The user doesn't have SELECT privilege on `sys.dba_2pc_pending` (critical for XA transaction tracking).
+
+**Solution**: Grant the missing privilege:
+```sql
+GRANT SELECT ON sys.dba_2pc_pending TO your_user;
+```
+
+**Important**: All XA privileges listed above must be granted. Missing even one will cause XA transactions to fail with various ORA-24xxx errors.
+
 ### ORA-02089: COMMIT is not allowed in a subordinate session
 
 **Cause**: Using regular `Connection.commit()` instead of `XAResource.commit()` on an XA connection.

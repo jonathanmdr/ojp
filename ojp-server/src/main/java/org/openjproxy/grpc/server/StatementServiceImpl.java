@@ -1443,10 +1443,16 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             // Provide additional context for Oracle XA errors
             String errorMsg = e.getMessage();
             if (errorMsg != null && errorMsg.contains("ORA-")) {
-                if (errorMsg.contains("ORA-6550") || errorMsg.contains("ORA-24756")) {
+                if (errorMsg.contains("ORA-6550") || errorMsg.contains("ORA-24756") || errorMsg.contains("ORA-24757")) {
                     log.error("Oracle XA Error: The database user may not have required XA privileges. " +
-                             "Required grants: SELECT ON sys.dba_pending_transactions, sys.pending_trans$, sys.dba_2pc_pending; " +
-                             "EXECUTE ON sys.dbms_system; FORCE ANY TRANSACTION; or GRANT XA_RECOVER_ADMIN (Oracle 12c+)");
+                             "All of the following must be granted: " +
+                             "GRANT SELECT ON sys.dba_pending_transactions TO user; " +
+                             "GRANT SELECT ON sys.pending_trans$ TO user; " +
+                             "GRANT SELECT ON sys.dba_2pc_pending TO user; " +
+                             "GRANT EXECUTE ON sys.dbms_system TO user; " +
+                             "GRANT FORCE ANY TRANSACTION TO user; " +
+                             "Or for Oracle 12c+: GRANT XA_RECOVER_ADMIN TO user; " +
+                             "See ojp-server/ORACLE_XA_SETUP.md for details.");
                 }
             }
             
