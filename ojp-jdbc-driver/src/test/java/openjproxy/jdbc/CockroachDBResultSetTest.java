@@ -5,8 +5,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -29,7 +27,6 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 public class CockroachDBResultSetTest {
 
     private Connection connection;
-    private XAConnection xaConnectionection;
     private Statement statement;
     private ResultSet resultSet;
 
@@ -41,7 +38,7 @@ public class CockroachDBResultSetTest {
     }
 
     @SneakyThrows
-    public void setUp(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
+    public void setUp(String driverClass, String url, String user, String pwd) throws SQLException {
         assumeFalse(isTestDisabled, "Skipping CockroachDB tests");
 
         // Create CockroachDB database connection
@@ -86,13 +83,12 @@ public class CockroachDBResultSetTest {
         if (resultSet != null) resultSet.close();
         if (statement != null) statement.close();
         if (connection != null) connection.close();
-        if (xaConnectionection != null) xaConnectionection.close();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testCockroachDBNavigationMethods(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, pwd, isXA);
+    public void testCockroachDBNavigationMethods(String driverClass, String url, String user, String pwd) throws SQLException {
+        setUp(driverClass, url, user, pwd);
         assertTrue(resultSet.next()); // Row 1
         assertTrue(resultSet.next()); // Row 2
         assertTrue(resultSet.previous()); // Back to Row 1
@@ -106,8 +102,8 @@ public class CockroachDBResultSetTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testCockroachDBAbsoluteAndRelativePositioning(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, pwd, isXA);
+    public void testCockroachDBAbsoluteAndRelativePositioning(String driverClass, String url, String user, String pwd) throws SQLException {
+        setUp(driverClass, url, user, pwd);
         
         assertTrue(resultSet.absolute(2)); // Move to row 2
         assertEquals(2, resultSet.getInt("id"));
@@ -121,8 +117,8 @@ public class CockroachDBResultSetTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testCockroachDBGetRow(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, pwd, isXA);
+    public void testCockroachDBGetRow(String driverClass, String url, String user, String pwd) throws SQLException {
+        setUp(driverClass, url, user, pwd);
         
         assertEquals(0, resultSet.getRow()); // Before first row
         assertTrue(resultSet.next());
@@ -133,8 +129,8 @@ public class CockroachDBResultSetTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testCockroachDBDataRetrieval(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, pwd, isXA);
+    public void testCockroachDBDataRetrieval(String driverClass, String url, String user, String pwd) throws SQLException {
+        setUp(driverClass, url, user, pwd);
         
         assertTrue(resultSet.next());
         
@@ -157,7 +153,7 @@ public class CockroachDBResultSetTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testCockroachDBNullHandling(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
+    public void testCockroachDBNullHandling(String driverClass, String url, String user, String pwd) throws SQLException {
         assumeFalse(isTestDisabled, "Skipping CockroachDB tests");
         
         connection = DriverManager.getConnection(url, user, pwd);
@@ -184,8 +180,8 @@ public class CockroachDBResultSetTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testCockroachDBFindColumn(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, pwd, isXA);
+    public void testCockroachDBFindColumn(String driverClass, String url, String user, String pwd) throws SQLException {
+        setUp(driverClass, url, user, pwd);
         
         assertTrue(resultSet.next());
         
@@ -199,16 +195,16 @@ public class CockroachDBResultSetTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testCockroachDBResultSetType(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, pwd, isXA);
+    public void testCockroachDBResultSetType(String driverClass, String url, String user, String pwd) throws SQLException {
+        setUp(driverClass, url, user, pwd);
         
         assertEquals(ResultSet.TYPE_FORWARD_ONLY, resultSet.getType());
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testCockroachDBResultSetConcurrency(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, pwd, isXA);
+    public void testCockroachDBResultSetConcurrency(String driverClass, String url, String user, String pwd) throws SQLException {
+        setUp(driverClass, url, user, pwd);
         
         int concurrency = resultSet.getConcurrency();
         assertTrue(concurrency == ResultSet.CONCUR_UPDATABLE || concurrency == ResultSet.CONCUR_READ_ONLY);
@@ -216,8 +212,8 @@ public class CockroachDBResultSetTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testCockroachDBWarnings(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, pwd, isXA);
+    public void testCockroachDBWarnings(String driverClass, String url, String user, String pwd) throws SQLException {
+        setUp(driverClass, url, user, pwd);
         
         resultSet.clearWarnings();
         SQLWarning warning = resultSet.getWarnings();
@@ -227,8 +223,8 @@ public class CockroachDBResultSetTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testCockroachDBGetStatement(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, pwd, isXA);
+    public void testCockroachDBGetStatement(String driverClass, String url, String user, String pwd) throws SQLException {
+        setUp(driverClass, url, user, pwd);
         
         Statement stmt = resultSet.getStatement();
         assertNotNull(stmt);
@@ -237,8 +233,8 @@ public class CockroachDBResultSetTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testCockroachDBBeforeFirstAfterLast(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, pwd, isXA);
+    public void testCockroachDBBeforeFirstAfterLast(String driverClass, String url, String user, String pwd) throws SQLException {
+        setUp(driverClass, url, user, pwd);
         
         resultSet.beforeFirst();
         assertTrue(resultSet.isBeforeFirst());
@@ -251,8 +247,8 @@ public class CockroachDBResultSetTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/cockroachdb_connection.csv")
-    public void testCockroachDBIsClosed(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException {
-        setUp(driverClass, url, user, pwd, isXA);
+    public void testCockroachDBIsClosed(String driverClass, String url, String user, String pwd) throws SQLException {
+        setUp(driverClass, url, user, pwd);
         
         assertFalse(resultSet.isClosed());
         resultSet.close();
