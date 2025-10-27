@@ -260,7 +260,7 @@ Add the OJP JDBC driver dependency to your project:
 <dependency>
     <groupId>org.openjproxy</groupId>
     <artifactId>ojp-jdbc-driver</artifactId>
-    <version>0.1.1-beta</version>
+    <version>0.2.0-beta</version>
 </dependency>
 ```
 

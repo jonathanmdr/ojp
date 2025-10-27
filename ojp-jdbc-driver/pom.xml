@@ -6,12 +6,12 @@
 
     <name>OJP JDBC Driver</name>
     <artifactId>ojp-jdbc-driver</artifactId>
-    <version>0.2.0-beta</version>
+    <version>0.2.1-snapshot</version>
 
     <parent>
         <groupId>org.openjproxy</groupId>
         <artifactId>ojp-parent</artifactId>
-        <version>0.2.0-beta</version>
+        <version>0.2.1-snapshot</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -27,7 +27,7 @@
         <dependency>
             <groupId>org.openjproxy</groupId>
             <artifactId>ojp-grpc-commons</artifactId>
-            <version>0.2.0-beta</version>
+            <version>0.2.1-snapshot</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
