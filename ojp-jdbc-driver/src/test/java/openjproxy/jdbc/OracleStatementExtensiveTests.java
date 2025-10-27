@@ -6,8 +6,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -30,7 +28,6 @@ public class OracleStatementExtensiveTests {
     private static boolean isTestDisabled;
 
     private Connection connection;
-    private XAConnection xaConnectionection;
     private Statement statement;
 
     @BeforeAll
@@ -38,7 +35,7 @@ public class OracleStatementExtensiveTests {
         isTestDisabled = !Boolean.parseBoolean(System.getProperty("enableOracleTests", "false"));
     }
 
-    public void setUp(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+    public void setUp(String driverClass, String url, String user, String password) throws Exception {
         assumeFalse(isTestDisabled, "Oracle tests are disabled");
         
         connection = DriverManager.getConnection(url, user, password);
@@ -54,8 +51,8 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testExecuteQuery(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testExecuteQuery(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         ResultSet rs = statement.executeQuery("SELECT * FROM oracle_statement_test");
         assertNotNull(rs);
         assertTrue(rs.next());
@@ -64,8 +61,8 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testExecuteUpdate(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testExecuteUpdate(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         int rows = statement.executeUpdate("UPDATE oracle_statement_test SET name = 'Updated Alice' WHERE id = 1");
         assertEquals(1, rows);
 
@@ -77,8 +74,8 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testClose(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testClose(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         assertFalse(statement.isClosed());
         statement.close();
         assertTrue(statement.isClosed());
@@ -86,8 +83,8 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testMaxFieldSize(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testMaxFieldSize(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         int orig = statement.getMaxFieldSize();
         statement.setMaxFieldSize(orig + 1);
         // Oracle behavior: typically returns 0 (unlimited) unless specifically set
@@ -97,8 +94,8 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testExecuteAfterCloseThrows(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testExecuteAfterCloseThrows(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         statement.close();
         assertThrows(SQLException.class, () -> statement.executeQuery("SELECT * FROM oracle_statement_test"));
         assertThrows(SQLException.class, () -> statement.executeUpdate("UPDATE oracle_statement_test SET name = 'fail' WHERE id = 1"));
@@ -107,8 +104,8 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testMaxRows(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testMaxRows(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         statement.setMaxRows(1);
         assertEquals(1, statement.getMaxRows());
         ResultSet rs = statement.executeQuery("SELECT * FROM oracle_statement_test");
@@ -119,8 +116,8 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testEscapeProcessing(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testEscapeProcessing(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         // Should not throw
         statement.setEscapeProcessing(true);
         statement.setEscapeProcessing(false);
@@ -128,40 +125,40 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testQueryTimeout(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testQueryTimeout(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         statement.setQueryTimeout(5);
         assertEquals(5, statement.getQueryTimeout());
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testCancel(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testCancel(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         // Should not throw
         statement.cancel();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testWarnings(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testWarnings(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         statement.clearWarnings();
         assertNull(statement.getWarnings());
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testSetCursorName(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testSetCursorName(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         // Some Oracle versions supports named cursors; the one used for tests does not.
         Assert.assertThrows(SQLException.class, () -> statement.setCursorName("CURSOR_A"));
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testExecute(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testExecute(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         boolean isResultSet = statement.execute("SELECT * FROM oracle_statement_test");
         assertTrue(isResultSet);
         ResultSet rs = statement.getResultSet();
@@ -176,8 +173,8 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testGetMoreResults(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testGetMoreResults(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         statement.execute("SELECT * FROM oracle_statement_test");
         assertFalse(statement.getMoreResults());
         assertEquals(-1, statement.getUpdateCount());
@@ -185,8 +182,8 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testFetchDirection(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testFetchDirection(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         int orig = statement.getFetchDirection();
         statement.setFetchDirection(ResultSet.FETCH_FORWARD);
         assertEquals(ResultSet.FETCH_FORWARD, statement.getFetchDirection());
@@ -195,8 +192,8 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testFetchSize(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testFetchSize(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         int orig = statement.getFetchSize();
         statement.setFetchSize(orig + 1);
         assertEquals(orig + 1, statement.getFetchSize());
@@ -205,8 +202,8 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testResultSetConcurrencyAndType(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testResultSetConcurrencyAndType(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         int concurrency = statement.getResultSetConcurrency();
         int type = statement.getResultSetType();
         assertTrue(concurrency == ResultSet.CONCUR_READ_ONLY || concurrency == ResultSet.CONCUR_UPDATABLE);
@@ -215,8 +212,8 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testBatchExecution(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testBatchExecution(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         statement.addBatch("INSERT INTO oracle_statement_test (id, name) VALUES (3, 'Charlie')");
         statement.addBatch("INSERT INTO oracle_statement_test (id, name) VALUES (4, 'David')");
         int[] results = statement.executeBatch();
@@ -230,8 +227,8 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testClearBatch(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testClearBatch(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         statement.addBatch("INSERT INTO oracle_statement_test (id, name) VALUES (5, 'Eve')");
         statement.clearBatch();
         int[] results = statement.executeBatch();
@@ -240,23 +237,23 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testGetConnection(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testGetConnection(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         assertSame(connection, statement.getConnection());
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testGetMoreResultsWithCurrent(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testGetMoreResultsWithCurrent(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         statement.execute("SELECT * FROM oracle_statement_test");
         assertFalse(statement.getMoreResults(Statement.CLOSE_CURRENT_RESULT));
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testGeneratedKeys(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testGeneratedKeys(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         TestDBUtils.createAutoIncrementTestTable(connection, "test_auto_keys", TestDBUtils.SqlSyntax.ORACLE);
         
         int affected = statement.executeUpdate("INSERT INTO test_auto_keys (name) VALUES ('foo')",
@@ -270,8 +267,8 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testExecuteUpdateVariants(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testExecuteUpdateVariants(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
 
         TestDBUtils.createAutoIncrementTestTable(connection, "test_cols", TestDBUtils.SqlSyntax.ORACLE);
         
@@ -290,8 +287,8 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testExecuteVariants(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testExecuteVariants(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         TestDBUtils.createAutoIncrementTestTable(connection, "test_exec", TestDBUtils.SqlSyntax.ORACLE);
         
         boolean b = statement.execute("INSERT INTO test_exec (name) VALUES ('v1')", Statement.RETURN_GENERATED_KEYS);
@@ -309,16 +306,16 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testGetResultSetHoldability(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testGetResultSetHoldability(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         int holdability = statement.getResultSetHoldability();
         assertTrue(holdability == ResultSet.HOLD_CURSORS_OVER_COMMIT || holdability == ResultSet.CLOSE_CURSORS_AT_COMMIT);
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testPoolable(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testPoolable(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         statement.setPoolable(true);
         // Oracle behavior: supports statement pooling
         boolean isPoolable = statement.isPoolable();
@@ -330,16 +327,16 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testCloseOnCompletion(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testCloseOnCompletion(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         statement.closeOnCompletion();
         assertTrue(statement.isCloseOnCompletion());
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testLargeMethodsDefault(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testLargeMethodsDefault(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         statement.getFetchDirection();
         statement.execute("INSERT INTO oracle_statement_test (id, name) VALUES (3, 'Juca Bala')");
         // Oracle drivers support large methods
@@ -357,16 +354,16 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testEnquoteLiteral(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testEnquoteLiteral(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         String quoted = statement.enquoteLiteral("foo'bar");
         assertEquals("'foo''bar'", quoted);
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testEnquoteIdentifier(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testEnquoteIdentifier(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         // Oracle quotes identifiers to preserve case sensitivity
         String quoted = statement.enquoteIdentifier("abc", true);
         assertNotNull(quoted);
@@ -376,8 +373,8 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testIsSimpleIdentifier(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testIsSimpleIdentifier(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         // Oracle has specific rules for simple identifiers
         boolean result1 = statement.isSimpleIdentifier("abc123");
         boolean result2 = statement.isSimpleIdentifier("ab-c");  // Contains hyphen - not simple
@@ -390,16 +387,16 @@ public class OracleStatementExtensiveTests {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testEnquoteNCharLiteral(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testEnquoteNCharLiteral(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         String quoted = statement.enquoteNCharLiteral("foo'bar");
         assertEquals("N'foo''bar'", quoted);
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/oracle_connections.csv")
-    public void testOracleSpecificFeatures(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
-        this.setUp(driverClass, url, user, password, isXA);
+    public void testOracleSpecificFeatures(String driverClass, String url, String user, String password) throws Exception {
+        this.setUp(driverClass, url, user, password);
         
         // Test Oracle-specific SQL features
         statement.execute("CREATE OR REPLACE VIEW oracle_test_view AS SELECT * FROM oracle_statement_test");

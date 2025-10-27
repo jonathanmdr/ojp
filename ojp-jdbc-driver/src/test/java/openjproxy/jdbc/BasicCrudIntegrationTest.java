@@ -1,18 +1,15 @@
 package openjproxy.jdbc;
 
 import lombok.extern.slf4j.Slf4j;
+import openjproxy.jdbc.testutil.TestDBUtils;
+import openjproxy.jdbc.testutil.TestDBUtils.ConnectionResult;
 import org.junit.Assert;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.openjproxy.jdbc.xa.OjpXADataSource;
-import javax.sql.XAConnection;
-import openjproxy.jdbc.testutil.TestDBUtils;
-import openjproxy.jdbc.testutil.TestDBUtils.ConnectionResult;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
