@@ -1,5 +1,7 @@
 package openjproxy.jdbc;
 
+import openjproxy.jdbc.testutil.TestDBUtils;
+import openjproxy.jdbc.testutil.TestDBUtils.ConnectionResult;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -9,7 +11,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -27,12 +28,13 @@ public class BinaryStreamIntegrationTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_postgres_connections.csv")
-    public void createAndReadingBinaryStreamSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
+    public void createAndReadingBinaryStreamSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
         if (isPostgresTestDisabled && url.contains("postgresql")) {
             return;
         }
 
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
+        Connection conn = connResult.getConnection();
 
         System.out.println("Testing for url -> " + url);
 
@@ -64,7 +66,10 @@ public class BinaryStreamIntegrationTest {
         psInsert.setBinaryStream(2, inputStream2, 5);
         psInsert.executeUpdate();
 
-        conn.commit();
+        connResult.commit();
+        
+        // Start new transaction for reading
+        connResult.startXATransactionIfNeeded();
 
         PreparedStatement psSelect = conn.prepareStatement("select val_blob1, val_blob2 from binary_stream_test_blob ");
         ResultSet resultSet = psSelect.executeQuery();
@@ -88,17 +93,18 @@ public class BinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        conn.close();
+        connResult.close();
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/h2_postgres_connections.csv")
-    public void createAndReadingLargeBinaryStreamSuccessful(String driverClass, String url, String user, String pwd) throws SQLException, ClassNotFoundException, IOException {
+    public void createAndReadingLargeBinaryStreamSuccessful(String driverClass, String url, String user, String pwd, boolean isXA) throws SQLException, ClassNotFoundException, IOException {
         if (isPostgresTestDisabled && url.contains("postgresql")) {
             return;
         }
 
-        Connection conn = DriverManager.getConnection(url, user, pwd);
+        ConnectionResult connResult = TestDBUtils.createConnection(url, user, pwd, isXA);
+        Connection conn = connResult.getConnection();
 
         System.out.println("Testing for url -> " + url);
 
@@ -145,7 +151,7 @@ public class BinaryStreamIntegrationTest {
 
         resultSet.close();
         psSelect.close();
-        conn.close();
+        connResult.close();
     }
 
 }

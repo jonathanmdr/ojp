@@ -1,6 +1,12 @@
 package openjproxy.jdbc.testutil;
 
+import org.openjproxy.jdbc.xa.OjpXADataSource;
+
+import javax.sql.XAConnection;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -16,6 +22,204 @@ import static org.junit.jupiter.api.Assertions.fail;
  * while allowing database-specific customizations.
  */
 public class TestDBUtils {
+
+    /**
+     * Result holder for connection creation that includes both Connection and XAConnection.
+     * When isXA is false, only connection is populated and xaConnection is null.
+     */
+    public static class ConnectionResult {
+        private final Connection connection;
+        private final XAConnection xaConnection;
+        private final boolean isXA;
+        private XAResource xaResource;
+        private Xid currentXid;
+        private boolean xaTransactionStarted = false;
+
+        public ConnectionResult(Connection connection, XAConnection xaConnection) {
+            this.connection = connection;
+            this.xaConnection = xaConnection;
+            this.isXA = (xaConnection != null);
+            if (isXA) {
+                try {
+                    this.xaResource = xaConnection.getXAResource();
+                } catch (SQLException e) {
+                    throw new RuntimeException("Failed to get XAResource", e);
+                }
+            }
+        }
+
+        public Connection getConnection() {
+            return connection;
+        }
+
+        public XAConnection getXaConnection() {
+            return xaConnection;
+        }
+
+        public boolean isXA() {
+            return isXA;
+        }
+
+        /**
+         * Starts XA transaction if this is an XA connection and transaction not already started.
+         * Should be called after setAutoCommit(false) for XA connections.
+         */
+        public void startXATransactionIfNeeded() throws SQLException {
+            if (isXA && !xaTransactionStarted) {
+                try {
+                    if (!connection.getAutoCommit()) {
+                        currentXid = new SimpleXid();
+                        xaResource.start(currentXid, XAResource.TMNOFLAGS);
+                        xaTransactionStarted = true;
+                    }
+                } catch (Exception e) {
+                    throw new SQLException("Failed to start XA transaction", e);
+                }
+            }
+        }
+
+        /**
+         * Commits the transaction using the appropriate method based on connection type.
+         * For XA connections, uses XAResource.commit(). For regular connections, uses Connection.commit().
+         */
+        public void commit() throws SQLException {
+            if (isXA) {
+                // For XA connections, don't call connection.commit() - it's not allowed
+                // Instead, manage via XAResource if autocommit is off
+                try {
+                    if (!connection.getAutoCommit() && xaTransactionStarted) {
+                        // End and commit the XA transaction
+                        xaResource.end(currentXid, XAResource.TMSUCCESS);
+                        xaResource.commit(currentXid, true);
+                        currentXid = null;
+                        xaTransactionStarted = false;
+                    }
+                } catch (Exception e) {
+                    xaTransactionStarted = false;
+                    currentXid = null;
+                    throw new SQLException("Failed to commit XA transaction", e);
+                }
+            } else {
+                connection.commit();
+            }
+        }
+
+        /**
+         * Rolls back the transaction.
+         */
+        public void rollback() throws SQLException {
+            if (isXA) {
+                try {
+                    if (!connection.getAutoCommit() && xaTransactionStarted) {
+                        xaResource.end(currentXid, XAResource.TMFAIL);
+                        xaResource.rollback(currentXid);
+                        currentXid = null;
+                        xaTransactionStarted = false;
+                    }
+                } catch (Exception e) {
+                    xaTransactionStarted = false;
+                    currentXid = null;
+                    throw new SQLException("Failed to rollback XA transaction", e);
+                }
+            } else {
+                connection.rollback();
+            }
+        }
+
+        /**
+         * Closes both connection and xaConnection if they exist.
+         * For XA connections, properly ends any active transaction before closing.
+         */
+        public void close() {
+            // For XA connections, end any active transaction before closing
+            if (isXA && xaTransactionStarted) {
+                try {
+                    xaResource.end(currentXid, XAResource.TMFAIL);
+                    xaResource.rollback(currentXid);
+                    xaTransactionStarted = false;
+                    currentXid = null;
+                } catch (Exception e) {
+                    // Log but don't throw - we're closing anyway
+                    System.err.println("Warning: Failed to rollback XA transaction during close: " + e.getMessage());
+                }
+            }
+            
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (Exception e) {
+                // Ignore
+            }
+            try {
+                if (xaConnection != null) {
+                    xaConnection.close();
+                }
+            } catch (Exception e) {
+                // Ignore
+            }
+        }
+    }
+
+    /**
+     * Simple Xid implementation for XA transactions in tests.
+     */
+    private static class SimpleXid implements Xid {
+        private static int counter = 0;
+        private final int id;
+
+        public SimpleXid() {
+            synchronized (SimpleXid.class) {
+                this.id = counter++;
+            }
+        }
+
+        @Override
+        public int getFormatId() {
+            return 1;
+        }
+
+        @Override
+        public byte[] getGlobalTransactionId() {
+            return ("gtx" + id).getBytes();
+        }
+
+        @Override
+        public byte[] getBranchQualifier() {
+            return ("btx" + id).getBytes();
+        }
+    }
+
+    /**
+     * Creates a database connection based on the isXA flag.
+     * If isXA is true, creates an XA connection using OjpXADataSource.
+     * If isXA is false, creates a standard JDBC connection using DriverManager.
+     *
+     * @param url The JDBC URL
+     * @param user The database user
+     * @param password The database password
+     * @param isXA Whether to create an XA connection
+     * @return ConnectionResult containing the Connection and optionally XAConnection
+     * @throws SQLException if connection creation fails
+     */
+    public static ConnectionResult createConnection(String url, String user, String password, boolean isXA) throws SQLException {
+        if (isXA) {
+            OjpXADataSource xaDataSource = new OjpXADataSource();
+            xaDataSource.setUrl(url);
+            xaDataSource.setUser(user);
+            xaDataSource.setPassword(password);
+            XAConnection xaConnection = xaDataSource.getXAConnection(user, password);
+            Connection connection = xaConnection.getConnection();
+            ConnectionResult result = new ConnectionResult(connection, xaConnection);
+            // For XA connections, set autocommit to false and start transaction immediately
+            connection.setAutoCommit(false);
+            result.startXATransactionIfNeeded();
+            return result;
+        } else {
+            Connection connection = DriverManager.getConnection(url, user, password);
+            return new ConnectionResult(connection, null);
+        }
+    }
 
     /**
      * Enum representing different SQL syntax variations for database-specific operations.

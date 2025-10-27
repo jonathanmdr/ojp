@@ -40,7 +40,7 @@ public class PostgresXAIntegrationTest {
         isTestDisabled = Boolean.parseBoolean(System.getProperty("disablePostgresXATests", "false"));
     }
 
-    public void setUp(String driverClass, String url, String user, String password) throws SQLException {
+    public void setUp(String driverClass, String url, String user, String password, boolean isXA) throws SQLException {
         assumeFalse(isTestDisabled, "Postgres XA tests are disabled. Enable with -DdisablePostgresXATests=false");
         
         // Create XA DataSource
@@ -70,9 +70,9 @@ public class PostgresXAIntegrationTest {
      * Test basic XA connection creation and closure.
      */
     @ParameterizedTest
-    @CsvFileSource(resources = "/postgres_xa_connection.csv")
-    public void testXAConnectionBasics(String driverClass, String url, String user, String password) throws Exception {
-        setUp(driverClass, url, user, password);
+    @CsvFileSource(resources = "/postgres_connection.csv")
+    public void testXAConnectionBasics(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        setUp(driverClass, url, user, password, isXA);
         
         assertNotNull(xaConnection, "XA connection should be created");
         assertNotNull(connection, "Logical connection should be created");
@@ -91,9 +91,9 @@ public class PostgresXAIntegrationTest {
      * This tests: xaStart -> executeUpdate -> xaEnd -> xaPrepare -> xaCommit
      */
     @ParameterizedTest
-    @CsvFileSource(resources = "/postgres_xa_connection.csv")
-    public void testXATransactionWithCRUD(String driverClass, String url, String user, String password) throws Exception {
-        setUp(driverClass, url, user, password);
+    @CsvFileSource(resources = "/postgres_connection.csv")
+    public void testXATransactionWithCRUD(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        setUp(driverClass, url, user, password, isXA);
         
         XAResource xaResource = xaConnection.getXAResource();
         
@@ -170,9 +170,9 @@ public class PostgresXAIntegrationTest {
      * Test XA transaction rollback.
      */
     @ParameterizedTest
-    @CsvFileSource(resources = "/postgres_xa_connection.csv")
-    public void testXATransactionRollback(String driverClass, String url, String user, String password) throws Exception {
-        setUp(driverClass, url, user, password);
+    @CsvFileSource(resources = "/postgres_connection.csv")
+    public void testXATransactionRollback(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        setUp(driverClass, url, user, password, isXA);
         
         XAResource xaResource = xaConnection.getXAResource();
         
@@ -232,9 +232,9 @@ public class PostgresXAIntegrationTest {
      * Test transaction timeout functionality.
      */
     @ParameterizedTest
-    @CsvFileSource(resources = "/postgres_xa_connection.csv")
-    public void testXATransactionTimeout(String driverClass, String url, String user, String password) throws Exception {
-        setUp(driverClass, url, user, password);
+    @CsvFileSource(resources = "/postgres_connection.csv")
+    public void testXATransactionTimeout(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        setUp(driverClass, url, user, password, isXA);
         
         XAResource xaResource = xaConnection.getXAResource();
         
@@ -255,9 +255,9 @@ public class PostgresXAIntegrationTest {
      * Test one-phase commit optimization.
      */
     @ParameterizedTest
-    @CsvFileSource(resources = "/postgres_xa_connection.csv")
-    public void testXAOnePhaseCommit(String driverClass, String url, String user, String password) throws Exception {
-        setUp(driverClass, url, user, password);
+    @CsvFileSource(resources = "/postgres_connection.csv")
+    public void testXAOnePhaseCommit(String driverClass, String url, String user, String password, boolean isXA) throws Exception {
+        setUp(driverClass, url, user, password, isXA);
         
         XAResource xaResource = xaConnection.getXAResource();
         

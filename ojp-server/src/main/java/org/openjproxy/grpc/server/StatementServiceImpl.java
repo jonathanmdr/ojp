@@ -48,6 +48,7 @@ import org.openjproxy.grpc.server.utils.MethodReflectionUtils;
 import org.openjproxy.grpc.server.utils.MethodNameGenerator;
 import org.openjproxy.grpc.server.utils.SessionInfoUtils;
 import org.openjproxy.grpc.server.statement.ParameterHandler;
+import org.openjproxy.grpc.server.xa.XADataSourceFactory;
 import org.openjproxy.grpc.server.statement.StatementFactory;
 import org.openjproxy.grpc.server.resultset.ResultSetWrapper;
 import org.openjproxy.grpc.server.lob.LobProcessor;
@@ -184,9 +185,9 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             XADataSource xaDataSource = this.xaDataSourceMap.get(connHash);
             if (xaDataSource == null) {
                 try {
-                    // Create XADataSource for the database
+                    // Create XADataSource for the database using factory
                     String url = UrlParser.parseUrl(connectionDetails.getUrl());
-                    xaDataSource = createXADataSource(url, connectionDetails);
+                    xaDataSource = XADataSourceFactory.createXADataSource(url, connectionDetails);
                     
                     this.xaDataSourceMap.put(connHash, xaDataSource);
                     
@@ -275,68 +276,6 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
         this.dbNameMap.put(connHash, DatabaseUtils.resolveDbName(connectionDetails.getUrl()));
 
         responseObserver.onCompleted();
-    }
-    
-    /**
-     * Creates an XADataSource for the specified database type.
-     */
-    private javax.sql.XADataSource createXADataSource(String url, ConnectionDetails connectionDetails) throws SQLException {
-        String lowerUrl = url.toLowerCase();
-        
-        try {
-            if (lowerUrl.contains("postgresql")) {
-                // PostgreSQL XADataSource
-                org.postgresql.xa.PGXADataSource xaDS = new org.postgresql.xa.PGXADataSource();
-                
-                // Parse connection URL to extract host, port, database
-                // Format: jdbc:postgresql://host:port/database or ojp[...]:host:port/database
-                String cleanUrl = url;
-                if (cleanUrl.toLowerCase().contains("_postgresql:")) {
-                    cleanUrl = cleanUrl.substring(cleanUrl.toLowerCase().indexOf("_postgresql:") + 1);
-                } else if (cleanUrl.toLowerCase().startsWith("jdbc:postgresql:")) {
-                    cleanUrl = cleanUrl.substring("jdbc:".length());
-                }
-                
-                // Parse postgresql://host:port/database
-                if (cleanUrl.startsWith("postgresql://")) {
-                    cleanUrl = cleanUrl.substring("postgresql://".length());
-                    String[] parts = cleanUrl.split("/");
-                    if (parts.length >= 2) {
-                        String hostPort = parts[0];
-                        String database = parts[1].split("\\?")[0]; // Remove query params
-                        
-                        String[] hostPortParts = hostPort.split(":");
-                        String host = hostPortParts[0];
-                        int port = hostPortParts.length > 1 ? Integer.parseInt(hostPortParts[1]) : 5432;
-                        
-                        xaDS.setServerNames(new String[]{host});
-                        xaDS.setPortNumbers(new int[]{port});
-                        xaDS.setDatabaseName(database);
-                    }
-                }
-                
-                xaDS.setUser(connectionDetails.getUser());
-                xaDS.setPassword(connectionDetails.getPassword());
-                
-                log.info("Created PostgreSQL XADataSource");
-                return xaDS;
-                
-            } else if (lowerUrl.contains("mysql")) {
-                // MySQL XADataSource
-                com.mysql.cj.jdbc.MysqlXADataSource xaDS = new com.mysql.cj.jdbc.MysqlXADataSource();
-                xaDS.setUrl(url);
-                xaDS.setUser(connectionDetails.getUser());
-                xaDS.setPassword(connectionDetails.getPassword());
-                log.info("Created MySQL XADataSource");
-                return xaDS;
-                
-            } else {
-                throw new SQLException("XA transactions not supported for database type in URL: " + url);
-            }
-        } catch (Exception e) {
-            log.error("Failed to create XADataSource: {}", e.getMessage(), e);
-            throw new SQLException("Failed to create XADataSource: " + e.getMessage(), e);
-        }
     }
     
     /**
@@ -1500,6 +1439,23 @@ public class StatementServiceImpl extends StatementServiceGrpc.StatementServiceI
             }
             
             log.error("Error in xaStart", e);
+            
+            // Provide additional context for Oracle XA errors
+            String errorMsg = e.getMessage();
+            if (errorMsg != null && errorMsg.contains("ORA-")) {
+                if (errorMsg.contains("ORA-6550") || errorMsg.contains("ORA-24756") || errorMsg.contains("ORA-24757")) {
+                    log.error("Oracle XA Error: The database user may not have required XA privileges. " +
+                             "All of the following must be granted: " +
+                             "GRANT SELECT ON sys.dba_pending_transactions TO user; " +
+                             "GRANT SELECT ON sys.pending_trans$ TO user; " +
+                             "GRANT SELECT ON sys.dba_2pc_pending TO user; " +
+                             "GRANT EXECUTE ON sys.dbms_system TO user; " +
+                             "GRANT FORCE ANY TRANSACTION TO user; " +
+                             "Or for Oracle 12c+: GRANT XA_RECOVER_ADMIN TO user; " +
+                             "See ojp-server/ORACLE_XA_SETUP.md for details.");
+                }
+            }
+            
             SQLException sqlException = (e instanceof SQLException) ? (SQLException) e : new SQLException(e);
             sendSQLExceptionMetadata(sqlException, responseObserver);
         }
