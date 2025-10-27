@@ -148,6 +148,9 @@ public class XADataSourceFactory {
                 int port = 1521;
                 String serviceName = null;
                 
+                // Set driver type first - required for Oracle to construct proper URL internally
+                xaDS.getClass().getMethod("setDriverType", String.class).invoke(xaDS, "thin");
+                
                 if (connectionPart.contains("/")) {
                     // Service name format: host:port/service
                     String[] parts = connectionPart.split("/");
@@ -177,12 +180,17 @@ public class XADataSourceFactory {
                         xaDS.getClass().getMethod("setDatabaseName", String.class).invoke(xaDS, sid);
                     }
                 } else {
-                    // Fallback: use URL directly
-                    xaDS.getClass().getMethod("setURL", String.class).invoke(xaDS, cleanUrl);
+                    // Fallback: try setting just the service name from the connection part
+                    xaDS.getClass().getMethod("setServerName", String.class).invoke(xaDS, host);
+                    xaDS.getClass().getMethod("setPortNumber", int.class).invoke(xaDS, port);
+                    xaDS.getClass().getMethod("setServiceName", String.class).invoke(xaDS, connectionPart);
                 }
             } else {
-                // Fallback: use URL directly
-                xaDS.getClass().getMethod("setURL", String.class).invoke(xaDS, cleanUrl);
+                // For non-thin URLs or unparseable formats, set driver type and try to parse
+                xaDS.getClass().getMethod("setDriverType", String.class).invoke(xaDS, "thin");
+                // Set sensible defaults
+                xaDS.getClass().getMethod("setServerName", String.class).invoke(xaDS, "localhost");
+                xaDS.getClass().getMethod("setPortNumber", int.class).invoke(xaDS, 1521);
             }
             
             xaDS.getClass().getMethod("setUser", String.class).invoke(xaDS, connectionDetails.getUser());
